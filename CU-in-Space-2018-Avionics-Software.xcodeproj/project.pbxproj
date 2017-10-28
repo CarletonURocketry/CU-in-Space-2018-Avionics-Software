@@ -8,12 +8,47 @@
 
 /* Begin PBXBuildFile section */
 		BC93ECA51FA4F5F200AD7504 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECA41FA4F5F200AD7504 /* main.c */; };
+		BC93ECBD1FA4F98500AD7504 /* serial0.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECBC1FA4F98500AD7504 /* serial0.c */; };
+		BC93ECC01FA4F9A700AD7504 /* menu.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECBF1FA4F9A700AD7504 /* menu.c */; };
+		BC93ECC51FA4FA0100AD7504 /* menu_data.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECC41FA4FA0100AD7504 /* menu_data.c */; };
+		BC93ECC81FA4FA1400AD7504 /* I2C.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECC71FA4FA1400AD7504 /* I2C.c */; };
+		BC93ECCB1FA4FA3200AD7504 /* serial1.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECCA1FA4FA3200AD7504 /* serial1.c */; };
+		BC93ECCE1FA4FA5100AD7504 /* SPI.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECCD1FA4FA5100AD7504 /* SPI.c */; };
+		BC93ECD21FA4FA7E00AD7504 /* XBee.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECD11FA4FA7E00AD7504 /* XBee.c */; };
+		BC93ECD51FA4FC0700AD7504 /* MPL3115A2.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECD41FA4FC0700AD7504 /* MPL3115A2.c */; };
+		BC93ECDA1FA4FC5300AD7504 /* ADXL343.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECD91FA4FC5300AD7504 /* ADXL343.c */; };
+		BC93ECDF1FA4FC7500AD7504 /* FXAS21002C.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECDE1FA4FC7500AD7504 /* FXAS21002C.c */; };
+		BC93ECE21FA4FC9700AD7504 /* FGPMMOPA6H.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECE11FA4FC9700AD7504 /* FGPMMOPA6H.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		BC93ECA11FA4F5F200AD7504 /* Index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Index; sourceTree = BUILT_PRODUCTS_DIR; };
 		BC93ECA41FA4F5F200AD7504 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		BC93ECA71FA4F5F200AD7504 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		BC93ECB91FA4F67400AD7504 /* pindefinitions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pindefinitions.h; sourceTree = "<group>"; };
+		BC93ECBA1FA4F91C00AD7504 /* global.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = global.h; sourceTree = "<group>"; };
+		BC93ECBB1FA4F98500AD7504 /* serial0.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = serial0.h; sourceTree = "<group>"; };
+		BC93ECBC1FA4F98500AD7504 /* serial0.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = serial0.c; sourceTree = "<group>"; };
+		BC93ECBE1FA4F9A700AD7504 /* menu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = menu.h; sourceTree = "<group>"; };
+		BC93ECBF1FA4F9A700AD7504 /* menu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = menu.c; sourceTree = "<group>"; };
+		BC93ECC31FA4FA0100AD7504 /* menu_data.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = menu_data.h; sourceTree = "<group>"; };
+		BC93ECC41FA4FA0100AD7504 /* menu_data.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = menu_data.c; sourceTree = "<group>"; };
+		BC93ECC61FA4FA1400AD7504 /* I2C.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = I2C.h; sourceTree = "<group>"; };
+		BC93ECC71FA4FA1400AD7504 /* I2C.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = I2C.c; sourceTree = "<group>"; };
+		BC93ECC91FA4FA3200AD7504 /* serial1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = serial1.h; sourceTree = "<group>"; };
+		BC93ECCA1FA4FA3200AD7504 /* serial1.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = serial1.c; sourceTree = "<group>"; };
+		BC93ECCC1FA4FA5100AD7504 /* SPI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SPI.h; sourceTree = "<group>"; };
+		BC93ECCD1FA4FA5100AD7504 /* SPI.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SPI.c; sourceTree = "<group>"; };
+		BC93ECD01FA4FA7E00AD7504 /* XBee.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XBee.h; sourceTree = "<group>"; };
+		BC93ECD11FA4FA7E00AD7504 /* XBee.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = XBee.c; sourceTree = "<group>"; };
+		BC93ECD31FA4FC0700AD7504 /* MPL3115A2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPL3115A2.h; sourceTree = "<group>"; };
+		BC93ECD41FA4FC0700AD7504 /* MPL3115A2.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = MPL3115A2.c; sourceTree = "<group>"; };
+		BC93ECD81FA4FC5300AD7504 /* ADXL343.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ADXL343.h; sourceTree = "<group>"; };
+		BC93ECD91FA4FC5300AD7504 /* ADXL343.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ADXL343.c; sourceTree = "<group>"; };
+		BC93ECDD1FA4FC7500AD7504 /* FXAS21002C.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FXAS21002C.h; sourceTree = "<group>"; };
+		BC93ECDE1FA4FC7500AD7504 /* FXAS21002C.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = FXAS21002C.c; sourceTree = "<group>"; };
+		BC93ECE01FA4FC9700AD7504 /* FGPMMOPA6H.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FGPMMOPA6H.h; sourceTree = "<group>"; };
+		BC93ECE11FA4FC9700AD7504 /* FGPMMOPA6H.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = FGPMMOPA6H.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -36,7 +71,13 @@
 		BC93ECA31FA4F5F200AD7504 /* CU-in-Space-2018-Avionics-Software */ = {
 			isa = PBXGroup;
 			children = (
+				BC93ECBA1FA4F91C00AD7504 /* global.h */,
+				BC93ECB91FA4F67400AD7504 /* pindefinitions.h */,
 				BC93ECA41FA4F5F200AD7504 /* main.c */,
+				BC93ECC11FA4F9BC00AD7504 /* IO */,
+				BC93ECC21FA4F9CA00AD7504 /* Debug */,
+				BC93ECCF1FA4FA6B00AD7504 /* Radio */,
+				BC93ECD71FA4FC1A00AD7504 /* Sensors */,
 				BC93ECA61FA4F5F200AD7504 /* Makefiles */,
 			);
 			path = "CU-in-Space-2018-Avionics-Software";
@@ -48,6 +89,56 @@
 				BC93ECA71FA4F5F200AD7504 /* Makefile */,
 			);
 			name = Makefiles;
+			sourceTree = "<group>";
+		};
+		BC93ECC11FA4F9BC00AD7504 /* IO */ = {
+			isa = PBXGroup;
+			children = (
+				BC93ECBB1FA4F98500AD7504 /* serial0.h */,
+				BC93ECBC1FA4F98500AD7504 /* serial0.c */,
+				BC93ECC91FA4FA3200AD7504 /* serial1.h */,
+				BC93ECCA1FA4FA3200AD7504 /* serial1.c */,
+				BC93ECC61FA4FA1400AD7504 /* I2C.h */,
+				BC93ECC71FA4FA1400AD7504 /* I2C.c */,
+				BC93ECCC1FA4FA5100AD7504 /* SPI.h */,
+				BC93ECCD1FA4FA5100AD7504 /* SPI.c */,
+			);
+			name = IO;
+			sourceTree = "<group>";
+		};
+		BC93ECC21FA4F9CA00AD7504 /* Debug */ = {
+			isa = PBXGroup;
+			children = (
+				BC93ECBE1FA4F9A700AD7504 /* menu.h */,
+				BC93ECBF1FA4F9A700AD7504 /* menu.c */,
+				BC93ECC31FA4FA0100AD7504 /* menu_data.h */,
+				BC93ECC41FA4FA0100AD7504 /* menu_data.c */,
+			);
+			name = Debug;
+			sourceTree = "<group>";
+		};
+		BC93ECCF1FA4FA6B00AD7504 /* Radio */ = {
+			isa = PBXGroup;
+			children = (
+				BC93ECD01FA4FA7E00AD7504 /* XBee.h */,
+				BC93ECD11FA4FA7E00AD7504 /* XBee.c */,
+			);
+			name = Radio;
+			sourceTree = "<group>";
+		};
+		BC93ECD71FA4FC1A00AD7504 /* Sensors */ = {
+			isa = PBXGroup;
+			children = (
+				BC93ECD31FA4FC0700AD7504 /* MPL3115A2.h */,
+				BC93ECD41FA4FC0700AD7504 /* MPL3115A2.c */,
+				BC93ECD81FA4FC5300AD7504 /* ADXL343.h */,
+				BC93ECD91FA4FC5300AD7504 /* ADXL343.c */,
+				BC93ECDD1FA4FC7500AD7504 /* FXAS21002C.h */,
+				BC93ECDE1FA4FC7500AD7504 /* FXAS21002C.c */,
+				BC93ECE01FA4FC9700AD7504 /* FGPMMOPA6H.h */,
+				BC93ECE11FA4FC9700AD7504 /* FGPMMOPA6H.c */,
+			);
+			name = Sensors;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -180,7 +271,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BC93ECDF1FA4FC7500AD7504 /* FXAS21002C.c in Sources */,
 				BC93ECA51FA4F5F200AD7504 /* main.c in Sources */,
+				BC93ECE21FA4FC9700AD7504 /* FGPMMOPA6H.c in Sources */,
+				BC93ECCB1FA4FA3200AD7504 /* serial1.c in Sources */,
+				BC93ECCE1FA4FA5100AD7504 /* SPI.c in Sources */,
+				BC93ECD51FA4FC0700AD7504 /* MPL3115A2.c in Sources */,
+				BC93ECD21FA4FA7E00AD7504 /* XBee.c in Sources */,
+				BC93ECC81FA4FA1400AD7504 /* I2C.c in Sources */,
+				BC93ECBD1FA4F98500AD7504 /* serial0.c in Sources */,
+				BC93ECC51FA4FA0100AD7504 /* menu_data.c in Sources */,
+				BC93ECC01FA4F9A700AD7504 /* menu.c in Sources */,
+				BC93ECDA1FA4FC5300AD7504 /* ADXL343.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
