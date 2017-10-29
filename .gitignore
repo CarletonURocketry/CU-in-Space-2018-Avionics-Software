@@ -1,0 +1,8 @@
+# Some common automatically created files that we would rather not have
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

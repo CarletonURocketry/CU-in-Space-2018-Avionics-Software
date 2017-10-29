@@ -6,3 +6,68 @@
 //
 
 #include "menu.h"
+
+#include <avr/interrupt.h>
+#include <string.h>
+
+#include "pindefinitions.h"
+#include "serial0.h"
+
+#include "menu_data.h"
+
+// MARK: Constants
+
+// MARK: Vairables
+static char menu_buffer[200];
+
+// MARK: Static Function prototypes
+static inline void print_prompt(void);
+
+// MARK: Function Definitions
+void init_menu(void)
+{
+    cli();
+    init_serial_0();
+    flags |= (1<<FLAG_SERIAL_0_LOOPBACK);       // Enable serial loopback
+    sei();
+    
+    serial_0_put_string_P(welcome_string);
+    print_prompt();
+}
+
+void menu_service(void)
+{
+    serial_0_service();
+    if (serial_0_has_line()) {
+        serial_0_get_line(menu_buffer, 200);
+        char *line = menu_buffer;
+        
+        int num_tokens = 1;
+        for (int i = 0; i < strlen(line); i++) {
+            num_tokens += menu_buffer[i] == ' ';
+        }
+        
+        char *args[num_tokens];
+        for (int i = 0; (args[i] = strsep(&line, " ")) != NULL; i++);
+        
+        for (int i = 0; i < menu_num_items; i++) {
+            if (!strcasecmp_P(args[0], (char*)pgm_read_word(&menu_items[i].string))) {
+                (*((menu_handler_t)pgm_read_word(&menu_items[i].handler)))(num_tokens, args);
+                print_prompt();
+                return;
+            }
+        }
+        
+        if (menu_buffer[0] != '\0') {
+            serial_0_put_string_P(menu_unkown_cmd_prt1);
+            serial_0_put_string(args[0]);
+            serial_0_put_string_P(menu_unkown_cmd_prt2);
+        }
+        print_prompt();
+    }
+}
+
+static inline void print_prompt(void)
+{
+    serial_0_put_string_P(prompt_string);
+}
