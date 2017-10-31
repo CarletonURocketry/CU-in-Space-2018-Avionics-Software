@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BC588CAE1FA9261D003E8C15 /* ADC.c in Sources */ = {isa = PBXBuildFile; fileRef = BC588CAD1FA9261D003E8C15 /* ADC.c */; };
 		BC93ECA51FA4F5F200AD7504 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECA41FA4F5F200AD7504 /* main.c */; };
 		BC93ECBD1FA4F98500AD7504 /* serial0.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECBC1FA4F98500AD7504 /* serial0.c */; };
 		BC93ECC01FA4F9A700AD7504 /* menu.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECBF1FA4F9A700AD7504 /* menu.c */; };
@@ -22,6 +23,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		BC588CAC1FA9261D003E8C15 /* ADC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ADC.h; sourceTree = "<group>"; };
+		BC588CAD1FA9261D003E8C15 /* ADC.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ADC.c; sourceTree = "<group>"; };
 		BC93ECA11FA4F5F200AD7504 /* Index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Index; sourceTree = BUILT_PRODUCTS_DIR; };
 		BC93ECA41FA4F5F200AD7504 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		BC93ECA71FA4F5F200AD7504 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
@@ -102,6 +105,8 @@
 				BC93ECC71FA4FA1400AD7504 /* I2C.c */,
 				BC93ECCC1FA4FA5100AD7504 /* SPI.h */,
 				BC93ECCD1FA4FA5100AD7504 /* SPI.c */,
+				BC588CAC1FA9261D003E8C15 /* ADC.h */,
+				BC588CAD1FA9261D003E8C15 /* ADC.c */,
 			);
 			name = IO;
 			sourceTree = "<group>";
@@ -278,6 +283,7 @@
 				BC93ECCE1FA4FA5100AD7504 /* SPI.c in Sources */,
 				BC93ECD51FA4FC0700AD7504 /* MPL3115A2.c in Sources */,
 				BC93ECD21FA4FA7E00AD7504 /* XBee.c in Sources */,
+				BC588CAE1FA9261D003E8C15 /* ADC.c in Sources */,
 				BC93ECC81FA4FA1400AD7504 /* I2C.c in Sources */,
 				BC93ECBD1FA4F98500AD7504 /* serial0.c in Sources */,
 				BC93ECC51FA4FA0100AD7504 /* menu_data.c in Sources */,
