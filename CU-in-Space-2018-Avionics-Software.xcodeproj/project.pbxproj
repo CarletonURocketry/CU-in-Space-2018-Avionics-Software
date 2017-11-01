@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		BC588CAE1FA9261D003E8C15 /* ADC.c in Sources */ = {isa = PBXBuildFile; fileRef = BC588CAD1FA9261D003E8C15 /* ADC.c */; };
+		BC933A181FAA8C6000476F3F /* EEPROM.c in Sources */ = {isa = PBXBuildFile; fileRef = BC933A171FAA8C6000476F3F /* EEPROM.c */; };
+		BC933A1B1FAA8C7000476F3F /* 25LC1024.c in Sources */ = {isa = PBXBuildFile; fileRef = BC933A1A1FAA8C7000476F3F /* 25LC1024.c */; };
 		BC93ECA51FA4F5F200AD7504 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECA41FA4F5F200AD7504 /* main.c */; };
 		BC93ECBD1FA4F98500AD7504 /* serial0.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECBC1FA4F98500AD7504 /* serial0.c */; };
 		BC93ECC01FA4F9A700AD7504 /* menu.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECBF1FA4F9A700AD7504 /* menu.c */; };
@@ -25,6 +27,10 @@
 /* Begin PBXFileReference section */
 		BC588CAC1FA9261D003E8C15 /* ADC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ADC.h; sourceTree = "<group>"; };
 		BC588CAD1FA9261D003E8C15 /* ADC.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ADC.c; sourceTree = "<group>"; };
+		BC933A161FAA8C6000476F3F /* EEPROM.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EEPROM.h; sourceTree = "<group>"; };
+		BC933A171FAA8C6000476F3F /* EEPROM.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = EEPROM.c; sourceTree = "<group>"; };
+		BC933A191FAA8C7000476F3F /* 25LC1024.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = 25LC1024.h; sourceTree = "<group>"; };
+		BC933A1A1FAA8C7000476F3F /* 25LC1024.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = 25LC1024.c; sourceTree = "<group>"; };
 		BC93ECA11FA4F5F200AD7504 /* Index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Index; sourceTree = BUILT_PRODUCTS_DIR; };
 		BC93ECA41FA4F5F200AD7504 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		BC93ECA71FA4F5F200AD7504 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
@@ -55,6 +61,17 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		BC933A151FAA8C4400476F3F /* EEPROM */ = {
+			isa = PBXGroup;
+			children = (
+				BC933A161FAA8C6000476F3F /* EEPROM.h */,
+				BC933A171FAA8C6000476F3F /* EEPROM.c */,
+				BC933A191FAA8C7000476F3F /* 25LC1024.h */,
+				BC933A1A1FAA8C7000476F3F /* 25LC1024.c */,
+			);
+			name = EEPROM;
+			sourceTree = "<group>";
+		};
 		BC93EC961FA4F5F200AD7504 = {
 			isa = PBXGroup;
 			children = (
@@ -81,6 +98,7 @@
 				BC93ECC21FA4F9CA00AD7504 /* Debug */,
 				BC93ECCF1FA4FA6B00AD7504 /* Radio */,
 				BC93ECD71FA4FC1A00AD7504 /* Sensors */,
+				BC933A151FAA8C4400476F3F /* EEPROM */,
 				BC93ECA61FA4F5F200AD7504 /* Makefiles */,
 			);
 			path = "CU-in-Space-2018-Avionics-Software";
@@ -285,10 +303,12 @@
 				BC93ECD21FA4FA7E00AD7504 /* XBee.c in Sources */,
 				BC588CAE1FA9261D003E8C15 /* ADC.c in Sources */,
 				BC93ECC81FA4FA1400AD7504 /* I2C.c in Sources */,
+				BC933A1B1FAA8C7000476F3F /* 25LC1024.c in Sources */,
 				BC93ECBD1FA4F98500AD7504 /* serial0.c in Sources */,
 				BC93ECC51FA4FA0100AD7504 /* menu_data.c in Sources */,
 				BC93ECC01FA4F9A700AD7504 /* menu.c in Sources */,
 				BC93ECDA1FA4FC5300AD7504 /* ADXL343.c in Sources */,
+				BC933A181FAA8C6000476F3F /* EEPROM.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
