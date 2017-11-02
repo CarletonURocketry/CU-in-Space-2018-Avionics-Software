@@ -7,6 +7,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/power.h>
 
 #include "pindefinitions.h"
 
@@ -57,8 +58,8 @@ void init_timers(void)
 int main(void)
 {
     cli();
-    PRRR0 |= (1<<PRTIM2) |  (1<<PRTIM0) | (1<<PRADC);// Shutdown timers 0 and 2 and the ADC
-    PRRR1 |= (1<<PRTIM3);                           // Shutdown timer 3
+    PRR0 |= (1<<PRTIM2) |  (1<<PRTIM0) | (1<<PRADC);// Shutdown timers 0 and 2 and the ADC
+    PRR1 |= (1<<PRTIM3);                            // Shutdown timer 3
     
 	initIO();
     init_timers();
