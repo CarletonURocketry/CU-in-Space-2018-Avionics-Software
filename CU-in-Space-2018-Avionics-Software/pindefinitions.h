@@ -14,4 +14,31 @@
 #define FLAG_SERIAL_0_LOOPBACK  6
 #define FLAG_SERIAL_0_TX_LOCK   7
 
+// MARK: Deployment
+#define MAIN_TRIGGER_DDR    DDRD
+#define MAIN_TRIGGER_PORT   PORTD
+#define MAIN_TRIGGER_NUM    PIND7
+
+#define DROGUE_TRIGGER_DDR  DDRD
+#define DROGUE_TRIGGER_PORT PORTD
+#define DROGUE_TRIGGER_NUM  PIND6
+
+#define ENGINE_VALVE_DDR    DDRD
+#define ENGINE_VALVE_PORT   PORTD
+#define ENGINE_VALVE_NUM    PIND5
+
+// MARK: SPI CS Pins
+#define RADIO_INTERUPT_DDR  DDRB
+#define RADIO_INTERUPT_PORT PORTB
+#define RADIO_INTERUPT_PIN  PINB
+#define RADIO_INTERUPT_NUM  PINB2
+
+#define EEPROM_CS_DDR       DDRB
+#define EEPROM_CS_PORT      PORTB
+#define EEPROM_CS_NUM       PINB2
+
+#define RADIO_CS_DDR        DDRB
+#define RADIO_CS_PORT       PORTB
+#define RADIO_CS_NUM        PINB2
+
 #endif /* pindefinitions_h */
