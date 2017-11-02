@@ -204,7 +204,7 @@ void serial_0_service (void)
 }
 
 // MARK: Interupt service routines
-ISR (USART_0_TX_vect)                                 // Transmit finished on USART0
+ISR (USART0_TX_vect)                                 // Transmit finished on USART0
 {
     if (out_buffer_withdraw_p != out_buffer_insert_p) {
         UDR0 = serial_out_buffer[out_buffer_withdraw_p];
@@ -214,7 +214,7 @@ ISR (USART_0_TX_vect)                                 // Transmit finished on US
     }
 }
 
-ISR (USART_0_RX_vect)                                 // Recieved byte on USART0
+ISR (USART0_RX_vect)                                 // Recieved byte on USART0
 {
     //    uint8_t usart_state = UCSR0A;                 //get state before data!
     uint8_t usart_byte = UDR0;                        //get data
