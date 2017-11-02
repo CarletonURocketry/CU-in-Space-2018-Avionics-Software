@@ -26,7 +26,15 @@ volatile uint8_t flags;
 // MARK: Function Definitions
 void initIO(void)
 {
-	
+    // Set radio attn pin as input without pullup
+    RADIO_ATTN_DDR &= ~(1 << RADIO_ATTN_NUM);
+    RADIO_ATTN_PORT &= ~(1 << RADIO_ATTN_NUM);
+    // Set radio cs pin as ouput and drive high
+    RADIO_CS_DDR |= (1 << RADIO_CS_NUM);
+    RADIO_CS_PORT |= (1 << RADIO_ATTN_NUM);
+    // Set eeprom cs pin as ouput and drive high
+    EEPROM_CS_DDR |= (1 << EEPROM_CS_NUM);
+    EEPROM_CS_PORT |= (1 << EEPROM_CS_NUM);
 }
 
 void init_timers(void)
@@ -42,6 +50,8 @@ void init_timers(void)
 int main(void)
 {
     cli();
+    PRRR0 |= (1<<PRTIM2) |  (1<<PRTIM0) | (1<<PRADC);// Shutdown timers 0 and 2 and the ADC
+    PRRR1 |= (1<<PRTIM3);                           // Shutdown timer 3
     
 	initIO();
     init_timers();
@@ -51,7 +61,6 @@ int main(void)
     for (;;) {
         main_loop();
 	}
-	return 0; // never reached
 }
 
 static void main_loop ()
