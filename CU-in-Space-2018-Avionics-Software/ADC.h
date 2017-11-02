@@ -10,5 +10,40 @@
 #ifndef ADC_h
 #define ADC_h
 
+#include "global.h"
+
+// MARK: Constants
+#define ADC_NUM_CHANNELS        8
+#define ADC_AUTO_PERIOD         4000    // The period at which readings will be taken from all enabled channels
+
+#define ADC_FLAG_AUTO_ENABLED   0   // When this flag is set to one the ADC will take readings at a set interval
+#define ADC_FLAG_IN_PROGRESS    1   // This flag is set to one when there is a set of conversions taking place
+
+// Setting a bit in DIDR0 will enable reading on the corresponding analog input and disable the corresponding digital pin
+#define ADC_ENABLE_MASK         DIDR0
+
+// MARK: Variable Declarations
+extern uint16_t adc_data[ADC_NUM_CHANNELS];
+
+extern volatile uint8_t adc_flags;
+extern uint32_t adc_last_sample_time;
+
+// MARK: Function Declarations
+
+/**
+ *  Initialize the ADC hardware
+ */
+extern void init_adc(void);
+
+/**
+ *  Service to be run in each iteration of the main loop
+ */
+extern void adc_service(void);
+
+/**
+ *  Service to be run in each iteration of the main loop
+ */
+extern void adc_start_conversion(void);
+
 
 #endif /* ADC_h */

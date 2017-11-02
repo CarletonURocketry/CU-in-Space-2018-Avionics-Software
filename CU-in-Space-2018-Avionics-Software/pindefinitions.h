@@ -41,4 +41,8 @@
 #define RADIO_CS_PORT       PORTB
 #define RADIO_CS_NUM        PINB2
 
+// MARK: Analog Inputs
+#define TEMP_1_ANALOG_PIN       0
+#define BAT_VOLTAGE_ANALOG_PIN  7
+
 #endif /* pindefinitions_h */
