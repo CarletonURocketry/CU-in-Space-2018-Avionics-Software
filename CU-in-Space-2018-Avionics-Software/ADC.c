@@ -1,4 +1,4 @@
-//
+ //
 //  ADC.c
 //  CU-in-Space-2018-Avionics-Software
 //
@@ -56,7 +56,6 @@ void adc_start_conversion(void)
             adc_chan_selected = 1;
             adc_current_chan = i;
             ADMUX |= adc_current_chan;  // Set adc channel
-            ADCSRA |= (1<<ADSC);        // Start the next ADC conversion
             break;
         }
     }
