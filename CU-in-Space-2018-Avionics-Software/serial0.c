@@ -15,16 +15,23 @@
 #include <ctype.h>
 
 // MARK: Constants
+// The use of 256 for these values makes the implementation of the circular buffer easier, changing them will break the buffers
 #define serial_in_buffer_length     256
 #define serial_out_buffer_length    256
 
 // MARK: Variable Definitions
+/** Buffer in which data recieved from the serial bus is stored*/
 static char serial_in_buffer[serial_in_buffer_length];
+/** Buffer in which data to be sent via serial bus is stored*/
 static char serial_out_buffer[serial_out_buffer_length];
 
+/** The position in the input buffer where the next byte to be added should go*/
 static volatile uint8_t in_buffer_insert_p;
+/** The position in the input buffer where the next byte should be read from*/
 static volatile uint8_t in_buffer_withdraw_p;
+/** The position in the output buffer where the next byte to be added should go*/
 static volatile uint8_t out_buffer_insert_p;
+/** The position in the output buffer where the next byte should be read from*/
 static volatile uint8_t out_buffer_withdraw_p;
 
 // MARK: Function Definitions

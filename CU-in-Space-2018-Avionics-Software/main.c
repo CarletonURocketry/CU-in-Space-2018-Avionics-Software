@@ -13,9 +13,13 @@
 //MARK: Constants
 
 // MARK: Function prototypes
+/**
+ *  The code which runs endlessly forever
+ */
 static void main_loop(void);
 
 // MARK: Variable Definitions
+
 volatile uint32_t millis;
 volatile uint8_t flags;
 

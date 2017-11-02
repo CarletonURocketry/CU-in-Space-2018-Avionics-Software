@@ -14,8 +14,10 @@
 #define TIMER_FREQUENCY     1000
 
 // MARK: Global variables
-extern volatile uint32_t millis;        // Tracks the number of milliseconds elapsed since initilization
+/** The number of milliseconds elapsed since initilization*/
+extern volatile uint32_t millis;
 
-extern volatile uint8_t flags;          // Stores some global boolean flags
+/** Various global boolean fields as described in pindefinitions.h*/
+extern volatile uint8_t flags;
 
 #endif /* global_h */

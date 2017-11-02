@@ -17,6 +17,8 @@ volatile uint8_t adc_enable_mask;
 volatile uint8_t adc_flags;
 
 uint32_t adc_last_sample_time;
+
+/** The next channel to be read from the ADC*/
 static volatile uint8_t adc_current_chan;
 
 // MARK: Function Definitions
@@ -24,9 +26,9 @@ static volatile uint8_t adc_current_chan;
 void init_adc(void)
 {
     ADCSRA |= (1<<ADIE) | (1<<ADPS2) | (1<<ADPS1);  // Enable ADC interupt and set prescaler to 64 (187.5kHz)
-    // Each ADC clock cycles is 64 system clock cycles. (5.334 milliseconds)
-    // Conversions take 13 ADC clock cycles, except for the first which takes 25.
-    // This means that in general reading all 8 ADCs would take about 104 ADC cycles (554.667 milliseconds)
+    // Each ADC clock cycles is 64 system clock cycles. (5.333 microseconds)
+    // Conversions take 13 ADC clock cycles (69.333 microseconds), except for the first which takes 25 (133.333 microseconds).
+    // This means that in general reading all 8 ADCs would take about 104 ADC cycles (554.667 microseconds)
     
     ADMUX = (1<<REFS0);                             // Set refrence to AVCC with external capacitor (3.3v)
 }
