@@ -27,7 +27,7 @@
 #define ENGINE_VALVE_PORT   PORTD
 #define ENGINE_VALVE_NUM    PIND5
 
-// MARK: SPI CS Pins
+// MARK: SPI Pins
 #define RADIO_ATTN_DDR      DDRB
 #define RADIO_ATTN_PORT     PORTB
 #define RADIO_ATTN_PIN      PINB
@@ -35,11 +35,20 @@
 
 #define EEPROM_CS_DDR       DDRB
 #define EEPROM_CS_PORT      PORTB
-#define EEPROM_CS_NUM       PINB2
+#define EEPROM_CS_NUM       PINB3
 
 #define RADIO_CS_DDR        DDRB
 #define RADIO_CS_PORT       PORTB
-#define RADIO_CS_NUM        PINB2
+#define RADIO_CS_NUM        PINB4
+
+#define SPI_MOSI_DDR        DDRB
+#define SPI_MOSI_NUM        PINB5
+
+#define SPI_MISO_DDR        DDRB
+#define SPI_MISO_NUM        PINB6
+
+#define SPI_SCK_DDR         DDRB
+#define SPI_SCK_NUM         PINB7
 
 // MARK: Analog Inputs
 #define TEMP_1_ANALOG_PIN       0

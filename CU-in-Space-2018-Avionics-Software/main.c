@@ -35,6 +35,13 @@ void initIO(void)
     // Set eeprom cs pin as ouput and drive high
     EEPROM_CS_DDR |= (1 << EEPROM_CS_NUM);
     EEPROM_CS_PORT |= (1 << EEPROM_CS_NUM);
+    
+    // Set spi MOSI pin as an output
+    SPI_MOSI_DDR |= (1<<SPI_MOSI_NUM);
+    // Set spi MISO pin as an input
+    SPI_MISO_DDR &= ~(1<<SPI_MOSI_NUM);
+    // Set spi SCK pin as an output
+    SPI_SCK_DDR |= (1<<SPI_MOSI_NUM);
 }
 
 void init_timers(void)
