@@ -27,11 +27,12 @@ void initIO(void)
 
 void init_timers(void)
 {
-    // Timer 0 (clock)
-    TCCR0B |= (1<<WGM01);                           // Set the Timer Mode to CTC
-    TIMSK0 |= (1<<OCIE0A);                          // Set the ISR COMPA vector (enables COMP interupt)
-    OCR0A = 125;                                    // 1000 Hz
-    TCCR0B |= (1<<CS01)|(1<<CS00);                  // set prescaler to 64 and start timer 0
+    // Timer 1 (clock)
+    TCCR1B |= (1<<WGM12);                           // Set the Timer Mode to CTC
+    TIMSK1 |= (1<<OCIE1A);                          // Set the ISR COMPA vector (enables COMP interupt)
+    OCR1AL = 220;                                   // 1000 Hz
+    OCR1AH = 5;                                     // OCR1A = 1500
+    TCCR1B |= (1<<CS11);                            // set prescaler to 8 and start timer 1
 }
 
 int main(void)
@@ -55,7 +56,7 @@ static void main_loop ()
 }
 
 // MARK: Interupt Service Routines
-ISR (TIMER0_COMPA_vect)                             // Timer 0, called every millisecond
+ISR (TIMER1_COMPA_vect)                             // Timer 0, called every millisecond
 {
     millis++;
 }
