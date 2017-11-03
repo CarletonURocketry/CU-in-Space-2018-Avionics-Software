@@ -38,8 +38,8 @@ void init_menu(void)
 void menu_service(void)
 {
     serial_0_service();
-    if (serial_0_has_line()) {
-        serial_0_get_line(menu_buffer, 200);
+    if (serial_0_has_line('\n')) {
+        serial_0_get_line('\n', menu_buffer, 200);
         char *line = menu_buffer;
         
         int num_tokens = 1;

@@ -33,10 +33,9 @@ extern void serial_1_put_string (char *str);
 extern void serial_1_put_string_P (const char *str);
 
 /**
- *  Writes a string to the serial output from EEPROM
+ *  Writes a nul terminated string to the serial output from EEPROM
  *  @note This function should not be called from within an interupt
  *  @param addr The addres of the string in EEPROM
- *  @param length The length of the string
  */
 extern void serial_1_put_from_eeprom (uint16_t addr);
 
@@ -57,17 +56,19 @@ extern void serial_1_get_string (char *str, int len);
 /**
  *  Determine if there is a full line avaliable to be read from the serial input
  *  @note This function should not be called from within an interupt
+ *  @param The delemiter for new lines (ie. '\n')
  *  @return 0 if there is no line avaliable, 1 if a line is avaliable
  */
-extern int serial_1_has_line (void);
+extern int serial_1_has_line (char delim);
 
 /**
  *  Read a bytes from the serial input as a string up to the next newline character
  *  @note This function should not be called from within an interupt
+ *  @param The delemiter for new lines (ie. '\n')
  *  @param str The string in which the data should be stored
  *  @param len The maximum number of chars to be read from the serial input
  */
-extern void serial_1_get_line (char *str, int len);
+extern void serial_1_get_line (char delim, char *str, int len);
 
 
 /**

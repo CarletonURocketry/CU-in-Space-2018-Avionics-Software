@@ -133,11 +133,11 @@ void serial_0_put_byte (char c)
     }
 }
 
-int serial_0_has_line (void)
+int serial_0_has_line (char delim)
 {
     ATOMIC_BLOCK(ATOMIC_FORCEON) {
         for (int i = in_buffer_withdraw_p; i != in_buffer_insert_p; i++) {
-            if (serial_in_buffer[i] == '\n') {
+            if (serial_in_buffer[i] == delim) {
                 return 1;
             }
         }
@@ -160,11 +160,11 @@ void serial_0_get_string (char *str, int len)
     }
 }
 
-extern void serial_0_get_line (char *str, int len) {
+void serial_0_get_line (char delim, char *str, int len) {
     ATOMIC_BLOCK(ATOMIC_FORCEON) {
         for (int i = 0; i < (len - 1); i++) {
             if (in_buffer_withdraw_p != in_buffer_insert_p) {
-                if (serial_in_buffer[in_buffer_withdraw_p] == '\n') {
+                if (serial_in_buffer[in_buffer_withdraw_p] == delim) {
                     str[i] = '\0';
                     in_buffer_withdraw_p++;
                     return;
