@@ -1,6 +1,6 @@
 //
 //  25LC1024.h
-//  Index
+//  CU-in-Space-2018-Avionics-Software
 //
 //  Created by Samuel Dewan on 2017-11-01.
 //

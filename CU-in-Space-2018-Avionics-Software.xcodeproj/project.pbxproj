@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		BC588CAE1FA9261D003E8C15 /* ADC.c in Sources */ = {isa = PBXBuildFile; fileRef = BC588CAD1FA9261D003E8C15 /* ADC.c */; };
-		BC933A181FAA8C6000476F3F /* EEPROM.c in Sources */ = {isa = PBXBuildFile; fileRef = BC933A171FAA8C6000476F3F /* EEPROM.c */; };
 		BC933A1B1FAA8C7000476F3F /* 25LC1024.c in Sources */ = {isa = PBXBuildFile; fileRef = BC933A1A1FAA8C7000476F3F /* 25LC1024.c */; };
 		BC93ECA51FA4F5F200AD7504 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECA41FA4F5F200AD7504 /* main.c */; };
 		BC93ECBD1FA4F98500AD7504 /* serial0.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECBC1FA4F98500AD7504 /* serial0.c */; };
@@ -22,13 +21,13 @@
 		BC93ECDA1FA4FC5300AD7504 /* ADXL343.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECD91FA4FC5300AD7504 /* ADXL343.c */; };
 		BC93ECDF1FA4FC7500AD7504 /* FXAS21002C.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECDE1FA4FC7500AD7504 /* FXAS21002C.c */; };
 		BC93ECE21FA4FC9700AD7504 /* FGPMMOPA6H.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECE11FA4FC9700AD7504 /* FGPMMOPA6H.c */; };
+		BCD115261FAD48AC00AC1997 /* Telemetry.c in Sources */ = {isa = PBXBuildFile; fileRef = BCD115251FAD48AC00AC1997 /* Telemetry.c */; };
+		BCD1152C1FAD494B00AC1997 /* Radio.c in Sources */ = {isa = PBXBuildFile; fileRef = BCD1152B1FAD494B00AC1997 /* Radio.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		BC588CAC1FA9261D003E8C15 /* ADC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ADC.h; sourceTree = "<group>"; };
 		BC588CAD1FA9261D003E8C15 /* ADC.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ADC.c; sourceTree = "<group>"; };
-		BC933A161FAA8C6000476F3F /* EEPROM.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EEPROM.h; sourceTree = "<group>"; };
-		BC933A171FAA8C6000476F3F /* EEPROM.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = EEPROM.c; sourceTree = "<group>"; };
 		BC933A191FAA8C7000476F3F /* 25LC1024.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = 25LC1024.h; sourceTree = "<group>"; };
 		BC933A1A1FAA8C7000476F3F /* 25LC1024.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = 25LC1024.c; sourceTree = "<group>"; };
 		BC93ECA11FA4F5F200AD7504 /* Index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Index; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -58,14 +57,16 @@
 		BC93ECDE1FA4FC7500AD7504 /* FXAS21002C.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = FXAS21002C.c; sourceTree = "<group>"; };
 		BC93ECE01FA4FC9700AD7504 /* FGPMMOPA6H.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FGPMMOPA6H.h; sourceTree = "<group>"; };
 		BC93ECE11FA4FC9700AD7504 /* FGPMMOPA6H.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = FGPMMOPA6H.c; sourceTree = "<group>"; };
+		BCD115241FAD48AC00AC1997 /* Telemetry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Telemetry.h; sourceTree = "<group>"; };
+		BCD115251FAD48AC00AC1997 /* Telemetry.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Telemetry.c; sourceTree = "<group>"; };
+		BCD1152A1FAD494B00AC1997 /* Radio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Radio.h; sourceTree = "<group>"; };
+		BCD1152B1FAD494B00AC1997 /* Radio.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Radio.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
 		BC933A151FAA8C4400476F3F /* EEPROM */ = {
 			isa = PBXGroup;
 			children = (
-				BC933A161FAA8C6000476F3F /* EEPROM.h */,
-				BC933A171FAA8C6000476F3F /* EEPROM.c */,
 				BC933A191FAA8C7000476F3F /* 25LC1024.h */,
 				BC933A1A1FAA8C7000476F3F /* 25LC1024.c */,
 			);
@@ -94,6 +95,7 @@
 				BC93ECBA1FA4F91C00AD7504 /* global.h */,
 				BC93ECB91FA4F67400AD7504 /* pindefinitions.h */,
 				BC93ECA41FA4F5F200AD7504 /* main.c */,
+				BCD115231FAD489A00AC1997 /* Application */,
 				BC93ECC11FA4F9BC00AD7504 /* IO */,
 				BC93ECC21FA4F9CA00AD7504 /* Debug */,
 				BC93ECCF1FA4FA6B00AD7504 /* Radio */,
@@ -143,6 +145,8 @@
 		BC93ECCF1FA4FA6B00AD7504 /* Radio */ = {
 			isa = PBXGroup;
 			children = (
+				BCD1152A1FAD494B00AC1997 /* Radio.h */,
+				BCD1152B1FAD494B00AC1997 /* Radio.c */,
 				BC93ECD01FA4FA7E00AD7504 /* XBee.h */,
 				BC93ECD11FA4FA7E00AD7504 /* XBee.c */,
 			);
@@ -162,6 +166,15 @@
 				BC93ECE11FA4FC9700AD7504 /* FGPMMOPA6H.c */,
 			);
 			name = Sensors;
+			sourceTree = "<group>";
+		};
+		BCD115231FAD489A00AC1997 /* Application */ = {
+			isa = PBXGroup;
+			children = (
+				BCD115241FAD48AC00AC1997 /* Telemetry.h */,
+				BCD115251FAD48AC00AC1997 /* Telemetry.c */,
+			);
+			name = Application;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -301,14 +314,15 @@
 				BC93ECCE1FA4FA5100AD7504 /* SPI.c in Sources */,
 				BC93ECD51FA4FC0700AD7504 /* MPL3115A2.c in Sources */,
 				BC93ECD21FA4FA7E00AD7504 /* XBee.c in Sources */,
+				BCD1152C1FAD494B00AC1997 /* Radio.c in Sources */,
 				BC588CAE1FA9261D003E8C15 /* ADC.c in Sources */,
 				BC93ECC81FA4FA1400AD7504 /* I2C.c in Sources */,
 				BC933A1B1FAA8C7000476F3F /* 25LC1024.c in Sources */,
+				BCD115261FAD48AC00AC1997 /* Telemetry.c in Sources */,
 				BC93ECBD1FA4F98500AD7504 /* serial0.c in Sources */,
 				BC93ECC51FA4FA0100AD7504 /* menu_data.c in Sources */,
 				BC93ECC01FA4F9A700AD7504 /* menu.c in Sources */,
 				BC93ECDA1FA4FC5300AD7504 /* ADXL343.c in Sources */,
-				BC933A181FAA8C6000476F3F /* EEPROM.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
