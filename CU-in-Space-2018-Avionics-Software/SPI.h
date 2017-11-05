@@ -61,7 +61,7 @@ extern uint8_t spi_full_duplex_get_transmition(uint8_t *buf, int len);
  *  @param out_buf The bytes to be shfited out
  *  @param bytes_in The number of bytes to shift in
  *  @param in_buf An array to place the bytes shifted in into
- *  @param return 0 if the transmition could not be started, 1 otherwise
+ *  @return 0 if the transmition could not be started, 1 otherwise
  */
 extern uint8_t spi_start_half_duplex(uint8_t cs_num, uint8_t bytes_out, uint8_t *out_buf, uint8_t bytes_in, uint8_t *in_buf);
 
@@ -71,7 +71,7 @@ extern uint8_t spi_start_half_duplex(uint8_t cs_num, uint8_t bytes_out, uint8_t 
  *  @note This function must only be called after spi_register_full_duplex
  *  @param bytes_out The number of bytes to shift out
  *  @param out_buf The bytes to be shfited out
- *  @param return 0 if the transmition could not be started, 1 otherwise
+ *  @return 0 if the transmition could not be started, 1 otherwise
  */
 extern uint8_t spi_start_full_duplex_write(uint8_t bytes_out, uint8_t *out_buf);
 
