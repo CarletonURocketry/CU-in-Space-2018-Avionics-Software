@@ -61,6 +61,9 @@
 		BCD115251FAD48AC00AC1997 /* Telemetry.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Telemetry.c; sourceTree = "<group>"; };
 		BCD1152A1FAD494B00AC1997 /* Radio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Radio.h; sourceTree = "<group>"; };
 		BCD1152B1FAD494B00AC1997 /* Radio.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Radio.c; sourceTree = "<group>"; };
+		BCD1152D1FAD4A9300AC1997 /* MPL3115A2-Registers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MPL3115A2-Registers.h"; sourceTree = "<group>"; };
+		BCD1152E1FAD4B0700AC1997 /* ADXL343-Registers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ADXL343-Registers.h"; sourceTree = "<group>"; };
+		BCD1152F1FAD4BAA00AC1997 /* FXAS21002C-Registers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FXAS21002C-Registers.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -156,10 +159,13 @@
 		BC93ECD71FA4FC1A00AD7504 /* Sensors */ = {
 			isa = PBXGroup;
 			children = (
+				BCD1152D1FAD4A9300AC1997 /* MPL3115A2-Registers.h */,
 				BC93ECD31FA4FC0700AD7504 /* MPL3115A2.h */,
 				BC93ECD41FA4FC0700AD7504 /* MPL3115A2.c */,
+				BCD1152E1FAD4B0700AC1997 /* ADXL343-Registers.h */,
 				BC93ECD81FA4FC5300AD7504 /* ADXL343.h */,
 				BC93ECD91FA4FC5300AD7504 /* ADXL343.c */,
+				BCD1152F1FAD4BAA00AC1997 /* FXAS21002C-Registers.h */,
 				BC93ECDD1FA4FC7500AD7504 /* FXAS21002C.h */,
 				BC93ECDE1FA4FC7500AD7504 /* FXAS21002C.c */,
 				BC93ECE01FA4FC9700AD7504 /* FGPMMOPA6H.h */,

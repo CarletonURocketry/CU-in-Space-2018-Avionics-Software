@@ -9,6 +9,4 @@
 #ifndef FXAS21002C_h
 #define FXAS21002C_h
 
-#include <stdio.h>
-
 #endif /* FXAS21002C_h */

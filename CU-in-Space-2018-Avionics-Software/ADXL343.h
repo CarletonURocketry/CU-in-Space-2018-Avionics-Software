@@ -9,6 +9,4 @@
 #ifndef ADXL343_h
 #define ADXL343_h
 
-#include <stdio.h>
-
 #endif /* ADXL343_h */

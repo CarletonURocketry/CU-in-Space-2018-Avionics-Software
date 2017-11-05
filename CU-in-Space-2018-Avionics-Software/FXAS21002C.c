@@ -7,3 +7,4 @@
 //
 
 #include "FXAS21002C.h"
+#include "FXAS21002C-Registers.h"

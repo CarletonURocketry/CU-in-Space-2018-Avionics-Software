@@ -7,3 +7,4 @@
 //
 
 #include "ADXL343.h"
+#include "ADXL343-Registers.h"
