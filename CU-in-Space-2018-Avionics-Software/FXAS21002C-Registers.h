@@ -25,7 +25,7 @@
 #define DR_STATUS_YOW       5       // Set if the data in the Y register has been overwritten before being read
 #define DR_STATUS_XOW       4       // Set if the data in the X register has been overwritten before being read
 #define DR_STATUS_ZYXDR     3       // Set if new data is ready on any of the Z, X or Y channels
-#define DR_STATUS_XDR       2       // Set if new data is ready on the Z channel
+#define DR_STATUS_ZDR       2       // Set if new data is ready on the Z channel
 #define DR_STATUS_YDR       1       // Set if new data is ready on the Y channel
 #define DR_STATUS_XDR       0       // Set if new data is ready on the X channel
 
