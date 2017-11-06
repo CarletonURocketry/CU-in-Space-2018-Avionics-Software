@@ -30,7 +30,7 @@ static volatile uint8_t full_duplex_buffer_insert_p;
 static volatile uint8_t full_duplex_buffer_withdraw_p;
 
 /** The index in the current full duplex input buffer where the next byte should be placed*/
-static volatile uint8_t full_duplex_input_possition;
+static volatile uint8_t full_duplex_input_position;
 
 /** The input register where the ATTN pin is located*/
 static volatile uint8_t *attn_pin_reg;
@@ -50,7 +50,7 @@ static volatile uint8_t num_bytes_in;
 /** The buffer in which bytes recieved in half duplex are placed*/
 static uint8_t *in_buffer;
 /** The possition whithin the current transaction*/
-static uint8_t possition;
+static uint8_t position;
 /** The bit number for the CS pin of the device currently being accessed within the output register*/
 static uint8_t hd_cs_num;
 
@@ -85,7 +85,7 @@ void spi_service(void)
         spi_full_duplex_buffer[full_duplex_buffer_insert_p][0] = 0;
         
         num_bytes_out = 0;
-        full_duplex_input_possition = 1;
+        full_duplex_input_position = 1;
         SPDR = 0;                                  // Write junk to the SPI bus to start the clock
     }
 }
@@ -129,7 +129,7 @@ uint8_t spi_start_half_duplex(uint8_t cs_num, uint8_t bytes_out, uint8_t *out_bu
     num_bytes_in = bytes_in;
     in_buffer = in_buf;
     
-    possition = 1;
+    position = 1;
     SPDR = out_buffer[0];
     
     return 1;
@@ -147,10 +147,10 @@ uint8_t spi_start_full_duplex_write(uint8_t bytes_out, uint8_t *out_buf)
     num_bytes_out = bytes_out;
     
     if (!active) {
-        possition = 1;
+        position = 1;
         SPDR = out_buffer[0];
     } else {
-        possition = 0;
+        position = 0;
     }
     
     return 1;
@@ -163,13 +163,13 @@ ISR (SPI_STC_vect)
     if ((*spi_port_reg & ~(1<<full_duplex_cs_num)) && (*attn_pin_reg & (1<<attn_pin_num))) {
         // Recieve byte in full duplex
         spi_flags |= (1<<SPI_FD_BYTE_RECIEVED);
-        spi_full_duplex_buffer[full_duplex_buffer_insert_p][full_duplex_input_possition] = SPDR;
+        spi_full_duplex_buffer[full_duplex_buffer_insert_p][full_duplex_input_position] = SPDR;
         spi_full_duplex_buffer[full_duplex_buffer_insert_p][0] = 0;
-        full_duplex_input_possition++;
+        full_duplex_input_position++;
     } else if ((*spi_port_reg & ~(1<<full_duplex_cs_num)) && (spi_flags & (1<<SPI_FD_BYTE_RECIEVED))) {
         // Finished receiving in full duplex
         spi_flags &= ~(1<<SPI_FD_BYTE_RECIEVED);
-        spi_full_duplex_buffer[full_duplex_buffer_insert_p][0] = full_duplex_input_possition;
+        spi_full_duplex_buffer[full_duplex_buffer_insert_p][0] = full_duplex_input_position;
         full_duplex_buffer_insert_p++;
         full_duplex_buffer_insert_p = (full_duplex_buffer_insert_p > SPI_BUFFER_MAX_FRAMES) ? 0 : SPI_BUFFER_MAX_FRAMES;
         if (full_duplex_buffer_insert_p == full_duplex_buffer_withdraw_p) {
@@ -177,22 +177,22 @@ ISR (SPI_STC_vect)
         }
          *spi_port_reg |= (1<<full_duplex_cs_num);    // raise CS
         spi_flags &= ~(1<<SPI_FLAG_ACTIVE);
-    } else if ((num_bytes_out = 0) && (possition < num_bytes_in)) {
+    } else if ((num_bytes_out = 0) && (position < num_bytes_in)) {
         // Recieve bytes in half duplex
-        in_buffer[possition + 1] = SPDR;
-        possition++;
-    } else if ((num_bytes_out = 0) && (possition == num_bytes_in)) {
+        in_buffer[position + 1] = SPDR;
+        position++;
+    } else if ((num_bytes_out = 0) && (position == num_bytes_in)) {
         // Finished recieving bytes in half duplex
-        in_buffer[0] = possition + 1;
+        in_buffer[0] = position + 1;
     }
     
     // Transmit byte
-    if (possition < num_bytes_out) {
-        SPDR = out_buffer[possition];
-        possition++;
-        if (possition == num_bytes_out) {
+    if (position < num_bytes_out) {
+        SPDR = out_buffer[position];
+        position++;
+        if (position == num_bytes_out) {
             // Done transmitting
-            possition = 1;
+            position = 1;
             num_bytes_out = 0;
         }
         if ((num_bytes_in == 0) && !(*spi_port_reg & ~(1<<full_duplex_cs_num))) {
@@ -200,7 +200,7 @@ ISR (SPI_STC_vect)
             *spi_port_reg |= (1<<hd_cs_num);    // raise CS
             spi_flags &= ~(1<<SPI_FLAG_ACTIVE);
         }
-    } else if ((spi_flags & (1<<SPI_FD_BYTE_RECIEVED) || (possition < num_bytes_in))) {
+    } else if ((spi_flags & (1<<SPI_FD_BYTE_RECIEVED) || (position < num_bytes_in))) {
         // Send junk data to continue recieving
         SPDR = 0;
     }
