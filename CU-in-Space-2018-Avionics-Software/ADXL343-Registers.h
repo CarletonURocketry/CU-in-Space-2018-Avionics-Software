@@ -10,6 +10,8 @@
 #ifndef ADXL343_Registers_h
 #define ADXL343_Registers_h
 
+#define ADDRESS             0x53    // Device address with ALT ADDRESS pin grounded
+
 #define DEVID               0x00    // Device ID (fixed value of 0xE5)
 
 #define THRESH_TAP          0x1D    // Tap threshold (62.5mg/LSB)

@@ -10,6 +10,8 @@
 #ifndef FXAS21002C_Registers_h
 #define FXAS21002C_Registers_h
 
+#define ADDRESS             0x20    // Device address with SAO pin grounded
+
 #define STATUS              0x00    // Allias to one of DR_STATUS or F_STATUS
 
 #define OUT_X_MSB           0x01    // Most signifigant byte of x axis angular velocity

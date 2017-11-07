@@ -10,6 +10,8 @@
 #ifndef MPL3115A2_Registers_h
 #define MPL3115A2_Registers_h
 
+#define ADDRESS             0x60    // Device address
+
 #define STATUS              0x00    // Allias to one of DR_STATUS or F_STATUS
 
 #define OUT_P_MSB           0x01    // Most signifigant byte of pressure/altitude data
