@@ -95,24 +95,32 @@ i2c_transaction_t *get_transaction (uint8_t transaction_id)
     return NULL;
 }
 
-uint8_t i2c_transfer_done(uint8_t transaction_id)
+uint8_t i2c_transaction_done(uint8_t transaction_id)
 {
     i2c_transaction_t *trans = get_transaction(transaction_id);
     if (trans != NULL) {
-        return 0;
-    } else {
         return trans->done;
     }
+    return 0;
 }
 
-uint8_t i2c_transfer_successful(uint8_t transaction_id)
+uint8_t i2c_transaction_successful(uint8_t transaction_id)
 {
     i2c_transaction_t *trans = get_transaction(transaction_id);
     if (trans != NULL) {
-        return 0;
-    } else {
         return trans->successful;
     }
+    return 0;
+}
+
+uint8_t i2c_clear_transaction(uint8_t transaction_id)
+{
+    i2c_transaction_t *trans = get_transaction(transaction_id);
+    if ((trans != NULL) && !(trans->active)) {
+        trans->transaction_id = I2C_TRANSACTION_VOID;
+        return 0;
+    }
+    return 1;
 }
 
 /**

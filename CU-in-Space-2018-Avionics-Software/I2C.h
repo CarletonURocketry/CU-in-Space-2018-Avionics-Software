@@ -23,16 +23,24 @@ extern void i2c_service(void);
 /**
  *  Check if an i2c transfer has finished
  *  @param transaction_id The transaction to check
- *  @return A non zero value if the transaction has finished
+ *  @return A non zero value if the transaction exists and has finished
  */
-extern uint8_t i2c_transfer_done(uint8_t transaction_id);
+extern uint8_t i2c_transaction_done(uint8_t transaction_id);
 
 /**
  *  Check if an i2c transfer was successful
  *  @param transaction_id The transaction to check
- *  @return A non zero value if the transaction was successful
+ *  @return A non zero value if the transaction exists and was successful
  */
-extern uint8_t i2c_transfer_successful(uint8_t transaction_id);
+extern uint8_t i2c_transaction_successful(uint8_t transaction_id);
+
+/**
+ *  Clear a transaction from the queue
+ *  @note This function will not clear the transaction if it is active
+ *  @param transaction_id The transaction to clear
+ *  @return Zero if the transaction exists and was successfully cleared
+ */
+extern uint8_t i2c_clear_transaction(uint8_t transaction_id);
 
 /**
  *  Adds a write transaction to the queue
