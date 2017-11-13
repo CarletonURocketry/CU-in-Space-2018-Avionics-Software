@@ -11,54 +11,50 @@
 #include <avr/interrupt.h>
 #include <string.h>
 
+typedef struct {
+    uint8_t     transaction_id;     // A unique identifier for this transaction
+    
+    uint8_t     bytes_out;          // The number of bytes to be  written to the peripheral
+    uint8_t     *out_buffer;        // The buffer which data is sent from
+    uint8_t     bytes_in;           // The number of bytes to be read from the peripheral
+    uint8_t     *in_buffer;         // The buffer in which recieved data is placed
+    
+    uint8_t     position;           // The current position within the transaction
+    
+    uint8_t     cs_num:3;           // The bit number for the CS pin of the peripheral within the spi output register
+    uint8_t     attn_num:3;         // The bit number for the ATTN pin of the peripheral within the spi input register
+    
+    uint8_t     full_duplex:1;      // This bit if set if input should be regulated via the ATTN pin
+    uint8_t     active:1;           // This bit is set when the transaction is currently on the bus
+    uint8_t     byte_received:1;    // This bit is set if a byte was recieved last time the SPI interupt ran
+    uint8_t     done:1;             // This bit if set if the transaction is complete, regardless of success
+} spi_transaction_t;
+
 // MARK: Constants
-#define SPI_BUFFER_FRAME_LENGTH         256
-#define SPI_BUFFER_MAX_FRAMES           4
+#define SPI_TRANSACTION_VOID    0   // The ID of an invalid transaction
+#define SPI_TRANSACTION_FIRST   1   // The first valid transaction ID
 
-#define EOT_CHAR_LITERAL                4  //␄ char
-
-#define SPI_FLAG_ACTIVE 0
-#define SPI_FD_BYTE_RECIEVED 1  // True if a byte was recieved last time the SPI interupt ran
+#define SPI_NUM_TRANSACTIONS    4   // The maximum number of transactions which can be queued
 
 // MARK: Variable Definitions
-/** Buffer in which data recieved during full duplex operation of the SPI bus is stored*/
-static uint8_t spi_full_duplex_buffer[SPI_BUFFER_MAX_FRAMES][SPI_BUFFER_FRAME_LENGTH];
 
-/** The position in the full duplex input buffer where the next byte to be added should go*/
-static volatile uint8_t full_duplex_buffer_insert_p;
-/** The position in the full duplex input buffer where the next byte should be read from*/
-static volatile uint8_t full_duplex_buffer_withdraw_p;
+/** The transaction queue */
+static volatile spi_transaction_t spi_transactions[SPI_NUM_TRANSACTIONS];
 
-/** The index in the current full duplex input buffer where the next byte should be placed*/
-static volatile uint8_t full_duplex_input_position;
+/** The index of the head of the transaction queue */
+static volatile uint8_t spi_queue_position;
 
-/** The input register where the ATTN pin is located*/
-static volatile uint8_t *attn_pin_reg;
-/** The bit number for the ATTN pin within the input registe*/
-static uint8_t attn_pin_num;
-/** The outpyt register where the SPU pins are located*/
+/** The next transaction ID that should be used*/
+static volatile uint8_t spi_next_transaction;
+
+/** The output register for the IO port where the SPI pins are located*/
 static volatile uint8_t *spi_port_reg;
-/** The bit number for the CS pin of the full duplex device within the output register*/
-static uint8_t full_duplex_cs_num;
-
-/** The number of bytes to be sent during the current transaction*/
-static volatile uint8_t num_bytes_out;
-/** The buffer from which bytes are sent*/
-static uint8_t *out_buffer;
-/** The number of bytes to be received during the current half duplex transaction*/
-static volatile uint8_t num_bytes_in;
-/** The buffer in which bytes recieved in half duplex are placed*/
-static uint8_t *in_buffer;
-/** The possition whithin the current transaction*/
-static uint8_t position;
-/** The bit number for the CS pin of the device currently being accessed within the output register*/
-static uint8_t hd_cs_num;
-
-static volatile uint8_t spi_flags;
 
 // MARK: Function Definitions
 void init_spi(volatile uint8_t *spi_port)
 {
+    spi_next_transaction = SPI_TRANSACTION_FIRST;
+    
     spi_port_reg = spi_port;
     // Set up SPI as follows:
     //  SPI interupt enabled
@@ -69,139 +65,201 @@ void init_spi(volatile uint8_t *spi_port)
     SPCR |= (1<<SPIE) | (1<<SPE) | (1<<MSTR);
 }
 
-void spi_register_full_duplex(volatile uint8_t *attn_pin, uint8_t attn_num, uint8_t cs_num)
+/**
+ *  Determine the next pending transaction and start transmitting it.
+ *  Does nothing if there is already an active transaction or if there are no pending transactions.
+ */
+static void spi_start_next_transaction (void)
 {
-    attn_pin_reg = attn_pin;
-    attn_pin_num = attn_num;
-    full_duplex_cs_num = cs_num;
+    if (spi_transactions[spi_queue_position].active) {
+        return;
+    }
+    
+    uint8_t i = 0;
+    do {
+        if ((spi_transactions[i].transaction_id != SPI_TRANSACTION_VOID) && (!spi_transactions[i].done)) {
+            spi_queue_position = i;
+            // Start transaction
+            spi_transactions[i].active = 1;
+        
+            *spi_port_reg &= ~(1<<spi_transactions[i].cs_num); // Assert CS pin
+            
+            if (spi_transactions[i].bytes_out > 0) {
+                // Send first byte
+                spi_transactions[i].position = 1;
+                SPDR = spi_transactions[i].out_buffer[0];
+            } else {
+                // Send dummy byte
+                SPDR = 0;
+            }
+            return;
+        }
+        i = ((i + 1) < SPI_NUM_TRANSACTIONS) ? i + 1 : 0;
+    } while (i != spi_queue_position);
 }
+
 
 void spi_service(void)
 {
-    if (!(spi_flags & (1<<SPI_FLAG_ACTIVE)) && (*attn_pin_reg & (1<<attn_pin_num))) {
-        spi_flags |= (1<<SPI_FLAG_ACTIVE);          // Lock SPI interface
-        *spi_port_reg &= ~(1<<full_duplex_cs_num);  // Select full duplex device
-        
-        spi_full_duplex_buffer[full_duplex_buffer_insert_p][0] = 0;
-        
-        num_bytes_out = 0;
-        full_duplex_input_position = 1;
-        SPDR = 0;                                  // Write junk to the SPI bus to start the clock
+    spi_start_next_transaction();
+}
+
+/**
+ *  Get a transaction with a certain ID
+ *  @param transaction_id The id of the transaction which should be retrieved
+ *  @return A pointer the transaction with an in matching transaction_id. Null if there is no such transaction.
+ */
+static volatile spi_transaction_t *get_transaction (uint8_t transaction_id)
+{
+    if (transaction_id != SPI_TRANSACTION_VOID) {
+        for (int i = 0; i < SPI_NUM_TRANSACTIONS; i++) {
+            if (spi_transactions[i].transaction_id == transaction_id) {
+                return &spi_transactions[i];
+            }
+        }
     }
+    return NULL;
 }
 
-uint8_t spi_transfer_active(void)
+uint8_t spi_transaction_done(uint8_t transaction_id)
 {
-    return spi_flags & (1<<SPI_FLAG_ACTIVE);
+    volatile spi_transaction_t *trans = get_transaction(transaction_id);
+    if (trans != NULL) {
+        return trans->done;
+    }
+    return 0;
 }
 
-uint8_t spi_full_duplex_has_transmition(void)
+uint8_t spi_clear_transaction(uint8_t transaction_id)
 {
-    return (full_duplex_buffer_insert_p != full_duplex_buffer_withdraw_p) &&
-        (spi_full_duplex_buffer[full_duplex_buffer_withdraw_p][0] != 0);
-}
-
-uint8_t spi_full_duplex_get_transmition(uint8_t *buf, int len)
-{
-    if ((full_duplex_buffer_insert_p == full_duplex_buffer_withdraw_p) ||
-        (spi_full_duplex_buffer[full_duplex_buffer_withdraw_p][0] == 0)) {
+    volatile spi_transaction_t *trans = get_transaction(transaction_id);
+    if ((trans != NULL) && !(trans->active)) {
+        trans->transaction_id = SPI_TRANSACTION_VOID;
         return 0;
     }
-    uint8_t *transmition = spi_full_duplex_buffer[full_duplex_buffer_withdraw_p];
-    full_duplex_buffer_withdraw_p++;
-    full_duplex_buffer_withdraw_p = (full_duplex_buffer_withdraw_p > SPI_BUFFER_MAX_FRAMES) ? 0 : SPI_BUFFER_MAX_FRAMES;
-    
-    uint8_t bytes = (len > SPI_BUFFER_FRAME_LENGTH) ? SPI_BUFFER_FRAME_LENGTH : len;
-    memcpy(buf, transmition, bytes);
-    return bytes;
-}
-
-uint8_t spi_start_half_duplex(uint8_t cs_num, uint8_t bytes_out, uint8_t *out_buf, uint8_t bytes_in, uint8_t *in_buf)
-{
-    if (spi_flags & (1<<SPI_FLAG_ACTIVE)) {
-        return 0;
-    }
-    spi_flags |= (1<<SPI_FLAG_ACTIVE);
-    
-    hd_cs_num = cs_num;
-    num_bytes_out = bytes_out;
-    out_buffer = out_buf;
-    num_bytes_in = bytes_in;
-    in_buffer = in_buf;
-    
-    position = 1;
-    SPDR = out_buffer[0];
-    
     return 1;
 }
 
-uint8_t spi_start_full_duplex_write(uint8_t bytes_out, uint8_t *out_buf)
+/**
+ *  Gets a pointer to the next free slot in the transaction buffer
+ *  @return A pointer to the next free transaction or NULL if there are no free transactions
+ */
+static volatile spi_transaction_t *get_next_free_transaction(void)
 {
-    uint8_t active = spi_flags & (1<<SPI_FLAG_ACTIVE);
-    if (active && !(active & (*attn_pin_reg & (1<<attn_pin_num)))) {
-        return 0;
+    uint8_t i = spi_queue_position;
+    
+    do {
+        if (spi_transactions[i].transaction_id == SPI_TRANSACTION_VOID) {
+            return &spi_transactions[i];
+        }
+        i = ((i + 1) < SPI_NUM_TRANSACTIONS) ? i + 1 : 0;
+    } while (i != spi_queue_position);
+    
+    return NULL;
+}
+
+uint8_t spi_start_half_duplex(uint8_t *transaction_id, uint8_t cs_num, uint8_t *out_buffer, uint8_t out_length,
+                              uint8_t * in_buffer, uint8_t in_length)
+{
+    volatile spi_transaction_t *trans = get_next_free_transaction();
+    if (trans == NULL) {
+        return 1;
     }
-    spi_flags |= (1<<SPI_FLAG_ACTIVE);
     
-    out_buffer = out_buf;
-    num_bytes_out = bytes_out;
+    uint8_t next = ((spi_next_transaction + 1) == SPI_TRANSACTION_VOID) ? SPI_TRANSACTION_FIRST : spi_next_transaction + 1;
     
-    if (!active) {
-        position = 1;
-        SPDR = out_buffer[0];
-    } else {
-        position = 0;
+    trans->transaction_id = spi_next_transaction;
+    *transaction_id = spi_next_transaction;
+    spi_next_transaction = next;
+    
+    trans->cs_num = cs_num;
+    trans->out_buffer = out_buffer;
+    trans->bytes_out = out_length;
+    trans->in_buffer = in_buffer;
+    trans->bytes_in = in_length;
+    
+    trans->position = 0;
+    
+    trans->full_duplex = 0;
+    trans->active = 0;
+    trans->byte_received = 0;
+    trans->done = 0;
+    
+    spi_start_next_transaction();
+    
+    return 0;
+}
+
+uint8_t spi_start_full_duplex(uint8_t *transaction_id, uint8_t cs_num, uint8_t *out_buffer, uint8_t out_length,
+                              uint8_t * in_buffer, uint8_t attn_num)
+{
+    volatile spi_transaction_t *trans = get_next_free_transaction();
+    if (trans == NULL) {
+        return 1;
     }
     
-    return 1;
+    uint8_t next = ((spi_next_transaction + 1) == SPI_TRANSACTION_VOID) ? SPI_TRANSACTION_FIRST : spi_next_transaction + 1;
+    
+    trans->transaction_id = spi_next_transaction;
+    *transaction_id = spi_next_transaction;
+    spi_next_transaction = next;
+    
+    trans->cs_num = cs_num;
+    trans->attn_num = attn_num;
+    trans->out_buffer = out_buffer;
+    trans->bytes_out = out_length;
+    trans->in_buffer = in_buffer;
+    trans->bytes_in = 0;
+    
+    trans->position = 0;
+    
+    trans->full_duplex = 1;
+    trans->active = 0;
+    trans->byte_received = 0;
+    trans->done = 0;
+    
+    spi_start_next_transaction();
+    
+    return 0;
 }
 
 // MARK: Interupt service routines
 ISR (SPI_STC_vect)
 {
-    // Recieve byte
-    if ((*spi_port_reg & ~(1<<full_duplex_cs_num)) && (*attn_pin_reg & (1<<attn_pin_num))) {
-        // Recieve byte in full duplex
-        spi_flags |= (1<<SPI_FD_BYTE_RECIEVED);
-        spi_full_duplex_buffer[full_duplex_buffer_insert_p][full_duplex_input_position] = SPDR;
-        spi_full_duplex_buffer[full_duplex_buffer_insert_p][0] = 0;
-        full_duplex_input_position++;
-    } else if ((*spi_port_reg & ~(1<<full_duplex_cs_num)) && (spi_flags & (1<<SPI_FD_BYTE_RECIEVED))) {
-        // Finished receiving in full duplex
-        spi_flags &= ~(1<<SPI_FD_BYTE_RECIEVED);
-        spi_full_duplex_buffer[full_duplex_buffer_insert_p][0] = full_duplex_input_position;
-        full_duplex_buffer_insert_p++;
-        full_duplex_buffer_insert_p = (full_duplex_buffer_insert_p > SPI_BUFFER_MAX_FRAMES) ? 0 : SPI_BUFFER_MAX_FRAMES;
-        if (full_duplex_buffer_insert_p == full_duplex_buffer_withdraw_p) {
-            full_duplex_buffer_withdraw_p++;
-        }
-         *spi_port_reg |= (1<<full_duplex_cs_num);    // raise CS
-        spi_flags &= ~(1<<SPI_FLAG_ACTIVE);
-    } else if ((num_bytes_out = 0) && (position < num_bytes_in)) {
-        // Recieve bytes in half duplex
-        in_buffer[position + 1] = SPDR;
-        position++;
-    } else if ((num_bytes_out = 0) && (position == num_bytes_in)) {
-        // Finished recieving bytes in half duplex
-        in_buffer[0] = position + 1;
+    volatile spi_transaction_t *trans = &(spi_transactions[spi_queue_position]);
+    
+    // Read
+    if (trans->full_duplex && ((*spi_port_reg & (1 << trans->attn_num)) || trans->byte_received)) {
+        // A byte should be recieved (full duplex)
+        trans->in_buffer[trans->bytes_in] = SPDR;
+        trans->bytes_in++;
+        trans->byte_received = 1;
+    } else if (!trans->full_duplex && (trans->bytes_out <= 0)) {
+        // A byte should be recieved (half duplex)
+        trans->in_buffer[trans->position] = SPDR;
+        trans->position++;
+    } else {
+        trans->byte_received = 0;
     }
     
-    // Transmit byte
-    if (position < num_bytes_out) {
-        SPDR = out_buffer[position];
-        position++;
-        if (position == num_bytes_out) {
-            // Done transmitting
-            position = 1;
-            num_bytes_out = 0;
-        }
-        if ((num_bytes_in == 0) && !(*spi_port_reg & ~(1<<full_duplex_cs_num))) {
-            // Finished transaction
-            *spi_port_reg |= (1<<hd_cs_num);    // raise CS
-            spi_flags &= ~(1<<SPI_FLAG_ACTIVE);
-        }
-    } else if ((spi_flags & (1<<SPI_FD_BYTE_RECIEVED) || (position < num_bytes_in))) {
-        // Send junk data to continue recieving
+    // Write
+    if (trans->bytes_out > 0) {
+        // A byte should be sent
+        SPDR = trans->out_buffer[trans->position];
+        trans->position++;
+        trans->bytes_out--;
+    } else if (trans->full_duplex && ((*spi_port_reg & (1 << trans->attn_num)))) {
+        // A dummy byte should be sent (full duplex)
         SPDR = 0;
+    } else if (!trans->full_duplex && (trans->position < trans->bytes_in)) {
+        // A dummy byte should be sent (half duplex)
+        SPDR = 0;
+    } else {
+        // Transaction is finished
+        *spi_port_reg ^= (1<< trans-> cs_num);  // De-assert CS pin
+        trans->active = 0;
+        trans->done = 1;
+        
+        spi_start_next_transaction();
     }
 }
