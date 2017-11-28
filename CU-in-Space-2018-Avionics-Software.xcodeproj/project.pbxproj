@@ -64,12 +64,14 @@
 		BCD1152D1FAD4A9300AC1997 /* MPL3115A2-Registers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MPL3115A2-Registers.h"; sourceTree = "<group>"; };
 		BCD1152E1FAD4B0700AC1997 /* ADXL343-Registers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ADXL343-Registers.h"; sourceTree = "<group>"; };
 		BCD1152F1FAD4BAA00AC1997 /* FXAS21002C-Registers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FXAS21002C-Registers.h"; sourceTree = "<group>"; };
+		BCD115301FBA0F0800AC1997 /* 25LC1024-Commands.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "25LC1024-Commands.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
 		BC933A151FAA8C4400476F3F /* EEPROM */ = {
 			isa = PBXGroup;
 			children = (
+				BCD115301FBA0F0800AC1997 /* 25LC1024-Commands.h */,
 				BC933A191FAA8C7000476F3F /* 25LC1024.h */,
 				BC933A1A1FAA8C7000476F3F /* 25LC1024.c */,
 			);
