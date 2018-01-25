@@ -11,6 +11,12 @@
 
 #include "pindefinitions.h"
 
+#include "menu.h"
+#include "SPI.h"
+#include "ADC.h"
+
+#include "25LC1024.h"
+
 //MARK: Constants
 
 // MARK: Function prototypes
@@ -50,19 +56,27 @@ void init_timers(void)
     // Timer 1 (clock)
     TCCR1B |= (1<<WGM12);                           // Set the Timer Mode to CTC
     TIMSK1 |= (1<<OCIE1A);                          // Set the ISR COMPA vector (enables COMP interupt)
+    OCR1AH = 5;                                     // OCR1A = 1500 - Note: The datasheet is wrong, MSB must be written first
     OCR1AL = 220;                                   // 1000 Hz
-    OCR1AH = 5;                                     // OCR1A = 1500
     TCCR1B |= (1<<CS11);                            // set prescaler to 8 and start timer 1
 }
 
 int main(void)
 {
     cli();
-    PRR0 |= (1<<PRTIM2) |  (1<<PRTIM0) | (1<<PRADC);// Shutdown timers 0 and 2 and the ADC
+    PRR0 |= (1<<PRTIM2) |  (1<<PRTIM0);             // Shutdown timers 0 and 2
     PRR1 |= (1<<PRTIM3);                            // Shutdown timer 3
     
 	initIO();
     init_timers();
+    
+    // Initilize IO peripherals
+    ADC_ENABLE_MASK = 0xff;                         // Enable all ADC channels
+    init_adc();
+    //init_spi(&SPI_PORT);
+    
+    // Initilize software modules
+    init_menu();
     
     sei();
 
@@ -73,7 +87,18 @@ int main(void)
 
 static void main_loop ()
 {
+    adc_service();
+    //eeprom_25lc1024_service();
     
+    
+    new_loops++;
+    if ((millis - last_loops_time) > LOOPS_MEASURMENT_PERIOD) {
+        last_loops_time = millis;
+        loops = new_loops;
+        new_loops = 0;
+    }
+    
+    menu_service();
 }
 
 // MARK: Interupt Service Routines

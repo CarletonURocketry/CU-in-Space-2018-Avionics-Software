@@ -34,12 +34,14 @@ static volatile uint8_t adc_sample_num;
 
 void init_adc(void)
 {
+    PRR0 &= ~(1<<PRADC);                            // Turn on power to the ADC
     ADCSRA |= (1<<ADIE) | (1<<ADPS2) | (1<<ADPS1);  // Enable ADC interupt and set prescaler to 64 (187.5kHz)
-    // Each ADC clock cycles is 64 system clock cycles. (5.333 microseconds)
+    // Each ADC clock cycle is 64 system clock cycles. (5.333 microseconds)
     // Conversions take 13 ADC clock cycles (69.333 microseconds), except for the first which takes 25 (133.333 microseconds).
     // This means that in general reading all 8 ADCs would take about 104 ADC cycles (554.667 microseconds)
     
     ADMUX = (1<<REFS0);                             // Set refrence to AVCC with external capacitor (3.3v)
+    PRR0 |= (1<<PRADC);                             // Turn off power to the ADC
 }
 
 void adc_service(void)
@@ -50,23 +52,27 @@ void adc_service(void)
         // Find average value for each channel
         for (int i = 0; i < ADC_NUM_CHANNELS; i++) {
             uint16_t sample_sum = 0;
-            for (int j =0; j < ADC_NUM_SAMPLES; i++) {
+            for (int j = 0; j < ADC_NUM_SAMPLES; j++) {
                 sample_sum += (uint16_t) adc_raw_data[i][j];
             }
-            adc_avg_data[i] = (uint8_t)(sample_sum / ADC_NUM_SAMPLES);
+            adc_avg_data[i] = (uint16_t)(sample_sum / ADC_NUM_SAMPLES);
         }
         adc_flags |= (1<<ADC_FLAG_VALUE_CURRENT);
     }
     
-    if (!adc_active && (adc_flags & (1<<ADC_FLAG_AUTO_ENABLED)) && (millis - adc_last_sample_time) >= ADC_AUTO_PERIOD) {
+    if (!adc_active && ((millis - adc_last_sample_time) >= ADC_AUTO_PERIOD || adc_last_sample_time == 0)) {
         // Start a new set of conversions
         adc_last_sample_time = millis;
         adc_start_conversion();
     }
 }
 
+#include "pindefinitions.h"
+
 void adc_start_conversion(void)
 {
+    
+    
     if (adc_flags & (1<<ADC_FLAG_IN_PROGRESS)) {
         return;
     }
@@ -79,7 +85,6 @@ void adc_start_conversion(void)
         if (ADC_ENABLE_MASK & (1<<i)) {
             adc_chan_selected = 1;
             adc_current_chan = i;
-            ADMUX |= adc_current_chan;  // Set adc channel
             break;
         }
     }
@@ -89,6 +94,7 @@ void adc_start_conversion(void)
         
         PRR0 &= ~(1<<PRADC);            // Turn on power to the ADC
         ADCSRA |= (1<<ADEN);            // Enable the ADC
+        ADMUX &= 0b11100000;
         ADMUX |= adc_current_chan;      // Set adc channel
         ADCSRA |= (1<<ADSC);            // Start the next ADC conversion
     }
@@ -98,7 +104,7 @@ void adc_start_conversion(void)
 ISR(ADC_vect)   // ADC Conversion Complete
 {
     uint16_t value = ADCL;
-    value |= (((uint16_t)ADCH) << 8);
+    value |= ((uint16_t)ADCH<<8);
     
     adc_raw_data[adc_current_chan][adc_sample_num] = value;
     
@@ -116,6 +122,7 @@ ISR(ADC_vect)   // ADC Conversion Complete
             if (ADC_ENABLE_MASK & (1<<i)) {
                 adc_chan_selected = 1;
                 adc_current_chan = i;
+                ADMUX &= 0b11100000;
                 ADMUX |= adc_current_chan;  // Set adc channel
                 ADCSRA |= (1<<ADSC);        // Start the next ADC conversion
                 break;
