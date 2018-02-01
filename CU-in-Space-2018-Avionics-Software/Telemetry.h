@@ -4,7 +4,7 @@
 //
 //  Created by Samuel Dewan on 2017-11-03.
 //
-//  Handle the aggregation and packetization of telemetry
+//  Handle the aggregation, packetization and transmition of telemetry
 //
 
 #ifndef Telemetry_h
