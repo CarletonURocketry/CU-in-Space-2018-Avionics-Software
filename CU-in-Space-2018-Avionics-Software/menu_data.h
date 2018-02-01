@@ -9,7 +9,13 @@
 #define menu_data_h
 
 #include <avr/pgmspace.h>
-#include "menu.h"
+
+typedef void (*menu_handler_t)(uint8_t, char**);
+typedef struct menu_item {
+    const PGM_P string;
+    const menu_handler_t handler;
+    const PGM_P help_string;
+} menu_item_t;
 
 // MARK: UI
 extern const char welcome_string[] PROGMEM;

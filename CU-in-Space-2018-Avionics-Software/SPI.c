@@ -11,6 +11,10 @@
 #include <avr/interrupt.h>
 #include <string.h>
 
+
+#include "serial0.h"
+#include <stdlib.h>
+
 typedef struct {
     uint8_t     transaction_id;     // A unique identifier for this transaction
     
@@ -161,6 +165,8 @@ static volatile spi_transaction_t *get_next_free_transaction(void)
 uint8_t spi_start_half_duplex(uint8_t *transaction_id, uint8_t cs_num, uint8_t *out_buffer, uint8_t out_length,
                               uint8_t * in_buffer, uint8_t in_length)
 {
+    serial_0_put_string("Started spi transaction with id: ");
+    
     volatile spi_transaction_t *trans = get_next_free_transaction();
     if (trans == NULL) {
         return 1;
@@ -186,6 +192,11 @@ uint8_t spi_start_half_duplex(uint8_t *transaction_id, uint8_t cs_num, uint8_t *
     trans->done = 0;
     
     spi_start_next_transaction();
+    
+    char str[10];
+    ultoa(trans->transaction_id, str, 16);
+    serial_0_put_string(str);
+    serial_0_put_byte('\n');
     
     return 0;
 }
@@ -236,6 +247,12 @@ ISR (SPI_STC_vect)
         trans->byte_received = 1;
     } else if (!trans->full_duplex && (trans->bytes_out <= 0)) {
         // A byte should be recieved (half duplex)
+//        uint8_t data = SPDR;
+//        char str[10];
+//        ultoa(data, str, 16);
+//        serial_0_put_string("SPI Recieved Byte: 0x");
+//        serial_0_put_string(str);
+//        serial_0_put_byte('\n');
         trans->in_buffer[trans->position] = SPDR;
         trans->position++;
     } else {
@@ -248,6 +265,10 @@ ISR (SPI_STC_vect)
         SPDR = trans->out_buffer[trans->position];
         trans->position++;
         trans->bytes_out--;
+        if (trans->bytes_out <= 0) {
+            // Finished transmitting, reset position
+            trans->position = 0;
+        }
     } else if (trans->full_duplex && ((*spi_port_reg & (1 << trans->attn_num)))) {
         // A dummy byte should be sent (full duplex)
         SPDR = 0;
@@ -259,6 +280,8 @@ ISR (SPI_STC_vect)
         *spi_port_reg ^= (1<< trans-> cs_num);  // De-assert CS pin
         trans->active = 0;
         trans->done = 1;
+        
+        serial_0_put_string("Finished spi transaction\n");
         
         spi_start_next_transaction();
     }

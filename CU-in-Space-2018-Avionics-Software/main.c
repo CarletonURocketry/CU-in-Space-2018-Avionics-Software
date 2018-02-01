@@ -46,9 +46,12 @@ void initIO(void)
     // Set spi MOSI pin as an output
     SPI_MOSI_DDR |= (1<<SPI_MOSI_NUM);
     // Set spi MISO pin as an input
-    SPI_MISO_DDR &= ~(1<<SPI_MOSI_NUM);
+    //SPI_MISO_DDR &= ~(1<<SPI_MOSI_NUM);
     // Set spi SCK pin as an output
-    SPI_SCK_DDR |= (1<<SPI_MOSI_NUM);
+    SPI_SCK_DDR |= (1<<SPI_SCK_NUM);
+
+    // Set main trigger as output
+    MAIN_TRIGGER_DDR |= (1<<MAIN_TRIGGER_NUM);
 }
 
 void init_timers(void)
@@ -73,12 +76,15 @@ int main(void)
     // Initilize IO peripherals
     ADC_ENABLE_MASK = 0xff;                         // Enable all ADC channels
     init_adc();
-    //init_spi(&SPI_PORT);
+    init_spi(&SPI_PORT);
     
     // Initilize software modules
     init_menu();
     
     sei();
+    
+    // Initilize external peripherals
+    //init_25lc1024(EEPROM_CS_NUM);
 
     for (;;) {
         main_loop();
@@ -88,15 +94,9 @@ int main(void)
 static void main_loop ()
 {
     adc_service();
+    spi_service();
+    
     //eeprom_25lc1024_service();
-    
-    
-    new_loops++;
-    if ((millis - last_loops_time) > LOOPS_MEASURMENT_PERIOD) {
-        last_loops_time = millis;
-        loops = new_loops;
-        new_loops = 0;
-    }
     
     menu_service();
 }

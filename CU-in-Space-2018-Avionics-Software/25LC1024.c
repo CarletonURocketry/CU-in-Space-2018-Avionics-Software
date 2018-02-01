@@ -35,7 +35,7 @@ typedef struct {
 } eeprom_transaction_t;
 
 // MARK: Constants
-#define EEPROM_NUM_TRANSACTIONS     4   // The maximum number of transactions which can be queued
+#define EEPROM_NUM_TRANSACTIONS     5   // The maximum number of transactions which can be queued
 
 #define EEPROM_TRANSACTION_VOID     0   // The transaction ID for a void transaction
 #define EEPROM_TRANSACTION_FIRST    1   // The first valid transaction ID
@@ -141,12 +141,14 @@ void eeprom_25lc1024_service(void)
             if (spi_transaction_done(trans->spi_transaction)) {
                 trans->state = CHECK_WIP;
                 eeprom_out_buffer[0] = RDSR;
+                spi_clear_transaction(trans->spi_transaction);
                 spi_start_half_duplex(&(trans->spi_transaction), cs_port_num, eeprom_out_buffer, 1, response_buffer, 1);
             }
             break;
         case CHECK_WIP:
             // Result of SPI transaction should be the STATUS regsiter, check that WIP bit is cleared and send WREN if writing
             if (spi_transaction_done(trans->spi_transaction)) {
+                spi_clear_transaction(trans->spi_transaction);
                 if (response_buffer[0] & (1<<SR_WIP)) {
                     // Write is in progress, check WIP again
                     spi_start_half_duplex(&(trans->spi_transaction), cs_port_num, eeprom_out_buffer, 1, response_buffer, 1);
@@ -166,6 +168,7 @@ void eeprom_25lc1024_service(void)
         case ENABLE_WRITE:
             // WREN sent, Write action can now take place or Read action can now take place
             if (spi_transaction_done(trans->spi_transaction)) {
+                spi_clear_transaction(trans->spi_transaction);
                 trans->state = ACTION;
                 eeprom_out_buffer[0] = trans->command;
                 if (trans->write && trans->send_addr) {
@@ -186,6 +189,7 @@ void eeprom_25lc1024_service(void)
         case ACTION:
             // Action preformed, handle result and return to DPD
             if (spi_transaction_done(trans->spi_transaction)) {
+                spi_clear_transaction(trans->spi_transaction);
                 trans->state = FINISHED;
                 eeprom_out_buffer[0] = DPD;
                 spi_start_half_duplex(&(trans->spi_transaction), cs_port_num, eeprom_out_buffer, 1, NULL, 0);
@@ -194,6 +198,7 @@ void eeprom_25lc1024_service(void)
         case FINISHED:
             // DPD entered, transaction done
             if (spi_transaction_done(trans->spi_transaction)) {
+                spi_clear_transaction(trans->spi_transaction);
                 trans->done = 1;
                 trans->active = 0;
                 eeprom_start_next_transaction();

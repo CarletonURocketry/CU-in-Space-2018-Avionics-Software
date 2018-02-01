@@ -31,6 +31,13 @@ void init_menu(void)
     flags |= (1<<FLAG_SERIAL_0_LOOPBACK);       // Enable serial loopback
     sei();
     
+    // Clear screen
+    serial_0_put_byte(0x1B);
+    serial_0_put_string("[2J");
+    // Bring cursor home
+    serial_0_put_byte(0x1B);
+    serial_0_put_string("[H");
+    
     serial_0_put_string_P(welcome_string);
     print_prompt();
 }

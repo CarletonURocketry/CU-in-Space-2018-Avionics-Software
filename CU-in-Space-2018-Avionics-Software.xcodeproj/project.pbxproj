@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BC3B8BC8201123EC00C7B0BA /* I2C-Example.c in Sources */ = {isa = PBXBuildFile; fileRef = BC3B8BC7201123EC00C7B0BA /* I2C-Example.c */; };
 		BC588CAE1FA9261D003E8C15 /* ADC.c in Sources */ = {isa = PBXBuildFile; fileRef = BC588CAD1FA9261D003E8C15 /* ADC.c */; };
 		BC933A1B1FAA8C7000476F3F /* 25LC1024.c in Sources */ = {isa = PBXBuildFile; fileRef = BC933A1A1FAA8C7000476F3F /* 25LC1024.c */; };
 		BC93ECA51FA4F5F200AD7504 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECA41FA4F5F200AD7504 /* main.c */; };
@@ -26,6 +27,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		BC3B8BC7201123EC00C7B0BA /* I2C-Example.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "I2C-Example.c"; sourceTree = "<group>"; };
 		BC588CAC1FA9261D003E8C15 /* ADC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ADC.h; sourceTree = "<group>"; };
 		BC588CAD1FA9261D003E8C15 /* ADC.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ADC.c; sourceTree = "<group>"; };
 		BC933A191FAA8C7000476F3F /* 25LC1024.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = 25LC1024.h; sourceTree = "<group>"; };
@@ -172,6 +174,7 @@
 				BC93ECDE1FA4FC7500AD7504 /* FXAS21002C.c */,
 				BC93ECE01FA4FC9700AD7504 /* FGPMMOPA6H.h */,
 				BC93ECE11FA4FC9700AD7504 /* FGPMMOPA6H.c */,
+				BC3B8BC7201123EC00C7B0BA /* I2C-Example.c */,
 			);
 			name = Sensors;
 			sourceTree = "<group>";
@@ -317,6 +320,7 @@
 			files = (
 				BC93ECDF1FA4FC7500AD7504 /* FXAS21002C.c in Sources */,
 				BC93ECA51FA4F5F200AD7504 /* main.c in Sources */,
+				BC3B8BC8201123EC00C7B0BA /* I2C-Example.c in Sources */,
 				BC93ECE21FA4FC9700AD7504 /* FGPMMOPA6H.c in Sources */,
 				BC93ECCB1FA4FA3200AD7504 /* serial1.c in Sources */,
 				BC93ECCE1FA4FA5100AD7504 /* SPI.c in Sources */,
