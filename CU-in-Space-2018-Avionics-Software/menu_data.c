@@ -167,7 +167,7 @@ static const char menu_help_spitest[] PROGMEM = "Run a test sequence on the 25LC
 void menu_cmd_spitest_handler(uint8_t arg_len, char** args)
 {
     if (arg_len != 1) {
-        serial_0_put_string_P(menu_help_loops);
+        serial_0_put_string_P(menu_help_spitest);
         return;
     }
     
@@ -198,8 +198,8 @@ void menu_cmd_spitest_handler(uint8_t arg_len, char** args)
     
     serial_0_put_string("WREN finished.\n");
     
-    uint8_t write_cmd[3] = {0b00000110, 0, 0, 0, 0xff};
-    spi_start_half_duplex(&id, EEPROM_CS_NUM, wren_cmd, 1, NULL, 0);
+    uint8_t write_cmd[5] = {0b00000110, 0, 0, 0, 0xff};
+    spi_start_half_duplex(&id, EEPROM_CS_NUM, write_cmd, 1, NULL, 0);
     
     while (!spi_transaction_done(id)) {
         spi_service();

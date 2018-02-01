@@ -18,10 +18,10 @@
 		BC93ECCB1FA4FA3200AD7504 /* serial1.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECCA1FA4FA3200AD7504 /* serial1.c */; };
 		BC93ECCE1FA4FA5100AD7504 /* SPI.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECCD1FA4FA5100AD7504 /* SPI.c */; };
 		BC93ECD21FA4FA7E00AD7504 /* XBee.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECD11FA4FA7E00AD7504 /* XBee.c */; };
-		BC93ECD51FA4FC0700AD7504 /* MPL3115A2.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECD41FA4FC0700AD7504 /* MPL3115A2.c */; };
-		BC93ECDA1FA4FC5300AD7504 /* ADXL343.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECD91FA4FC5300AD7504 /* ADXL343.c */; };
-		BC93ECDF1FA4FC7500AD7504 /* FXAS21002C.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECDE1FA4FC7500AD7504 /* FXAS21002C.c */; };
-		BC93ECE21FA4FC9700AD7504 /* FGPMMOPA6H.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECE11FA4FC9700AD7504 /* FGPMMOPA6H.c */; };
+		BC93ECD51FA4FC0700AD7504 /* Barometer-MPL3115A2.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECD41FA4FC0700AD7504 /* Barometer-MPL3115A2.c */; };
+		BC93ECDA1FA4FC5300AD7504 /* Accel-ADXL343.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECD91FA4FC5300AD7504 /* Accel-ADXL343.c */; };
+		BC93ECDF1FA4FC7500AD7504 /* Gyro-FXAS21002C.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECDE1FA4FC7500AD7504 /* Gyro-FXAS21002C.c */; };
+		BC93ECE21FA4FC9700AD7504 /* GPS-FGPMMOPA6H.c in Sources */ = {isa = PBXBuildFile; fileRef = BC93ECE11FA4FC9700AD7504 /* GPS-FGPMMOPA6H.c */; };
 		BCD115261FAD48AC00AC1997 /* Telemetry.c in Sources */ = {isa = PBXBuildFile; fileRef = BCD115251FAD48AC00AC1997 /* Telemetry.c */; };
 		BCD1152C1FAD494B00AC1997 /* Radio.c in Sources */ = {isa = PBXBuildFile; fileRef = BCD1152B1FAD494B00AC1997 /* Radio.c */; };
 /* End PBXBuildFile section */
@@ -51,21 +51,21 @@
 		BC93ECCD1FA4FA5100AD7504 /* SPI.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SPI.c; sourceTree = "<group>"; };
 		BC93ECD01FA4FA7E00AD7504 /* XBee.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XBee.h; sourceTree = "<group>"; };
 		BC93ECD11FA4FA7E00AD7504 /* XBee.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = XBee.c; sourceTree = "<group>"; };
-		BC93ECD31FA4FC0700AD7504 /* MPL3115A2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPL3115A2.h; sourceTree = "<group>"; };
-		BC93ECD41FA4FC0700AD7504 /* MPL3115A2.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = MPL3115A2.c; sourceTree = "<group>"; };
-		BC93ECD81FA4FC5300AD7504 /* ADXL343.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ADXL343.h; sourceTree = "<group>"; };
-		BC93ECD91FA4FC5300AD7504 /* ADXL343.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ADXL343.c; sourceTree = "<group>"; };
-		BC93ECDD1FA4FC7500AD7504 /* FXAS21002C.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FXAS21002C.h; sourceTree = "<group>"; };
-		BC93ECDE1FA4FC7500AD7504 /* FXAS21002C.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = FXAS21002C.c; sourceTree = "<group>"; };
-		BC93ECE01FA4FC9700AD7504 /* FGPMMOPA6H.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FGPMMOPA6H.h; sourceTree = "<group>"; };
-		BC93ECE11FA4FC9700AD7504 /* FGPMMOPA6H.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = FGPMMOPA6H.c; sourceTree = "<group>"; };
+		BC93ECD31FA4FC0700AD7504 /* Barometer-MPL3115A2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Barometer-MPL3115A2.h"; sourceTree = "<group>"; };
+		BC93ECD41FA4FC0700AD7504 /* Barometer-MPL3115A2.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "Barometer-MPL3115A2.c"; sourceTree = "<group>"; };
+		BC93ECD81FA4FC5300AD7504 /* Accel-ADXL343.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Accel-ADXL343.h"; sourceTree = "<group>"; };
+		BC93ECD91FA4FC5300AD7504 /* Accel-ADXL343.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "Accel-ADXL343.c"; sourceTree = "<group>"; };
+		BC93ECDD1FA4FC7500AD7504 /* Gyro-FXAS21002C.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Gyro-FXAS21002C.h"; sourceTree = "<group>"; };
+		BC93ECDE1FA4FC7500AD7504 /* Gyro-FXAS21002C.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "Gyro-FXAS21002C.c"; sourceTree = "<group>"; };
+		BC93ECE01FA4FC9700AD7504 /* GPS-FGPMMOPA6H.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "GPS-FGPMMOPA6H.h"; sourceTree = "<group>"; };
+		BC93ECE11FA4FC9700AD7504 /* GPS-FGPMMOPA6H.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "GPS-FGPMMOPA6H.c"; sourceTree = "<group>"; };
 		BCD115241FAD48AC00AC1997 /* Telemetry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Telemetry.h; sourceTree = "<group>"; };
 		BCD115251FAD48AC00AC1997 /* Telemetry.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Telemetry.c; sourceTree = "<group>"; };
 		BCD1152A1FAD494B00AC1997 /* Radio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Radio.h; sourceTree = "<group>"; };
 		BCD1152B1FAD494B00AC1997 /* Radio.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Radio.c; sourceTree = "<group>"; };
-		BCD1152D1FAD4A9300AC1997 /* MPL3115A2-Registers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MPL3115A2-Registers.h"; sourceTree = "<group>"; };
-		BCD1152E1FAD4B0700AC1997 /* ADXL343-Registers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ADXL343-Registers.h"; sourceTree = "<group>"; };
-		BCD1152F1FAD4BAA00AC1997 /* FXAS21002C-Registers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FXAS21002C-Registers.h"; sourceTree = "<group>"; };
+		BCD1152D1FAD4A9300AC1997 /* Barometer-MPL3115A2-Registers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Barometer-MPL3115A2-Registers.h"; sourceTree = "<group>"; };
+		BCD1152E1FAD4B0700AC1997 /* Accel-ADXL343-Registers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Accel-ADXL343-Registers.h"; sourceTree = "<group>"; };
+		BCD1152F1FAD4BAA00AC1997 /* Gyro-FXAS21002C-Registers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Gyro-FXAS21002C-Registers.h"; sourceTree = "<group>"; };
 		BCD115301FBA0F0800AC1997 /* 25LC1024-Commands.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "25LC1024-Commands.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -163,17 +163,17 @@
 		BC93ECD71FA4FC1A00AD7504 /* Sensors */ = {
 			isa = PBXGroup;
 			children = (
-				BCD1152D1FAD4A9300AC1997 /* MPL3115A2-Registers.h */,
-				BC93ECD31FA4FC0700AD7504 /* MPL3115A2.h */,
-				BC93ECD41FA4FC0700AD7504 /* MPL3115A2.c */,
-				BCD1152E1FAD4B0700AC1997 /* ADXL343-Registers.h */,
-				BC93ECD81FA4FC5300AD7504 /* ADXL343.h */,
-				BC93ECD91FA4FC5300AD7504 /* ADXL343.c */,
-				BCD1152F1FAD4BAA00AC1997 /* FXAS21002C-Registers.h */,
-				BC93ECDD1FA4FC7500AD7504 /* FXAS21002C.h */,
-				BC93ECDE1FA4FC7500AD7504 /* FXAS21002C.c */,
-				BC93ECE01FA4FC9700AD7504 /* FGPMMOPA6H.h */,
-				BC93ECE11FA4FC9700AD7504 /* FGPMMOPA6H.c */,
+				BCD1152D1FAD4A9300AC1997 /* Barometer-MPL3115A2-Registers.h */,
+				BC93ECD31FA4FC0700AD7504 /* Barometer-MPL3115A2.h */,
+				BC93ECD41FA4FC0700AD7504 /* Barometer-MPL3115A2.c */,
+				BCD1152E1FAD4B0700AC1997 /* Accel-ADXL343-Registers.h */,
+				BC93ECD81FA4FC5300AD7504 /* Accel-ADXL343.h */,
+				BC93ECD91FA4FC5300AD7504 /* Accel-ADXL343.c */,
+				BCD1152F1FAD4BAA00AC1997 /* Gyro-FXAS21002C-Registers.h */,
+				BC93ECDD1FA4FC7500AD7504 /* Gyro-FXAS21002C.h */,
+				BC93ECDE1FA4FC7500AD7504 /* Gyro-FXAS21002C.c */,
+				BC93ECE01FA4FC9700AD7504 /* GPS-FGPMMOPA6H.h */,
+				BC93ECE11FA4FC9700AD7504 /* GPS-FGPMMOPA6H.c */,
 				BC3B8BC7201123EC00C7B0BA /* I2C-Example.c */,
 			);
 			name = Sensors;
@@ -318,13 +318,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BC93ECDF1FA4FC7500AD7504 /* FXAS21002C.c in Sources */,
+				BC93ECDF1FA4FC7500AD7504 /* Gyro-FXAS21002C.c in Sources */,
 				BC93ECA51FA4F5F200AD7504 /* main.c in Sources */,
 				BC3B8BC8201123EC00C7B0BA /* I2C-Example.c in Sources */,
-				BC93ECE21FA4FC9700AD7504 /* FGPMMOPA6H.c in Sources */,
+				BC93ECE21FA4FC9700AD7504 /* GPS-FGPMMOPA6H.c in Sources */,
 				BC93ECCB1FA4FA3200AD7504 /* serial1.c in Sources */,
 				BC93ECCE1FA4FA5100AD7504 /* SPI.c in Sources */,
-				BC93ECD51FA4FC0700AD7504 /* MPL3115A2.c in Sources */,
+				BC93ECD51FA4FC0700AD7504 /* Barometer-MPL3115A2.c in Sources */,
 				BC93ECD21FA4FA7E00AD7504 /* XBee.c in Sources */,
 				BCD1152C1FAD494B00AC1997 /* Radio.c in Sources */,
 				BC588CAE1FA9261D003E8C15 /* ADC.c in Sources */,
@@ -334,7 +334,7 @@
 				BC93ECBD1FA4F98500AD7504 /* serial0.c in Sources */,
 				BC93ECC51FA4FA0100AD7504 /* menu_data.c in Sources */,
 				BC93ECC01FA4F9A700AD7504 /* menu.c in Sources */,
-				BC93ECDA1FA4FC5300AD7504 /* ADXL343.c in Sources */,
+				BC93ECDA1FA4FC5300AD7504 /* Accel-ADXL343.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
