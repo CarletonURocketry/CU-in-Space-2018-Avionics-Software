@@ -1,5 +1,5 @@
 //
-//  FXAS21002C-Registers.h
+//  Gyro-FXAS21002C-Registers.h
 //  CU-in-Space-2018-Avionics-Software
 //
 //  Created by Samuel Dewan on 2017-11-03.
@@ -7,8 +7,8 @@
 //  Register definitions for FXA21002C gyroscope
 //
 
-#ifndef FXAS21002C_Registers_h
-#define FXAS21002C_Registers_h
+#ifndef Gyro-FXAS21002C_Registers_h
+#define Gyro-FXAS21002C_Registers_h
 
 #define ADDRESS             0x20    // Device address with SAO pin grounded
 
@@ -109,4 +109,4 @@
 #define CTRL_REG3_WRAPTOONE 3       // If set auto-increment pointer rolls over to 0x01 (OUT_X_MSB), otherwise 0x00 (STATUS)
 #define CTRL_REG3_EXTCTRLEN 2       // If set INT2 pin acts as an external power mode control input
 #define CTRL_REG3_FS_DOUBLE 0       // 
-#endif /* FXAS21002C_Registers_h */
+#endif /* Gyro-FXAS21002C_Registers_h */

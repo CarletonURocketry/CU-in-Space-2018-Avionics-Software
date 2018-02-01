@@ -1,5 +1,5 @@
 //
-//  ADXL343-Registers.h
+//  Accel-ADXL343-Registers.h
 //  CU-in-Space-2018-Avionics-Software
 //
 //  Created by Samuel Dewan on 2017-11-03.
@@ -7,8 +7,8 @@
 //  Register definitions for ADXL343 accelerometer
 //
 
-#ifndef ADXL343_Registers_h
-#define ADXL343_Registers_h
+#ifndef Accel-ADXL343_Registers_h
+#define Accel-ADXL343_Registers_h
 
 #define ADDRESS             0x53    // Device address with ALT ADDRESS pin grounded
 
@@ -124,4 +124,4 @@
 #define FIFO_TRIG           7       // Set if FIFO trigger event has occured
 #define FIFO_ENTRIES_MASK   0x1f    // Number of entries in FIFO buffer
 
-#endif /* ADXL343_Registers_h */
+#endif /* Accel-ADXL343_Registers_h */

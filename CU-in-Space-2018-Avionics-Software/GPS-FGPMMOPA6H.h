@@ -1,13 +1,13 @@
 //
-//  FGPMMOPA6H.h
+//  GPS-FGPMMOPA6H.h
 //  CU-in-Space-2018-Avionics-Software
 //
 //  Created by Samuel Dewan on 2017-10-28.
 //  GPS
 //
 
-#ifndef FGPMMOPA6H_h
-#define FGPMMOPA6H_h
+#ifndef GPS-FGPMMOPA6H_h
+#define GPS-FGPMMOPA6H_h
 
 #include "global.h"
 
@@ -55,4 +55,4 @@ extern uint8_t init_fgpmmopa6h(void);
  */
 extern void fgpmmopa6h_service(void);
 
-#endif /* FGPMMOPA6H_h */
+#endif /* GPS-FGPMMOPA6H_h */

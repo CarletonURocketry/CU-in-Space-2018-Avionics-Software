@@ -1,13 +1,13 @@
 //
-//  ADXL343.h
+//  Accel-ADXL343.h
 //  CU-in-Space-2018-Avionics-Software
 //
 //  Created by Samuel Dewan on 2017-10-28.
 //  Accelerometer
 //
 
-#ifndef ADXL343_h
-#define ADXL343_h
+#ifndef Accel-ADXL343_h
+#define Accel-ADXL343_h
 
 #include "global.h"
 
@@ -45,4 +45,4 @@ extern uint8_t init_adxl343(void);
  */
 extern void adxl343_service(void);
 
-#endif /* ADXL343_h */
+#endif /* Accel-ADXL343_h */

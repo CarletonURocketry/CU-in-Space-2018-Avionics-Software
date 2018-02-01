@@ -1,13 +1,13 @@
 //
-//  MPL3115A2.h
+//  Barometer-MPL3115A2.h
 //  CU-in-Space-2018-Avionics-Software
 //
 //  Created by Samuel Dewan on 2017-10-28.
 //  Barometric Pressure Sensor
 //
 
-#ifndef MPL3115A2_h
-#define MPL3115A2_h
+#ifndef Barometer-MPL3115A2_h
+#define Barometer-MPL3115A2_h
 
 #include "global.h"
 
@@ -60,4 +60,4 @@ extern uint8_t init_mpl3115a2(void);
  */
 extern void mpl3115a2_service(void);
 
-#endif /* MPL3115A2_h */
+#endif /* Barometer-MPL3115A2_h */

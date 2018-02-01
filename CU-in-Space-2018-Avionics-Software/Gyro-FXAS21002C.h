@@ -1,13 +1,13 @@
 //
-//  FXAS21002C.h
+//  Gyro-FXAS21002C.h
 //  CU-in-Space-2018-Avionics-Software
 //
 //  Created by Samuel Dewan on 2017-10-28.
 //  Gyroscope
 //
 
-#ifndef FXAS21002C_h
-#define FXAS21002C_h
+#ifndef Gyro-FXAS21002C_h
+#define Gyro-FXAS21002C_h
 
 #include "global.h"
 
@@ -50,4 +50,4 @@ extern uint8_t init_fxas21002c(void);
  */
 extern void fxas21002c_service(void);
 
-#endif /* FXAS21002C_h */
+#endif /* Gyro-FXAS21002C_h */

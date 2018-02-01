@@ -1,5 +1,5 @@
 //
-//  MPL3115A2-Registers.h
+//  Barometer-MPL3115A2-Registers.h
 //  CU-in-Space-2018-Avionics-Software
 //
 //  Created by Samuel Dewan on 2017-11-03.
@@ -7,8 +7,8 @@
 //  Register definitions for MPL3115A2 barometric altimiter
 //
 
-#ifndef MPL3115A2_Registers_h
-#define MPL3115A2_Registers_h
+#ifndef Barometer-MPL3115A2_Registers_h
+#define Barometer-MPL3115A2_Registers_h
 
 #define ADDRESS             0x60    // Device address
 
@@ -142,4 +142,4 @@
 #define OFF_T               0x2c    // Offset correction for temperature
 #define OFF_H               0x2d    // Offset correction for altitude
 
-#endif /* MPL3115A2_Registers_h */
+#endif /* Barometer-MPL3115A2_Registers_h */
