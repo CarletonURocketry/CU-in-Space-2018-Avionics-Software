@@ -311,6 +311,7 @@ ISR (TWI_vect)
             break;
         case TW_MR_DATA_ACK:  // Data byte recieved, ACK sent
             // Get ready to receive next byte
+			*(i2c_transactions[i2c_buffer_position].buffer + i2c_transactions[i2c_buffer_position].position) = TWDR;
 			++(i2c_transactions[i2c_buffer_position].position);
 			if ((i2c_transactions[i2c_buffer_position].position) + 1 < i2c_transactions[i2c_buffer_position].num_bytes)
 			{
@@ -323,6 +324,7 @@ ISR (TWI_vect)
             break;
         case TW_MR_DATA_NACK:  // Data byte recieved, NOT ACK sent
             // Read finished, wrap up transaction
+			*(i2c_transactions[i2c_buffer_position].buffer + i2c_transactions[i2c_buffer_position].position) = TWDR;
 			++(i2c_transactions[i2c_buffer_position].position);
 			TWCR |= _BV(TWSTO);
 			i2c_transactions[i2c_buffer_position].successful = 1;
