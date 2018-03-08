@@ -209,67 +209,68 @@ uint8_t i2c_read(uint8_t *transaction_id, uint8_t address, uint8_t reg, uint8_t 
 // MARK: Interupt service routines
 ISR (TWI_vect)
 {
+	i2c_transaction_t *current_buffer_position = &i2c_transactions[i2c_buffer_position];
     switch (TW_STATUS) {
         case TW_START:  // Transmition of start condition has finished
             // Transmit adress + W
-			TWDR = (i2c_transactions[i2c_buffer_position].slave_address << 1); // write bit is low at SDA
+			TWDR = ((current_buffer_position->slave_address) << 1); // write bit is low at SDA
 			TWCR &= ~_BV(TWSTA); //TWSTA must be cleared by software 
             break;
         case TW_REP_START:  // Transmition of repeated start has finished
             // Transmit adress + R
-			TWDR = (i2c_transactions[i2c_buffer_position].slave_address << 1); // write bit is low at SDA
-			if (i2c_transactions[i2c_buffer_position].write == 0) TWDR |= TW_READ; // if this is a reading operation set the last bit to 1
+			TWDR = ((current_buffer_position->slave_address) << 1); // write bit is low at SDA
+			if ((current_buffer_position->write) == 0) TWDR |= TW_READ; // if this is a reading operation set the last bit to 1
 			TWCR &= ~_BV(TWSTA); //TWSTA must be cleared by software
             break;
         case TW_MT_SLA_ACK:  // Address + W has been sent, ACK recieved
             // Transmit Command
-			TWDR = i2c_transactions[i2c_buffer_position].slave_register;
+			TWDR = current_buffer_position->slave_register;
 			// increment position indicator
-			i2c_transactions[i2c_buffer_position].position++;
+			(current_buffer_position->position)++;
             break;
         case TW_MT_SLA_NACK:  // Address + W has been sent, NOT ACK recieved
             // Increment error count and restart transaction or abort as appropriate
             // Restart transaction
 	    TWCR |= _BV(TWSTO);
-			if (++i2c_transactions[i2c_buffer_position].error_count <= I2C_MAX_ERRORS)
+			if (++(current_buffer_position->error_count) <= I2C_MAX_ERRORS)
 			{
-				i2c_transactions[i2c_buffer_position].position = 0;
+				current_buffer_position->position = 0;
 				TWCR |= _BV(TWSTA);
 			}
 			else // max error number reached, abort this operation
 			{
-				i2c_transactions[i2c_buffer_position].successful = 0;
-				i2c_transactions[i2c_buffer_position].active = 0;
-				i2c_transactions[i2c_buffer_position].done = 1;
+				current_buffer_position->successful = 0;
+				current_buffer_position->active = 0;
+				current_buffer_position->done = 1;
 			}
             break;
         case TW_MT_DATA_NACK:  // Data byte had been transmitted, NOT ACK recieved
             // Increment error count and restart transaction or abort as appropriate
-            if (++i2c_transactions[i2c_buffer_position].error_count > I2C_MAX_ERRORS)
+            if (++(current_buffer_position->error_count) > I2C_MAX_ERRORS)
             {
-				i2c_transactions[i2c_buffer_position].successful = 0;
-				i2c_transactions[i2c_buffer_position].active = 0;
-				i2c_transactions[i2c_buffer_position].done = 1;
+				current_buffer_position->successful = 0;
+				current_buffer_position->active = 0;
+				current_buffer_position->done = 1;
 				TWCR |= _BV(TWSTO);
-				goto OPERATION_CONTINUE;
+				break;
             }
             // Try to resend byte
             // Set up to resend command or decrement position as appropriate
-			i2c_transactions[i2c_buffer_position].position--;
+			(current_buffer_position->position)--;
             // Fall through to resend bytes
         case TW_MT_DATA_ACK:  // Data byte had been transmitted, ACK recieved
             // Send next byte as appropriate
 			// if we are writing to a register, use writing routine
-			if (i2c_transactions[i2c_buffer_position].write) {
-				if (++i2c_transactions[i2c_buffer_position].position > i2c_transactions[i2c_buffer_position].num_bytes)
+			if (current_buffer_position->write) {
+				if (++current_buffer_position->position > current_buffer_position->num_bytes)
 				{
 					// data write complete, release the i2c transaction
 					TWCR = _BV(TWSTO);
-					i2c_transactions[i2c_buffer_position].successful = 1;
-					i2c_transactions[i2c_buffer_position].active = 0;
-					i2c_transactions[i2c_buffer_position].done = 1;
+					current_buffer_position->successful = 1;
+					current_buffer_position->active = 0;
+					current_buffer_position->done = 1;
 				}
-				else TWDR = (i2c_transactions[i2c_buffer_position].position > 0) ? *(i2c_transactions[i2c_buffer_position].buffer + i2c_transactions[i2c_buffer_position].position - 1) : i2c_transactions[i2c_buffer_position].slave_register;
+				else TWDR = (current_buffer_position->position > 0) ? *(current_buffer_position->buffer + current_buffer_position->position - 1) : current_buffer_position->slave_register;
 			}
 			else {
 				// that means the register address is successfully sent, send repeated start signal
@@ -280,13 +281,13 @@ ISR (TWI_vect)
             // Increment error count and restart transaction or abort as appropriate
 			// resend START condition when the bus becomes free
 			TWCR |= _BV(TWSTA);
-			i2c_transactions[i2c_buffer_position].position = 0;
+			current_buffer_position->position = 0;
             break;
         case TW_MR_SLA_ACK:  // Address + R has been sent, ACK recieved
             // Reset possition
             // Receive bytes and send ACK or NACK as appropriate
-			i2c_transactions[i2c_buffer_position].position = 0;
-			if (i2c_transactions[i2c_buffer_position].num_bytes > 1)
+			current_buffer_position->position = 0;
+			if (current_buffer_position->num_bytes > 1)
 			{
 				TWCR |= _BV(TWEA);
 			} 
@@ -297,22 +298,23 @@ ISR (TWI_vect)
             break;
         case TW_MR_SLA_NACK:  // Address + R has been sent, NOT ACK recieved
             // Increment error count and resend address or abort as appropriate
-			if (++i2c_transactions[i2c_buffer_position].error_count <= I2C_MAX_ERRORS)
+			if (++current_buffer_position->error_count <= I2C_MAX_ERRORS)
 			{
-				TWDR = (i2c_transactions[i2c_buffer_position].slave_address << 1) | TW_READ;
+				TWDR = (current_buffer_position->slave_address << 1) | TW_READ;
 			} 
 			else
 			{
 				TWCR |= _BV(TWSTO);
-				i2c_transactions[i2c_buffer_position].successful = 0;
-				i2c_transactions[i2c_buffer_position].active = 0;
-				i2c_transactions[i2c_buffer_position].done = 1;
+				current_buffer_position->successful = 0;
+				current_buffer_position->active = 0;
+				current_buffer_position->done = 1;
 			}
             break;
         case TW_MR_DATA_ACK:  // Data byte recieved, ACK sent
             // Get ready to receive next byte
-			++(i2c_transactions[i2c_buffer_position].position);
-			if ((i2c_transactions[i2c_buffer_position].position) + 1 < i2c_transactions[i2c_buffer_position].num_bytes)
+			*(current_buffer_position->buffer + current_buffer_position->position) = TWDR;
+			++(current_buffer_position->position);
+			if ((current_buffer_position->position) + 1 < current_buffer_position->num_bytes)
 			{
 				TWCR |= _BV(TWEA);
 			} 
@@ -323,16 +325,16 @@ ISR (TWI_vect)
             break;
         case TW_MR_DATA_NACK:  // Data byte recieved, NOT ACK sent
             // Read finished, wrap up transaction
-			++(i2c_transactions[i2c_buffer_position].position);
+			*(current_buffer_position->buffer + current_buffer_position->position) = TWDR;
+			++(current_buffer_position->position);
 			TWCR |= _BV(TWSTO);
-			i2c_transactions[i2c_buffer_position].successful = 1;
-			i2c_transactions[i2c_buffer_position].active = 0;
-			i2c_transactions[i2c_buffer_position].done = 1;
+			current_buffer_position->successful = 1;
+			current_buffer_position->active = 0;
+			current_buffer_position->done = 1;
             break;
         default:
             // Should never be reached
             break;
     }
-OPERATION_CONTINUE:
 	TWCR |= _BV(TWINT); // continue operation
 }
