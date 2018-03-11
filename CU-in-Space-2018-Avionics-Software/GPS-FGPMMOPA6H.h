@@ -6,8 +6,8 @@
 //  GPS
 //
 
-#ifndef GPS-FGPMMOPA6H_h
-#define GPS-FGPMMOPA6H_h
+#ifndef GPS_FGPMMOPA6H_h
+#define GPS_FGPMMOPA6H_h
 
 #include "global.h"
 
@@ -55,4 +55,4 @@ extern uint8_t init_fgpmmopa6h(void);
  */
 extern void fgpmmopa6h_service(void);
 
-#endif /* GPS-FGPMMOPA6H_h */
+#endif /* GPS_FGPMMOPA6H_h */

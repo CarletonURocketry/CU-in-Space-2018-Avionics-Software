@@ -6,8 +6,11 @@
 //  Gyroscope
 //
 
-#ifndef Gyro-FXAS21002C_h
-#define Gyro-FXAS21002C_h
+
+// Note: X->Roll, Y->Pitch, Z->Yaw
+
+#ifndef Gyro_FXAS21002C_h
+#define Gyro_FXAS21002C_h
 
 #include "global.h"
 
@@ -50,4 +53,4 @@ extern uint8_t init_fxas21002c(void);
  */
 extern void fxas21002c_service(void);
 
-#endif /* Gyro-FXAS21002C_h */
+#endif /* Gyro_FXAS21002C_h */

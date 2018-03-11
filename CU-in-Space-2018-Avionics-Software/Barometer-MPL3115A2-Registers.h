@@ -7,8 +7,8 @@
 //  Register definitions for MPL3115A2 barometric altimiter
 //
 
-#ifndef Barometer-MPL3115A2_Registers_h
-#define Barometer-MPL3115A2_Registers_h
+#ifndef Barometer_MPL3115A2_Registers_h
+#define Barometer_MPL3115A2_Registers_h
 
 #define ADDRESS             0x60    // Device address
 
@@ -142,4 +142,4 @@
 #define OFF_T               0x2c    // Offset correction for temperature
 #define OFF_H               0x2d    // Offset correction for altitude
 
-#endif /* Barometer-MPL3115A2_Registers_h */
+#endif /* Barometer_MPL3115A2_Registers_h */

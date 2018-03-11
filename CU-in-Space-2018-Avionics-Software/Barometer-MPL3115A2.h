@@ -6,8 +6,8 @@
 //  Barometric Pressure Sensor
 //
 
-#ifndef Barometer-MPL3115A2_h
-#define Barometer-MPL3115A2_h
+#ifndef Barometer_MPL3115A2_h
+#define Barometer_MPL3115A2_h
 
 #include "global.h"
 
@@ -60,4 +60,4 @@ extern uint8_t init_mpl3115a2(void);
  */
 extern void mpl3115a2_service(void);
 
-#endif /* Barometer-MPL3115A2_h */
+#endif /* Barometer_MPL3115A2_h */

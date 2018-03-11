@@ -6,8 +6,8 @@
 //  Accelerometer
 //
 
-#ifndef Accel-ADXL343_h
-#define Accel-ADXL343_h
+#ifndef Accel_ADXL343_h
+#define Accel_ADXL343_h
 
 #include "global.h"
 
@@ -45,4 +45,4 @@ extern uint8_t init_adxl343(void);
  */
 extern void adxl343_service(void);
 
-#endif /* Accel-ADXL343_h */
+#endif /* Accel_ADXL343_h */
