@@ -84,6 +84,12 @@ extern char serial_0_peak_byte (void);
 extern char serial_0_get_byte (void);
 
 /**
+ *  Determine if the transmit buffer is empty
+ *  @return 1 if the buffer is empty, 0 otherwise
+ */
+extern uint8_t serial_0_out_buffer_empty (void);
+
+/**
  *  Service to be run in each iteration of the main loop
  */
 extern void serial_0_service (void);

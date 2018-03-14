@@ -210,6 +210,11 @@ void serial_0_service (void)
     }
 }
 
+uint8_t serial_0_out_buffer_empty (void)
+{
+    return out_buffer_withdraw_p == out_buffer_insert_p;
+}
+
 // MARK: Interupt service routines
 ISR (USART0_TX_vect)                                 // Transmit finished on USART0
 {
