@@ -21,16 +21,16 @@
 extern uint32_t fgpmmopa6h_sample_time;
 
 /**
- *  The UTC time according to the GPS module. See Telemetery Format document for more information.
+ *  The UTC time according to the GPS module in milliseconds since midnight
  */
 extern uint32_t fgpmmopa6h_utc_time;
 
 /**
- *  The lattitude according to the GPS module. See Telemetery Format document for more information.
+ *  The lattitude according to the GPS module in microdegrees, positive if in norhern hemisphere, negtive if in southern
  */
 extern int32_t fgpmmopa6h_lattitude;
 /**
- *  The longitude according to the GPS module. See Telemetery Format document for more information.
+ *  The longitude according to the GPS module, positive if in eastern hemisphere, negative if in southern
  */
 extern int32_t fgpmmopa6h_longitude;
 

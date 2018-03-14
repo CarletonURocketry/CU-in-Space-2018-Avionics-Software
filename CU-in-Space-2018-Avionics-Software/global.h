@@ -5,6 +5,8 @@
 //  Created by Samuel Dewan on 2017-10-28.
 //
 
+// Fuses: -U lfuse:w:0xff:m -U hfuse:w:0xd7:m -U efuse:w:0xfe:m
+
 #ifndef global_h
 #define global_h
 
