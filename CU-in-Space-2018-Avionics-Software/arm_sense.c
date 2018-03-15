@@ -3,12 +3,10 @@
 //  Index
 //
 //  Created by Samuel Dewan on 2018-03-14.
-//  Copyright © 2018 Samuel Dewan. All rights reserved.
 //
 
 #include "arm_sense.h"
 
-#include "global.h"
 #include "pindefinitions.h"
 
 #include <avr/io.h>
@@ -48,6 +46,11 @@ void arm_sense_db_service (void)
             disarm();
         }
     }
+}
+
+uint8_t is_armed (void)
+{
+    return armed_sense_state;
 }
 
 void arm(void)
