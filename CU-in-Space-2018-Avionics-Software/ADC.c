@@ -40,7 +40,7 @@ void init_adc(void)
     // Conversions take 13 ADC clock cycles (69.333 microseconds), except for the first which takes 25 (133.333 microseconds).
     // This means that in general reading all 8 ADCs would take about 104 ADC cycles (554.667 microseconds)
     
-    //ADMUX = (1<<REFS0);                             // Set refrence to AVCC with external capacitor (3.3v)
+    ADMUX = (1<<REFS0);                             // Set refrence to AVCC with external capacitor (3.3v)
     PRR0 |= (1<<PRADC);                             // Turn off power to the ADC
 }
 
