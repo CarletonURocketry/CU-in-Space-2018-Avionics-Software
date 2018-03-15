@@ -8,6 +8,7 @@
 #include "Barometer-MPL3115A2.h"
 #include "Barometer-MPL3115A2-Registers.h"
 
+uint32_t mpl3115a2_sample_time;
 uint32_t mpl3115a2_alt;
 uint8_t mpl3115a2_alt_msb;
 uint8_t mpl3115a2_alt_csb;

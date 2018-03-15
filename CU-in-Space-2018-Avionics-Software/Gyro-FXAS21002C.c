@@ -8,6 +8,7 @@
 #include "Gyro-FXAS21002C.h"
 #include "Gyro-FXAS21002C-Registers.h"
 
+uint32_t fxas21002c_sample_time;
 int16_t fxas21002c_pitch_rate;
 int16_t fxas21002c_roll_rate;
 int16_t fxas21002c_yaw_rate;
