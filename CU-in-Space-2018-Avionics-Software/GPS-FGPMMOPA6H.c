@@ -23,9 +23,6 @@ int32_t fgpmmopa6h_longitude;
 int16_t fgpmmopa6h_speed;
 int16_t fgpmmopa6h_course;
 
-
-
-
 //parses number from general form "hhmmss.sss" where there are breaks in the number by a factor of 6 every 2 digits before decimal place
 //first_break indicates how many digits are at the beginning of the representation before the first seperation by a factor of 6.
 //first_break = 2 for time and latitude, =3 for longitude
