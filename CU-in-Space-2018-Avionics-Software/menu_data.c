@@ -27,10 +27,12 @@
 #include "Gyro-FXAS21002C.h"
 #include "GPS-FGPMMOPA6H.h"
 
+
 static char str[25];
 
 // MARK: Strings
-const char welcome_string[] PROGMEM = "CU In Space Avionics - 2018\tv1.0\n";
+const char welcome_string[] PROGMEM = "CU In Space Avionics - 2018\n";
+const char version_string[] PROGMEM = "Built "__DATE__" at "__TIME__" with avr-gcc "__VERSION__"\n";
 const char prompt_string[] PROGMEM = "> ";
 const char menu_unkown_cmd_prt1[] PROGMEM = "Unkown command: \"";
 const char menu_unkown_cmd_prt2[] PROGMEM = "\"\nUse \"help --list\" to get a list of avaliable commands.\n";
@@ -112,6 +114,13 @@ static const char stat_str_times_accel[] PROGMEM = "\tAccelerometer: ";
 static const char stat_str_times_gyro[] PROGMEM = "\tGyroscope: ";
 static const char stat_str_times_gps[] PROGMEM = "\tGPS: ";
 
+static const char stat_str_reset_title[] PROGMEM = "Last Reset Due To: ";
+static const char stat_str_reset_poweron[] PROGMEM = "Power On\n";
+static const char stat_str_reset_external[] PROGMEM = "External Reset (Reset Pin)\n";
+static const char stat_str_reset_brownout[] PROGMEM = "Brownout Detected\n";
+static const char stat_str_reset_watchdog[] PROGMEM = "Watchdog Timer\n";
+static const char stat_str_reset_jtag[] PROGMEM = "JTAG\n";
+
 void menu_cmd_stat_handler(uint8_t arg_len, char** args)
 {
     if (arg_len != 1) {
@@ -174,6 +183,26 @@ void menu_cmd_stat_handler(uint8_t arg_len, char** args)
     ultoa(fgpmmopa6h_sample_time, str, 10);
     serial_0_put_string(str);
     serial_0_put_string_P(stat_str_time_units);
+    
+    // Reset Reason
+    serial_0_put_string_P(stat_str_reset_title);
+    switch (reset_type) {
+        case JTAG:
+            serial_0_put_string_P(stat_str_reset_jtag);
+            break;
+        case WATCHDOG:
+            serial_0_put_string_P(stat_str_reset_watchdog);
+            break;
+        case BROWNOUT:
+            serial_0_put_string_P(stat_str_reset_brownout);
+            break;
+        case EXTERNAL:
+            serial_0_put_string_P(stat_str_reset_external);
+            break;
+        case POWERON:
+            serial_0_put_string_P(stat_str_reset_poweron);
+            break;
+    }
 }
 
 // EEPROM
@@ -252,9 +281,7 @@ static void do_eeprom_cmd (uint8_t* cmd, uint8_t bytes_out, uint8_t bytes_in, ch
     
     spi_start_half_duplex(&id, EEPROM_CS_NUM, cmd, bytes_out, input, bytes_in);
     
-    while (!spi_transaction_done(id)) {
-        spi_service();
-    }
+    while (!spi_transaction_done(id)) spi_service();
     
     serial_0_put_string(name);
     serial_0_put_string_P(spitest_string_fin);
@@ -276,45 +303,101 @@ void menu_cmd_spitest_handler(uint8_t arg_len, char** args)
         serial_0_put_string_P(menu_help_spitest);
         return;
     }
+    
+    uint8_t id;
+    uint8_t sr;
+    
 
     uint8_t rdid_cmd[4] = {0b10101011, 0, 0, 0};
     do_eeprom_cmd(rdid_cmd, 4, 1, "RDID", "SIG");
 
-//    uint8_t rdsr_cmd[1] = {0b00000101};
-//    do_eeprom_cmd(rdsr_cmd, 1, 1, "RDSR", "Status");
+    uint8_t rdsr_cmd[1] = {0b00000101};
+    do_eeprom_cmd(rdsr_cmd, 1, 1, "RDSR", "Status");
     
-//    uint8_t wren_cmd[1] = {0b00000110};
-//    do_eeprom_cmd(wren_cmd, 1, 0, "WREN", "");
+    uint8_t wren_cmd[1] = {0b00000110};
+    do_eeprom_cmd(wren_cmd, 1, 0, "WREN", "");
     
 //    uint8_t wrdi_cmd[1] = {0b00000100};
-//    do_eeprom_cmd(wrdi_cmd, 1, 0, "WRDI", "");
-//
+//    do_eeprom_cmd(wrdi_cmd, 1, 0, "WRDI", " ");
+
 //    uint8_t wrsr_cmd[2] = {0b00000001, 0};
-//    do_eeprom_cmd(wrsr_cmd, 2, 0, "WRSR", "");
+//    do_eeprom_cmd(wrsr_cmd, 2, 0, "WRSR", " ");
 
+    do_eeprom_cmd(rdsr_cmd, 1, 1, "RDSR", "Status");
+
+    uint8_t write_cmd[5] = {0b00000010, 0, 0, 1, 0x12};
+    do_eeprom_cmd(write_cmd, 5, 0, "WRITE", "");
     
-//    do_eeprom_cmd(rdsr_cmd, 1, 1, "RDSR", "Status");
-
-//    uint8_t read_cmd[4] = {0b00000011, 0, 0, 1};
-//    do_eeprom_cmd(read_cmd, 4, 1, "READ", "Data");
-
-//    uint8_t write_cmd[5] = {0b00000110, 0, 0, 0, 0x67};
-//    do_eeprom_cmd(write_cmd, 5, 0, "WRITE", "");
+    while (sr & 1) {
+        spi_start_half_duplex(&id, EEPROM_CS_NUM, rdsr_cmd, 1, &sr, 1);
+        while (!spi_transaction_done(id)) spi_service();
+        spi_clear_transaction(id);
+    }
+    serial_0_put_string("Write done\n");
+    
+    uint8_t read_cmd[4] = {0b00000011, 0, 0, 1};
+    do_eeprom_cmd(read_cmd, 4, 1, "READ", "Data");
 }
 
 // SPI Raw
 static const char menu_cmd_spiraw_string[] PROGMEM = "spiraw";
-static const char menu_help_spiraw[] PROGMEM = "Run a test sequence on the 25LC1024 without using the SPI buffer\n";
+static const char menu_help_spiraw[] PROGMEM = "Run a test sequence on the 25LC1024 without using the SPI buffer\nValid Usage \n\tspiraw (read <address>)\n";
 
+#ifdef ENABLE_SPI
+static const char spiraw_string_enabled[] PROGMEM = "Cannot use spiraw, SPI queue is enabled.\n";
+#else
+static const char spiraw_string_read_cmd[] PROGMEM = "read";
 static const char spiraw_string_sig[] PROGMEM = "Signature: 0x";
+static const char spiraw_string_stat[] PROGMEM = "Status Register: 0b";
+static const char spiraw_string_wrsr[] PROGMEM = "Finished WRSR\n";
+static const char spiraw_string_wren[] PROGMEM = "Finished WREN\n";
+static const char spiraw_string_write[] PROGMEM = "Started Write\n";
+static const char spiraw_string_write2[] PROGMEM = "Finished Write\n";
+static const char spiraw_string_read[] PROGMEM = "Read: 0x";
+#endif
 
 void menu_cmd_spiraw_handler(uint8_t arg_len, char** args)
 {
-    if (arg_len != 1) {
-        serial_0_put_string_P(menu_help_spiraw);
-        return;
+#ifdef ENABLE_SPI
+    serial_0_put_string_P(spiraw_string_enabled);
+#else
+    if (arg_len == 3) {
+        if (!strcasecmp_P(args[1], spiraw_string_read_cmd)) {
+            char* end;
+            uint32_t addr = strtoul(args[2], &end, 0);
+            if (*end != '\0') {
+                goto invalid_args;
+            }
+            // Read
+            EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
+            SPDR = 0b00000011;
+            while (!(SPSR & (1<<SPIF)));
+            SPDR = ((uint8_t*)addr)[1];
+            while (!(SPSR & (1<<SPIF)));
+            SPDR = ((uint8_t*)addr)[2];
+            while (!(SPSR & (1<<SPIF)));
+            SPDR = ((uint8_t*)addr)[3];
+            while (!(SPSR & (1<<SPIF)));
+            SPDR = 0b0;
+            while (!(SPSR & (1<<SPIF)));
+            uint8_t result = SPDR;
+            EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
+            
+            serial_0_put_string_P(spiraw_string_read);
+            ultoa(result, str, 16);
+            serial_0_put_string(str);
+            serial_0_put_string_P(string_nl);
+            return;
+        } else {
+            goto invalid_args;
+        }
+    } else if (arg_len != 1) {
+        goto invalid_args;
     }
     
+    SPCR |= (1<<SPE) | (1<<MSTR);
+    
+    // Read sig
     EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
     SPDR = 0b10101011;
     while (!(SPSR & (1<<SPIF)));
@@ -326,12 +409,125 @@ void menu_cmd_spiraw_handler(uint8_t arg_len, char** args)
     while (!(SPSR & (1<<SPIF)));
     SPDR = 0b0;
     while (!(SPSR & (1<<SPIF)));
-    uint8_t sig = SPDR;
+    uint8_t result = SPDR;
     EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
     
     serial_0_put_string_P(spiraw_string_sig);
-    ultoa(sig, str, 16);
+    ultoa(result, str, 16);
     serial_0_put_string(str);
+    serial_0_put_string_P(string_nl);
+    
+    // RDSR
+    EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
+    SPDR = 0b00000101;
+    while (!(SPSR & (1<<SPIF)));
+    SPDR = 0b0;
+    while (!(SPSR & (1<<SPIF)));
+    result = SPDR;
+    EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
+    
+    serial_0_put_string_P(spiraw_string_stat);
+    ultoa(result, str, 2);
+    serial_0_put_string(str);
+    serial_0_put_string_P(string_nl);
+    
+    // WRSR
+    EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
+    SPDR = 0b00000001;
+    while (!(SPSR & (1<<SPIF)));
+    SPDR = 0b0;
+    while (!(SPSR & (1<<SPIF)));
+    EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
+    
+    serial_0_put_string_P(spiraw_string_wrsr);
+    
+    // WREN
+    EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
+    SPDR = 0b00000110;
+    while (!(SPSR & (1<<SPIF)));
+    EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
+    
+    serial_0_put_string_P(spiraw_string_wren);
+    
+    // RDSR
+    EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
+    SPDR = 0b00000101;
+    while (!(SPSR & (1<<SPIF)));
+    SPDR = 0b0;
+    while (!(SPSR & (1<<SPIF)));
+    result = SPDR;
+    EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
+    
+    serial_0_put_string_P(spiraw_string_stat);
+    ultoa(result, str, 2);
+    serial_0_put_string(str);
+    serial_0_put_string_P(string_nl);
+    
+    // Write
+    EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
+    SPDR = 0b00000010;
+    while (!(SPSR & (1<<SPIF)));
+    SPDR = 0b0;
+    while (!(SPSR & (1<<SPIF)));
+    SPDR = 0b0;
+    while (!(SPSR & (1<<SPIF)));
+    SPDR = 0b1;
+    while (!(SPSR & (1<<SPIF)));
+    SPDR = 0x21;
+    while (!(SPSR & (1<<SPIF)));
+    EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
+    
+    serial_0_put_string_P(spiraw_string_write);
+    
+    // RDSR
+    EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
+    SPDR = 0b00000101;
+    while (!(SPSR & (1<<SPIF)));
+    SPDR = 0b0;
+    while (!(SPSR & (1<<SPIF)));
+    result = SPDR;
+    EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
+    
+    serial_0_put_string_P(spiraw_string_stat);
+    ultoa(result, str, 2);
+    serial_0_put_string(str);
+    serial_0_put_string_P(string_nl);
+    
+    // Wait for write to finish
+    while (result & (1)) {
+        EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
+        SPDR = 0b00000101;
+        while (!(SPSR & (1<<SPIF)));
+        SPDR = 0b0;
+        while (!(SPSR & (1<<SPIF)));
+        result = SPDR;
+        EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
+    }
+    serial_0_put_string_P(spiraw_string_write2);
+    
+    // Read
+    EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
+    SPDR = 0b00000011;
+    while (!(SPSR & (1<<SPIF)));
+    SPDR = 0b0;
+    while (!(SPSR & (1<<SPIF)));
+    SPDR = 0b0;
+    while (!(SPSR & (1<<SPIF)));
+    SPDR = 0b1;
+    while (!(SPSR & (1<<SPIF)));
+    SPDR = 0b0;
+    while (!(SPSR & (1<<SPIF)));
+    result = SPDR;
+    EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
+    
+    serial_0_put_string_P(spiraw_string_read);
+    ultoa(result, str, 16);
+    serial_0_put_string(str);
+    serial_0_put_string_P(string_nl);
+#endif
+    return;
+invalid_args:
+    serial_0_put_string_P(menu_help_spiraw);
 }
 
 // Analog
@@ -390,7 +586,7 @@ void menu_cmd_analog_handler(uint8_t arg_len, char** args)
 
 // Sensors
 static const char menu_cmd_sensors_string[] PROGMEM = "sensors";
-static const char menu_help_sensors[] PROGMEM = "Read from sensors\n";
+static const char menu_help_sensors[] PROGMEM = "Print data from sensors\n";
 
 static const char sensors_str_baro_title[] PROGMEM = "Barometric Altimiter (MPL3115A2)\n";
 static const char sensors_str_baro_alt[] PROGMEM = "\tAltitude: ";
@@ -468,6 +664,33 @@ void menu_cmd_sensors_handler(uint8_t arg_len, char** args)
     serial_0_put_string_P(sensors_str_gyro_units);
     serial_0_put_string_P(sensors_str_temp);
     itoa(fxas21002c_temp, str , 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(sensors_str_temp_units);
+}
+
+// GPS
+static const char menu_cmd_gps_string[] PROGMEM = "gps";
+static const char menu_help_gps[] PROGMEM = "Read from GPS\n";
+
+static const char gps_str_time[] PROGMEM = "UTC Time: ";
+
+void menu_cmd_gps_handler(uint8_t arg_len, char** args)
+{
+    if (arg_len != 1) {
+        serial_0_put_string_P(menu_help_gps);
+        return;
+    }
+    
+    double val = 0;
+    
+    serial_0_put_string_P(gps_str_time);
+    
+
+    serial_0_put_string(str);
+    serial_0_put_string_P(sensors_str_alt_units);
+    serial_0_put_string_P(sensors_str_temp);
+    val = ((double)(mpl3115a2_temp_msb + (((double)(mpl3115a2_temp_lsb >> 4)) / 16)));
+    dtostrf(val, 9, 4, str);
     serial_0_put_string(str);
     serial_0_put_string_P(sensors_str_temp_units);
 }

@@ -16,9 +16,10 @@
 #include "menu_data.h"
 
 // MARK: Constants
+#define MENU_BUFFER_SIZE 200
 
 // MARK: Vairables
-static char menu_buffer[200];
+static char menu_buffer[MENU_BUFFER_SIZE];
 
 // MARK: Static Function prototypes
 static inline void print_prompt(void);
@@ -31,14 +32,15 @@ void init_menu(void)
     flags |= (1<<FLAG_SERIAL_0_LOOPBACK);       // Enable serial loopback
     sei();
     
-    // Clear screen
-    serial_0_put_byte(0x1B);
-    serial_0_put_string("[2J");
-    // Bring cursor home
-    serial_0_put_byte(0x1B);
-    serial_0_put_string("[H");
+//    // Clear screen
+//    serial_0_put_byte(0x1B);
+//    serial_0_put_string("[2J");
+//    // Bring cursor home
+//    serial_0_put_byte(0x1B);
+//    serial_0_put_string("[H");
     
     serial_0_put_string_P(welcome_string);
+    serial_0_put_string_P(version_string);
     print_prompt();
 }
 
@@ -46,7 +48,7 @@ void menu_service(void)
 {
     serial_0_service();
     if (serial_0_has_line('\n')) {
-        serial_0_get_line('\n', menu_buffer, 200);
+        serial_0_get_line('\n', menu_buffer, MENU_BUFFER_SIZE);
         char *line = menu_buffer;
         
         int num_tokens = 1;

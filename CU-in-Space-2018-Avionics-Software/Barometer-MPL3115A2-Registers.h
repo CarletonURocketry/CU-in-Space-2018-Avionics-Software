@@ -4,7 +4,7 @@
 //
 //  Created by Samuel Dewan on 2017-11-03.
 //
-//  Register definitions for MPL3115A2 barometric altimiter
+//  Register definitions for MPL3115A2 barometric altimeter
 //
 
 #ifndef Barometer_MPL3115A2_Registers_h

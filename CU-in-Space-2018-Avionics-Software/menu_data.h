@@ -19,6 +19,7 @@ typedef struct menu_item {
 
 // MARK: UI
 extern const char welcome_string[] PROGMEM;
+extern const char version_string[] PROGMEM;
 extern const char prompt_string[] PROGMEM;
 extern const char menu_unkown_cmd_prt1[] PROGMEM;
 extern const char menu_unkown_cmd_prt2[] PROGMEM;
