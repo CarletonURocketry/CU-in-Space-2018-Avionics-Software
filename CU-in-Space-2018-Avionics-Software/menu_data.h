@@ -24,7 +24,8 @@ extern const char prompt_string[] PROGMEM;
 extern const char menu_unkown_cmd_prt1[] PROGMEM;
 extern const char menu_unkown_cmd_prt2[] PROGMEM;
 
-// MARK: Responses
+// MARK: Welcome
+extern void menu_print_welcome (void);
 
 // MARK: Commands
 extern const uint8_t menu_num_items;

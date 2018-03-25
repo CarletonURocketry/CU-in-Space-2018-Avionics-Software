@@ -31,12 +31,48 @@
 static char str[25];
 
 // MARK: Strings
-const char welcome_string[] PROGMEM = "CU In Space Avionics - 2018\n";
-const char version_string[] PROGMEM = "Built "__DATE__" at "__TIME__" with avr-gcc "__VERSION__"\n";
+
 const char prompt_string[] PROGMEM = "> ";
 const char menu_unkown_cmd_prt1[] PROGMEM = "Unkown command: \"";
 const char menu_unkown_cmd_prt2[] PROGMEM = "\"\nUse \"help --list\" to get a list of avaliable commands.\n";
 static const char string_nl[] PROGMEM = "\n";
+
+// MARK: Welcome
+const char welcome_string[] PROGMEM = "CU InSpace 2018 Avionics Software -> ";
+const char version_string[] PROGMEM = "Built "__DATE__" at "__TIME__" with avr-gcc "__VERSION__"\n";
+
+const char welcome_reset_title[] PROGMEM = "Reset due to: ";
+
+static const char str_reset_poweron[] PROGMEM = "Power On\n";
+static const char str_reset_external[] PROGMEM = "External Reset (Reset Pin)\n";
+static const char str_reset_brownout[] PROGMEM = "Brownout Detected\n";
+static const char str_reset_watchdog[] PROGMEM = "Watchdog Timer\n";
+static const char str_reset_jtag[] PROGMEM = "JTAG\n";
+
+void menu_print_welcome (void)
+{
+    serial_0_put_string_P(welcome_string);
+    serial_0_put_string_P(version_string);
+    
+    serial_0_put_string_P(welcome_reset_title);
+    switch (reset_type) {
+        case JTAG:
+            serial_0_put_string_P(str_reset_jtag);
+            break;
+        case WATCHDOG:
+            serial_0_put_string_P(str_reset_watchdog);
+            break;
+        case BROWNOUT:
+            serial_0_put_string_P(str_reset_brownout);
+            break;
+        case EXTERNAL:
+            serial_0_put_string_P(str_reset_external);
+            break;
+        case POWERON:
+            serial_0_put_string_P(str_reset_poweron);
+            break;
+    }
+}
 
 // MARK: Commands
 
@@ -125,11 +161,6 @@ static const char stat_str_times_gyro[] PROGMEM = "\tGyroscope: ";
 static const char stat_str_times_gps[] PROGMEM = "\tGPS: ";
 
 static const char stat_str_reset_title[] PROGMEM = "Last Reset Due To: ";
-static const char stat_str_reset_poweron[] PROGMEM = "Power On\n";
-static const char stat_str_reset_external[] PROGMEM = "External Reset (Reset Pin)\n";
-static const char stat_str_reset_brownout[] PROGMEM = "Brownout Detected\n";
-static const char stat_str_reset_watchdog[] PROGMEM = "Watchdog Timer\n";
-static const char stat_str_reset_jtag[] PROGMEM = "JTAG\n";
 
 void menu_cmd_stat_handler(uint8_t arg_len, char** args)
 {
@@ -198,19 +229,19 @@ void menu_cmd_stat_handler(uint8_t arg_len, char** args)
     serial_0_put_string_P(stat_str_reset_title);
     switch (reset_type) {
         case JTAG:
-            serial_0_put_string_P(stat_str_reset_jtag);
+            serial_0_put_string_P(str_reset_jtag);
             break;
         case WATCHDOG:
-            serial_0_put_string_P(stat_str_reset_watchdog);
+            serial_0_put_string_P(str_reset_watchdog);
             break;
         case BROWNOUT:
-            serial_0_put_string_P(stat_str_reset_brownout);
+            serial_0_put_string_P(str_reset_brownout);
             break;
         case EXTERNAL:
-            serial_0_put_string_P(stat_str_reset_external);
+            serial_0_put_string_P(str_reset_external);
             break;
         case POWERON:
-            serial_0_put_string_P(stat_str_reset_poweron);
+            serial_0_put_string_P(str_reset_poweron);
             break;
     }
 }
