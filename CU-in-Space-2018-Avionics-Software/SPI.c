@@ -12,40 +12,57 @@
 #include <string.h>
 
 // MARK: Constants
-#define QUEUE_LENGTH 8
-#define MAX_ERRORS 5
+#define QUEUE_LENGTH 8  // The number of SPI transactions which can be queued
 
-#define ID_INVALID 0
-#define ID_FIRST 1
+#define ID_INVALID 0    // The transaction ID for an unused transaction
+#define ID_FIRST 1      // The first valid transaction ID
 
 // MARK: Structures
 typedef struct {
+    /** A unique identifer for this transaction */
     uint8_t id;
     
+    /** The chip select pin for this transaction */
     uint8_t cs_num;
+    /** The attention pin for this transaction */
     uint8_t attn_num;
     
+    /** Number of bytes to be sent*/
     uint8_t out_length;
+    /** The buffer from which data is sent */
     uint8_t *out_buffer;
+    /** The number of bytes to be recieved */
     uint8_t in_length;
+    /** The buffer in which recieved data is placed */
     uint8_t *in_buffer;
     
+    /** The number of bytes that have been sent */
     uint8_t bytes_out;
+    /** The number of bytes that have been received */
     uint8_t bytes_in;
 
+    /** 1 if this transaction uses the attention pin to send and recieve data in full duplex */
     uint8_t full_duplex: 1;
+    /** The state of the attention pin the last time the interupt ran */
     uint8_t last_attn: 1;
+    /** 1 if this transaction is currently in progress */
     uint8_t active: 1;
+    /** 1 if all bytes have been transmitted */
     uint8_t done_out: 1;
+    /** 1 if this transaction is complete */
     uint8_t done: 1;
 } spi_transaction_t;
 
 // MARK: Variables
+/** The port on which the SPI pins are located */
 static volatile uint8_t *port;
 
+/** The transaction queue */
 static spi_transaction_t queue[QUEUE_LENGTH];
+/** The index of the head of the transaction queue */
 static uint8_t queue_head;
 
+/** The transaction id that should be given to the next new transaction */
 static uint8_t next_id = ID_FIRST;
 
 // MARK: Functions
@@ -81,6 +98,10 @@ void spi_service(void)
     } while (i != queue_head);
 }
 
+/**
+ *  Get the first transaction in the queue with the given ID
+ *  @param id The transaction ID to search for
+ */
 static spi_transaction_t *get_transaction_with_id(uint8_t id)
 {
     for (spi_transaction_t *i = queue; i < queue + QUEUE_LENGTH; i++) {
@@ -105,6 +126,9 @@ uint8_t spi_clear_transaction(uint8_t transaction_id)
     return 1;
 }
 
+/**
+ *  Get the next transaction slot which is not currently in use
+ */
 static spi_transaction_t *get_next_free_transaction(void)
 {
     uint8_t i = queue_head;
