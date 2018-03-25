@@ -147,7 +147,30 @@ uint8_t spi_start_half_duplex(uint8_t *transaction_id, uint8_t cs_num, uint8_t *
 uint8_t spi_start_full_duplex(uint8_t *transaction_id, uint8_t cs_num, uint8_t *out_buffer, uint8_t out_length,
                               uint8_t * in_buffer, uint8_t attn_num)
 {
-    return 1;
+    spi_transaction_t *t = get_next_free_transaction();
+    if (t == NULL) return 1;
+    
+    t->id = next_id;
+    *transaction_id = next_id++;
+    if (next_id == ID_INVALID) next_id = ID_FIRST;
+    
+    t->bytes_out = 0;
+    t->bytes_in = 0;
+    t->full_duplex = 1;
+    t->last_attn = 0;
+    t->active = 0;
+    t->done_out = 0;
+    t->done = 0;
+    
+    t->cs_num = cs_num;
+    t->attn_num = attn_num;
+    t->out_buffer = out_buffer;
+    t->out_length = out_length;
+    t->in_buffer = in_buffer;
+    t->in_length = 0;
+    
+    spi_service();
+    return 0;
 }
 
 // MARK: Interupt service routines
@@ -159,7 +182,7 @@ ISR (SPI_STC_vect)
     if (!t->full_duplex && (t->done_out) && (t->bytes_in < t->in_length)) {
         // A byte should be recieved (half duplex)
         t->in_buffer[t->bytes_in++] = SPDR;
-    } else if (t->full_duplex && (t->last_attn || (*port & (1 << t->attn_num))) && (t->bytes_in < t->in_length)) {
+    } else if (t->full_duplex && (t->last_attn || (*port & (1 << t->attn_num)))) {
         // A byte should be recieved (full duplex)
         t->in_buffer[t->bytes_in++] = SPDR;
     }
