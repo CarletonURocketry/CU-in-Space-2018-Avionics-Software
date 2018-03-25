@@ -40,6 +40,16 @@ static const char string_nl[] PROGMEM = "\n";
 
 // MARK: Commands
 
+// Version
+static const char menu_cmd_version_string[] PROGMEM = "version";
+static const char menu_help_version[] PROGMEM = "Get information about the version of this software\n";
+
+void menu_cmd_version_handler(uint8_t arg_len, char** args)
+{
+    serial_0_put_string_P(welcome_string);
+    serial_0_put_string_P(version_string);
+}
+
 // Help
 static const char menu_cmd_help_string[] PROGMEM = "help";
 static const char menu_help_help[] PROGMEM = "Get information about how to use commands.\nValid Usage: help <command name>\nUse help --list to list all valid commands.\n";
@@ -281,7 +291,7 @@ static void do_eeprom_cmd (uint8_t* cmd, uint8_t bytes_out, uint8_t bytes_in, ch
     
     spi_start_half_duplex(&id, EEPROM_CS_NUM, cmd, bytes_out, input, bytes_in);
     
-    while (!spi_transaction_done(id)) spi_service();
+    while (!spi_transaction_done(id));
     
     serial_0_put_string(name);
     serial_0_put_string_P(spitest_string_fin);
@@ -307,13 +317,12 @@ void menu_cmd_spitest_handler(uint8_t arg_len, char** args)
     uint8_t id;
     uint8_t sr;
     
-
     uint8_t rdid_cmd[4] = {0b10101011, 0, 0, 0};
     do_eeprom_cmd(rdid_cmd, 4, 1, "RDID", "SIG");
 
     uint8_t rdsr_cmd[1] = {0b00000101};
     do_eeprom_cmd(rdsr_cmd, 1, 1, "RDSR", "Status");
-    
+
     uint8_t wren_cmd[1] = {0b00000110};
     do_eeprom_cmd(wren_cmd, 1, 0, "WREN", "");
     
@@ -327,33 +336,26 @@ void menu_cmd_spitest_handler(uint8_t arg_len, char** args)
 
     uint8_t write_cmd[5] = {0b00000010, 0, 0, 1, 0x12};
     do_eeprom_cmd(write_cmd, 5, 0, "WRITE", "");
-    
+
     while (sr & 1) {
         spi_start_half_duplex(&id, EEPROM_CS_NUM, rdsr_cmd, 1, &sr, 1);
         while (!spi_transaction_done(id)) spi_service();
         spi_clear_transaction(id);
     }
     serial_0_put_string("Write done\n");
-    
+
     uint8_t read_cmd[4] = {0b00000011, 0, 0, 1};
     do_eeprom_cmd(read_cmd, 4, 1, "READ", "Data");
 }
 
 // SPI Raw
 static const char menu_cmd_spiraw_string[] PROGMEM = "spiraw";
-static const char menu_help_spiraw[] PROGMEM = "Run a test sequence on the 25LC1024 without using the SPI buffer\nValid Usage \n\tspiraw (read <address>)\n";
+static const char menu_help_spiraw[] PROGMEM = "Run a test sequence on the 25LC1024 without using the SPI buffer\n";
 
 #ifdef ENABLE_SPI
 static const char spiraw_string_enabled[] PROGMEM = "Cannot use spiraw, SPI queue is enabled.\n";
 #else
-static const char spiraw_string_read_cmd[] PROGMEM = "read";
 static const char spiraw_string_sig[] PROGMEM = "Signature: 0x";
-static const char spiraw_string_stat[] PROGMEM = "Status Register: 0b";
-static const char spiraw_string_wrsr[] PROGMEM = "Finished WRSR\n";
-static const char spiraw_string_wren[] PROGMEM = "Finished WREN\n";
-static const char spiraw_string_write[] PROGMEM = "Started Write\n";
-static const char spiraw_string_write2[] PROGMEM = "Finished Write\n";
-static const char spiraw_string_read[] PROGMEM = "Read: 0x";
 #endif
 
 void menu_cmd_spiraw_handler(uint8_t arg_len, char** args)
@@ -361,38 +363,9 @@ void menu_cmd_spiraw_handler(uint8_t arg_len, char** args)
 #ifdef ENABLE_SPI
     serial_0_put_string_P(spiraw_string_enabled);
 #else
-    if (arg_len == 3) {
-        if (!strcasecmp_P(args[1], spiraw_string_read_cmd)) {
-            char* end;
-            uint32_t addr = strtoul(args[2], &end, 0);
-            if (*end != '\0') {
-                goto invalid_args;
-            }
-            // Read
-            EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
-            SPDR = 0b00000011;
-            while (!(SPSR & (1<<SPIF)));
-            SPDR = ((uint8_t*)addr)[1];
-            while (!(SPSR & (1<<SPIF)));
-            SPDR = ((uint8_t*)addr)[2];
-            while (!(SPSR & (1<<SPIF)));
-            SPDR = ((uint8_t*)addr)[3];
-            while (!(SPSR & (1<<SPIF)));
-            SPDR = 0b0;
-            while (!(SPSR & (1<<SPIF)));
-            uint8_t result = SPDR;
-            EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
-            
-            serial_0_put_string_P(spiraw_string_read);
-            ultoa(result, str, 16);
-            serial_0_put_string(str);
-            serial_0_put_string_P(string_nl);
-            return;
-        } else {
-            goto invalid_args;
-        }
-    } else if (arg_len != 1) {
-        goto invalid_args;
+    if (arg_len != 1) {
+        serial_0_put_string_P(menu_help_spiraw);
+        return;
     }
     
     SPCR |= (1<<SPE) | (1<<MSTR);
@@ -416,118 +389,70 @@ void menu_cmd_spiraw_handler(uint8_t arg_len, char** args)
     ultoa(result, str, 16);
     serial_0_put_string(str);
     serial_0_put_string_P(string_nl);
-    
-    // RDSR
-    EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
-    SPDR = 0b00000101;
-    while (!(SPSR & (1<<SPIF)));
-    SPDR = 0b0;
-    while (!(SPSR & (1<<SPIF)));
-    result = SPDR;
-    EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
-    
-    serial_0_put_string_P(spiraw_string_stat);
-    ultoa(result, str, 2);
-    serial_0_put_string(str);
-    serial_0_put_string_P(string_nl);
-    
-    // WRSR
-    EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
-    SPDR = 0b00000001;
-    while (!(SPSR & (1<<SPIF)));
-    SPDR = 0b0;
-    while (!(SPSR & (1<<SPIF)));
-    EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
-    
-    serial_0_put_string_P(spiraw_string_wrsr);
-    
-    // WREN
-    EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
-    SPDR = 0b00000110;
-    while (!(SPSR & (1<<SPIF)));
-    EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
-    
-    serial_0_put_string_P(spiraw_string_wren);
-    
-    // RDSR
-    EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
-    SPDR = 0b00000101;
-    while (!(SPSR & (1<<SPIF)));
-    SPDR = 0b0;
-    while (!(SPSR & (1<<SPIF)));
-    result = SPDR;
-    EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
-    
-    serial_0_put_string_P(spiraw_string_stat);
-    ultoa(result, str, 2);
-    serial_0_put_string(str);
-    serial_0_put_string_P(string_nl);
-    
-    // Write
-    EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
-    SPDR = 0b00000010;
-    while (!(SPSR & (1<<SPIF)));
-    SPDR = 0b0;
-    while (!(SPSR & (1<<SPIF)));
-    SPDR = 0b0;
-    while (!(SPSR & (1<<SPIF)));
-    SPDR = 0b1;
-    while (!(SPSR & (1<<SPIF)));
-    SPDR = 0x21;
-    while (!(SPSR & (1<<SPIF)));
-    EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
-    
-    serial_0_put_string_P(spiraw_string_write);
-    
-    // RDSR
-    EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
-    SPDR = 0b00000101;
-    while (!(SPSR & (1<<SPIF)));
-    SPDR = 0b0;
-    while (!(SPSR & (1<<SPIF)));
-    result = SPDR;
-    EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
-    
-    serial_0_put_string_P(spiraw_string_stat);
-    ultoa(result, str, 2);
-    serial_0_put_string(str);
-    serial_0_put_string_P(string_nl);
-    
-    // Wait for write to finish
-    while (result & (1)) {
-        EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
-        SPDR = 0b00000101;
-        while (!(SPSR & (1<<SPIF)));
-        SPDR = 0b0;
-        while (!(SPSR & (1<<SPIF)));
-        result = SPDR;
-        EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
-    }
-    serial_0_put_string_P(spiraw_string_write2);
-    
-    // Read
-    EEPROM_CS_PORT &= ~(1<<EEPROM_CS_NUM);
-    SPDR = 0b00000011;
-    while (!(SPSR & (1<<SPIF)));
-    SPDR = 0b0;
-    while (!(SPSR & (1<<SPIF)));
-    SPDR = 0b0;
-    while (!(SPSR & (1<<SPIF)));
-    SPDR = 0b1;
-    while (!(SPSR & (1<<SPIF)));
-    SPDR = 0b0;
-    while (!(SPSR & (1<<SPIF)));
-    result = SPDR;
-    EEPROM_CS_PORT |= (1<<EEPROM_CS_NUM);
-    
-    serial_0_put_string_P(spiraw_string_read);
-    ultoa(result, str, 16);
-    serial_0_put_string(str);
-    serial_0_put_string_P(string_nl);
 #endif
-    return;
-invalid_args:
-    serial_0_put_string_P(menu_help_spiraw);
+}
+
+// SPI Conc
+static const char menu_cmd_spiconc_string[] PROGMEM = "spiconc";
+static const char menu_help_spiconc[] PROGMEM = "Run a test sequence on the 25LC1024, issuing multiple transactions to the spi queue concurrently.\n";
+
+static const char spiconc_string_rdid[] PROGMEM = "Signature: 0x";
+static const char spiconc_string_rdsr[] PROGMEM = "Status Register: 0b";
+static const char spiconc_string_read[] PROGMEM = "Read: 0x";
+
+void menu_cmd_spiconc_handler(uint8_t arg_len, char** args)
+{
+    if (arg_len != 1) {
+        serial_0_put_string_P(menu_help_spiconc);
+        return;
+    }
+    
+    uint8_t rdid_id, rdsr_id, read_id, wren_id, rdsr2_id, write_id;
+    uint8_t rdid_in, rdsr_in, read_in, rdsr2_in;
+    
+    uint8_t rdid_cmd[4] = {0b10101011, 0, 0, 0};
+    uint8_t rdsr_cmd[1] = {0b00000101};
+    uint8_t read_cmd[4] = {0b00000011, 0, 0, 1};
+    uint8_t wren_cmd[1] = {0b00000110};
+    uint8_t write_cmd[5] = {0b00000010, 0, 0, 1, 0xcc};
+    
+    spi_start_half_duplex(&rdid_id, EEPROM_CS_NUM, rdid_cmd, 4, &rdid_in, 1);
+    spi_start_half_duplex(&rdsr_id, EEPROM_CS_NUM, rdsr_cmd, 1, &rdsr_in, 1);
+    spi_start_half_duplex(&read_id, EEPROM_CS_NUM, read_cmd, 4, &read_in, 1);
+    spi_start_half_duplex(&wren_id, EEPROM_CS_NUM, wren_cmd, 1, NULL, 0);
+    spi_start_half_duplex(&rdsr2_id, EEPROM_CS_NUM, rdsr_cmd, 1, &rdsr2_in, 1);
+    spi_start_half_duplex(&write_id, EEPROM_CS_NUM, write_cmd, 5, NULL, 0);
+    
+    while (!spi_transaction_done(rdid_id));
+    serial_0_put_string_P(spiconc_string_rdid);
+    ultoa(rdid_in, str, 16);
+    serial_0_put_string(str);
+    serial_0_put_string_P(string_nl);
+    
+    while (!spi_transaction_done(rdsr_id));
+    serial_0_put_string_P(spiconc_string_rdsr);
+    ultoa(rdsr_in, str, 2);
+    serial_0_put_string(str);
+    serial_0_put_string_P(string_nl);
+    
+    while (!spi_transaction_done(read_id));
+    serial_0_put_string_P(spiconc_string_read);
+    ultoa(read_in, str, 16);
+    serial_0_put_string(str);
+    serial_0_put_string_P(string_nl);
+    
+    while (!spi_transaction_done(rdsr2_id));
+    serial_0_put_string_P(spiconc_string_rdsr);
+    ultoa(rdsr2_in, str, 2);
+    serial_0_put_string(str);
+    serial_0_put_string_P(string_nl);
+    
+    spi_clear_transaction(rdid_id);
+    spi_clear_transaction(rdsr_id);
+    spi_clear_transaction(read_id);
+    spi_clear_transaction(wren_id);
+    spi_clear_transaction(rdsr2_id);
+    spi_clear_transaction(write_id);
 }
 
 // Analog
@@ -746,16 +671,19 @@ void menu_cmd_altest_handler(uint8_t arg_len, char** args)
 }
 
 
-const uint8_t menu_num_items = 10;
+const uint8_t menu_num_items = 13;
 const menu_item_t menu_items[] PROGMEM = {
+    {.string = menu_cmd_version_string, .handler = menu_cmd_version_handler, .help_string = menu_help_version},
     {.string = menu_cmd_help_string, .handler = menu_cmd_help_handler, .help_string = menu_help_help},
     {.string = menu_cmd_clear_string, .handler = menu_cmd_clear_handler, .help_string = menu_help_clear},
     {.string = menu_cmd_stat_string, .handler = menu_cmd_stat_handler, .help_string = menu_help_stat},
     {.string = menu_cmd_eeprom_string, .handler = menu_cmd_epprom_handler, .help_string = menu_help_eeprom},
     {.string = menu_cmd_spitest_string, .handler = menu_cmd_spitest_handler, .help_string = menu_help_spitest},
     {.string = menu_cmd_spiraw_string, .handler = menu_cmd_spiraw_handler, .help_string = menu_help_spiraw},
+    {.string = menu_cmd_spiconc_string, .handler = menu_cmd_spiconc_handler, .help_string = menu_help_spiconc},
     {.string = menu_cmd_analog_string, .handler = menu_cmd_analog_handler, .help_string = menu_help_analog},
     {.string = menu_cmd_sensors_string, .handler = menu_cmd_sensors_handler, .help_string = menu_help_sensors},
+    {.string = menu_cmd_gps_string, .handler = menu_cmd_gps_handler, .help_string = menu_help_gps},
     {.string = menu_cmd_actest_string, .handler = menu_cmd_actest_handler, .help_string = menu_help_actest},
     {.string = menu_cmd_altest_string, .handler = menu_cmd_altest_handler, .help_string = menu_help_altest}
 };
