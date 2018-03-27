@@ -58,9 +58,9 @@ typedef struct {
 static volatile uint8_t *port;
 
 /** The transaction queue */
-static spi_transaction_t queue[QUEUE_LENGTH];
+static volatile spi_transaction_t queue[QUEUE_LENGTH];
 /** The index of the head of the transaction queue */
-static uint8_t queue_head;
+static volatile uint8_t queue_head;
 
 /** The transaction id that should be given to the next new transaction */
 static uint8_t next_id = ID_FIRST;
@@ -72,10 +72,13 @@ void init_spi(volatile uint8_t *spi_port)
     SPCR |= (1<<SPIE)|(1<<SPE)|(1<<MSTR);  // Enable SPI interface in master mode with interupts
 }
 
-void spi_service(void)
-{
+/**
+ *  Starts the next queued transaction if there is one and there is no currently active transaction.
+ *  This function is inline so that is can be safely called from an ISR
+ */
+static inline void start_next_transaction (void) {
     if (queue[queue_head].active) return;
-        
+    
     uint8_t i = queue_head;
     do {
         if ((queue[i].id != ID_INVALID) && !queue[i].active && !queue[i].done) {
@@ -98,13 +101,18 @@ void spi_service(void)
     } while (i != queue_head);
 }
 
+void spi_service(void)
+{
+    start_next_transaction();
+}
+
 /**
  *  Get the first transaction in the queue with the given ID
  *  @param id The transaction ID to search for
  */
-static spi_transaction_t *get_transaction_with_id(uint8_t id)
+static volatile spi_transaction_t *get_transaction_with_id(uint8_t id)
 {
-    for (spi_transaction_t *i = queue; i < queue + QUEUE_LENGTH; i++) {
+    for (volatile spi_transaction_t *i = queue; i < queue + QUEUE_LENGTH; i++) {
         if (i->id == id) return i;
     }
     return NULL;
@@ -112,13 +120,13 @@ static spi_transaction_t *get_transaction_with_id(uint8_t id)
 
 uint8_t spi_transaction_done(uint8_t transaction_id)
 {
-    spi_transaction_t *t = get_transaction_with_id(transaction_id);
+    volatile spi_transaction_t *t = get_transaction_with_id(transaction_id);
     return (t != NULL) ? (t->done) : 0;
 }
 
 uint8_t spi_clear_transaction(uint8_t transaction_id)
 {
-    spi_transaction_t *t = get_transaction_with_id(transaction_id);
+    volatile spi_transaction_t *t = get_transaction_with_id(transaction_id);
     if ((t != NULL) && !(t->active)) {
         t->id = ID_INVALID;
         return 0;
@@ -129,7 +137,7 @@ uint8_t spi_clear_transaction(uint8_t transaction_id)
 /**
  *  Get the next transaction slot which is not currently in use
  */
-static spi_transaction_t *get_next_free_transaction(void)
+static volatile spi_transaction_t *get_next_free_transaction(void)
 {
     uint8_t i = queue_head;
     do {
@@ -142,7 +150,7 @@ static spi_transaction_t *get_next_free_transaction(void)
 uint8_t spi_start_half_duplex(uint8_t *transaction_id, uint8_t cs_num, uint8_t *out_buffer, uint8_t out_length,
                               uint8_t * in_buffer, uint8_t in_length)
 {
-    spi_transaction_t *t = get_next_free_transaction();
+    volatile spi_transaction_t *t = get_next_free_transaction();
     if (t == NULL) return 1;
     
     t->id = next_id;
@@ -171,7 +179,7 @@ uint8_t spi_start_half_duplex(uint8_t *transaction_id, uint8_t cs_num, uint8_t *
 uint8_t spi_start_full_duplex(uint8_t *transaction_id, uint8_t cs_num, uint8_t *out_buffer, uint8_t out_length,
                               uint8_t * in_buffer, uint8_t attn_num)
 {
-    spi_transaction_t *t = get_next_free_transaction();
+    volatile spi_transaction_t *t = get_next_free_transaction();
     if (t == NULL) return 1;
     
     t->id = next_id;
@@ -200,7 +208,7 @@ uint8_t spi_start_full_duplex(uint8_t *transaction_id, uint8_t cs_num, uint8_t *
 // MARK: Interupt service routines
 ISR (SPI_STC_vect)
 {
-    spi_transaction_t *t = queue + queue_head;
+    volatile spi_transaction_t *t = queue + queue_head;
     
     // Read
     if (!t->full_duplex && (t->done_out) && (t->bytes_in < t->in_length)) {
@@ -227,6 +235,6 @@ ISR (SPI_STC_vect)
         t->active = 0;
         queue_head = (queue_head + 1) % QUEUE_LENGTH;
         
-        spi_service();
+        start_next_transaction();
     }
 }
