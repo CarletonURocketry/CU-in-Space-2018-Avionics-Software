@@ -119,7 +119,7 @@ uint8_t spi_transaction_done(uint8_t transaction_id)
 uint8_t spi_clear_transaction(uint8_t transaction_id)
 {
     spi_transaction_t *t = get_transaction_with_id(transaction_id);
-    if (t != NULL) {
+    if ((t != NULL) && !(t->active)) {
         t->id = ID_INVALID;
         return 0;
     }

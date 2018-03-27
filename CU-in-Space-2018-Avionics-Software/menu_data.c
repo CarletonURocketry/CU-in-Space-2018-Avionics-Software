@@ -253,38 +253,33 @@ static const char menu_help_eeprom[] PROGMEM = "Test external 25LC1024 EEPROM.\n
 static const char eeprom_string_read[] PROGMEM = "read";
 static const char eeprom_string_write[] PROGMEM = "write";
 
+static const char eeprom_string_hex[] PROGMEM = "0x";
+
 void menu_cmd_epprom_handler(uint8_t arg_len, char** args)
 {
     if (arg_len < 3) {
         goto invalid_args;
     }
     
+    uint8_t id;
+    char* end;
+    uint32_t addr = strtoul(args[2], &end, 0);
+    if (*end != '\0') {
+        goto invalid_args;
+    }
+    
     if (!strcasecmp_P(args[1], eeprom_string_read)) {
-        char* end;
-        uint32_t addr = strtoul(args[2], &end, 0);
-        if (*end != '\0') {
-            goto invalid_args;
-        }
-        
-        uint8_t id;
         uint32_t buffer;
         eeprom_25lc1024_read(&id, addr, 4, (uint8_t*)&buffer);
         
-        while (!eeprom_25lc1024_transaction_done(id)) {
-            eeprom_25lc1024_service();
-        }
+        while (!eeprom_25lc1024_transaction_done(id)) eeprom_25lc1024_service();
         
-        ultoa(buffer, str, 10);
+        serial_0_put_string_P(eeprom_string_hex);
+        ultoa(buffer, str, 16);
         serial_0_put_string(str);
         serial_0_put_string_P(string_nl);
     } else if (!strcasecmp_P(args[1], eeprom_string_write)) {
         if (arg_len < 4) {
-            goto invalid_args;
-        }
-        
-        char* end;
-        uint32_t addr = strtoul(args[2], &end, 0);
-        if (*end != '\0') {
             goto invalid_args;
         }
 
@@ -293,15 +288,14 @@ void menu_cmd_epprom_handler(uint8_t arg_len, char** args)
             goto invalid_args;
         }
         
-        uint8_t id;
-        eeprom_25lc1024_read(&id, addr, 4, (uint8_t*)&data);
+        eeprom_25lc1024_write(&id, addr, 4, (uint8_t*)&data);
         
-        while (!eeprom_25lc1024_transaction_done(id)) {
-            eeprom_25lc1024_service();
-        }
+        while (!eeprom_25lc1024_transaction_done(id)) eeprom_25lc1024_service();
     } else {
         goto invalid_args;
     }
+    
+    eeprom_25lc1024_clear_transaction(id);
     
     return;
     

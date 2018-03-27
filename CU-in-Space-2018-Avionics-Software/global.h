@@ -16,7 +16,7 @@
 // MARK: Constants
 #define TIMER_FREQUENCY     1000
 
-//#define ENABLE_DEBUG_FLASH
+#define ENABLE_DEBUG_FLASH
 
 #define ENABLE_SPI
 #define ENABLE_I2C
@@ -30,7 +30,7 @@
 //#define ENABLE_XBEE
 //#define ENABLE_RADIO
 
-//#define ENABLE_EEPROM
+#define ENABLE_EEPROM
 
 // MARK: Startup cause enum
 typedef enum {JTAG, WATCHDOG, BROWNOUT, EXTERNAL, POWERON} reset_reason;

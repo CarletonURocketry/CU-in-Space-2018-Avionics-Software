@@ -15,9 +15,8 @@
 /**
  *  Initilize the 25LC1024 EEPROM with the given CS num
  *  @param cs_num The offset within the SPI output IO register for the CS pin of the EEPROM
- *  @returns 0 if the function was successfull
  */
-extern uint8_t init_25lc1024(uint8_t cs_num);
+extern void init_25lc1024(uint8_t cs_num);
 
 /**
  *  Code to be run in each iteration of the main loop
@@ -45,7 +44,7 @@ extern uint8_t eeprom_25lc1024_clear_transaction(uint8_t transaction_id);
  *  @param length The number of bytes to be read
  *  @param buffer The memory in which the bytes which are read will be placed
  */
-extern uint8_t eeprom_25lc1024_read(uint8_t *transaction_id, uint32_t address, uint8_t length, uint8_t *buffer);
+extern uint8_t eeprom_25lc1024_read(uint8_t *transaction_id, uint32_t address, uint8_t length, uint8_t *data);
 
 /**
  *  Add a write transaction to the queue

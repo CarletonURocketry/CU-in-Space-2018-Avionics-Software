@@ -12,85 +12,46 @@
 
 #include "SPI.h"
 
-typedef enum {QUEUED, READ_SIG, CHECK_WIP, ENABLE_WRITE, ACTION, FINISHED} eeprom_state_t;
+typedef enum {QUEUED, WAKE, WRITE_EN, ACTION, CHECK_STAT, SLEEP, DONE} eeprom_state_t;
 
 typedef struct {
-    uint8_t         transaction_id;     // A unique identifier for this transaction
+    uint8_t id;
+    eeprom_state_t state;
     
-    uint8_t         spi_transaction;    // The identifier of the SPI transaction associated with this EEPROM transaction
+    uint8_t spi_id;
+
+    uint32_t address;
+    uint8_t *data;
+    uint8_t length;
     
-    eeprom_state_t  state;              // The current state of this transaction
-    
-    uint8_t         command;            // The command to be used in this transaction
-    uint8_t         *address;           // The memory address for this transaction (3 bytes)
-    uint8_t         *data;              // The buffer to be used for sending or receiveing data in this transaction
-    uint8_t         length;             // The number of bytes to be sent or recieved
-    
-    uint8_t         write:1;            // This bit is set if this is a write transaction
-    uint8_t         send_addr:1;        // This bit is set if the address should be transmitted
-    uint8_t         active:1;           // This bit is set when the transaction is currently in progress
-    uint8_t         done:1;             // This bit if set if the transaction is complete, regardless of success
-    uint8_t         successfull:1;      // This bit is set if the transaction was successfull
-    
+    uint8_t write: 1;
 } eeprom_transaction_t;
 
 // MARK: Constants
-#define EEPROM_NUM_TRANSACTIONS     5   // The maximum number of transactions which can be queued
+#define QUEUE_LENGTH 5  // The number of SPI transactions which can be queued
+#define BUFFER_LENGTH 260 // The size of the output buffer
 
-#define EEPROM_TRANSACTION_VOID     0   // The transaction ID for a void transaction
-#define EEPROM_TRANSACTION_FIRST    1   // The first valid transaction ID
+#define ID_INVALID   0  // The transaction ID for an unused transaction
+#define ID_FIRST     1  // The first valid transaction ID
 
 // MARK: Variable Definitions
-static volatile uint8_t cs_port_num;
+static volatile uint8_t cs_num;
 
 /** The transaction queue */
-static eeprom_transaction_t eeprom_transactions[EEPROM_NUM_TRANSACTIONS];
-
+static eeprom_transaction_t queue[QUEUE_LENGTH];
 /** The index of the head of the transaction queue */
-static uint8_t eeprom_queue_position;
+static uint8_t queue_head;
 
-/** The next transaction ID that should be used*/
-static uint8_t eeprom_next_transaction;
+/** The transaction id that should be given to the next new transaction */
+static uint8_t next_id = ID_FIRST;
 
-static uint8_t eeprom_out_buffer[260];
-
-/** The data which should be written to the status register */
-static uint8_t init_data[] = {0b00000000};
-
-/** A buffer in which various responses can be stored*/
-static uint8_t response_buffer[1];
+/** The buffer used in communications with the EEPROM*/
+static uint8_t buffer[BUFFER_LENGTH];
 
 // MARK: Function Definitions
-uint8_t init_25lc1024(uint8_t cs_num)
+void init_25lc1024(uint8_t eeprom_cs_num)
 {
-    cs_port_num = cs_num;
-    eeprom_next_transaction = EEPROM_TRANSACTION_FIRST + 1;
-    
-    eeprom_transaction_t *trans = &eeprom_transactions[0];
-    
-    eeprom_queue_position = EEPROM_TRANSACTION_FIRST;
-    
-    trans->transaction_id = EEPROM_TRANSACTION_FIRST;
-    trans->state = READ_SIG;
-    
-    trans->write = 1;
-    trans->send_addr = 0;
-    trans->active = 1;
-    trans->done = 0;
-    trans->successfull = 1;
-    
-    trans->command = WRSR;
-    trans->data = init_data;
-    trans->length = 1;
-    
-    eeprom_out_buffer[0] = RDID;
-    eeprom_out_buffer[1] = 0;
-    eeprom_out_buffer[2] = 0;
-    eeprom_out_buffer[3] = 0;
-    
-    spi_start_half_duplex(&(trans->spi_transaction), cs_port_num, eeprom_out_buffer, 4, response_buffer, 1);
-    
-    return 0;
+    cs_num = eeprom_cs_num;
 }
 
 /**
@@ -99,110 +60,86 @@ uint8_t init_25lc1024(uint8_t cs_num)
  */
 static void eeprom_start_next_transaction (void)
 {
-    if (eeprom_transactions[eeprom_queue_position].active) {
-        return;
-    }
+    if ((queue[queue_head].state != QUEUED) && (queue[queue_head].state != DONE)) return;
     
-    uint8_t i = 0;
+    uint8_t i = queue_head;
     do {
-        if ((eeprom_transactions[i].transaction_id != EEPROM_TRANSACTION_VOID) && (!eeprom_transactions[i].done)) {
-            eeprom_queue_position = i;
-            // Start transaction
-            eeprom_transactions[i].active = 1;
-            
-            eeprom_out_buffer[0] = RDID;
-            eeprom_out_buffer[1] = 0;
-            eeprom_out_buffer[2] = 0;
-            eeprom_out_buffer[3] = 0;
-            
-            spi_start_half_duplex(&(eeprom_transactions[i].spi_transaction), cs_port_num, eeprom_out_buffer, 4, response_buffer, 1);
-            
+        if ((queue[i].id != ID_INVALID) && (queue[i].state == QUEUED)) {
+            queue_head = i;
+            // Start transaction by waking the eeprom
+            buffer[0] = RDID;
+            spi_start_half_duplex(&queue[i].spi_id, cs_num, buffer, 4,  buffer + 4, 1);
+            queue[i].state = WAKE;
             return;
         }
-        i = ((i + 1) < EEPROM_NUM_TRANSACTIONS) ? i + 1 : 0;
-    } while (i != eeprom_queue_position);
+        i = (i + 1) % QUEUE_LENGTH;
+    } while (i != queue_head);
 }
 
 void eeprom_25lc1024_service(void)
 {
-    eeprom_transaction_t *trans = &(eeprom_transactions[eeprom_queue_position]);
+    eeprom_transaction_t *t = queue + queue_head;
+    if (!spi_transaction_done(t->spi_id)) return;
+    spi_clear_transaction(t->spi_id);
     
-    if (!trans->active) {
-        eeprom_start_next_transaction();
-        return;
-    }
-    // QUEUED, READ_SIG, CHECK_WIP, ENABLE_WRITE, WRITE, DPD, FINISHED
-    switch (trans->state) {
+    switch (t->state) {
         case QUEUED:
-            // This shouldn't happen
+            //serial_0_put_string("\tEEPROM: QUEUED\n");
+            //while (!serial_0_out_buffer_empty());
+            // Shouldn't happen
             break;
-        case READ_SIG:
-            // Result of SPI transaction should be the 8bit signature of the EEPROM (0x29)
-            if (spi_transaction_done(trans->spi_transaction)) {
-                trans->state = CHECK_WIP;
-                eeprom_out_buffer[0] = RDSR;
-                spi_clear_transaction(trans->spi_transaction);
-                spi_start_half_duplex(&(trans->spi_transaction), cs_port_num, eeprom_out_buffer, 1, response_buffer, 1);
-            }
-            break;
-        case CHECK_WIP:
-            // Result of SPI transaction should be the STATUS regsiter, check that WIP bit is cleared and send WREN if writing
-            if (spi_transaction_done(trans->spi_transaction)) {
-                spi_clear_transaction(trans->spi_transaction);
-                if (response_buffer[0] & (1<<SR_WIP)) {
-                    // Write is in progress, check WIP again
-                    spi_start_half_duplex(&(trans->spi_transaction), cs_port_num, eeprom_out_buffer, 1, response_buffer, 1);
-                    break;
-                } else if (trans->write) {
-                    // No write in progress, need to send WREN
-                    trans->state = ENABLE_WRITE;
-                    eeprom_out_buffer[0] = WREN;
-                    spi_start_half_duplex(&(trans->spi_transaction), cs_port_num, eeprom_out_buffer, 1, NULL, 0);
-                    break;
-                } else {
-                    // No write in progress, don't need to send WREN
-                }
-            } else {
+        case WAKE:
+            // Finished reading SIG, move on to read action or right enable
+            if (t->write) {
+                // WIP cleared, we need to enable writes now
+                buffer[0] = WREN;
+                spi_start_half_duplex(&t->spi_id, cs_num, buffer, 1, NULL, 0);
+                t->state = WRITE_EN;
                 break;
             }
-        case ENABLE_WRITE:
-            // WREN sent, Write action can now take place or Read action can now take place
-            if (spi_transaction_done(trans->spi_transaction)) {
-                spi_clear_transaction(trans->spi_transaction);
-                trans->state = ACTION;
-                eeprom_out_buffer[0] = trans->command;
-                if (trans->write && trans->send_addr) {
-                    memcpy(eeprom_out_buffer + 1, trans->address, 3);
-                    memcpy(eeprom_out_buffer + 4, trans->data, trans->length);
-                    spi_start_half_duplex(&(trans->spi_transaction), cs_port_num, eeprom_out_buffer, trans->length + 4, NULL, 0);
-                } else if (trans->write) {
-                    memcpy(eeprom_out_buffer + 1, trans->data, trans->length);
-                    spi_start_half_duplex(&(trans->spi_transaction), cs_port_num, eeprom_out_buffer, trans->length + 1, NULL, 0);
-                } else if (trans->send_addr) {
-                    memcpy(eeprom_out_buffer + 1, trans->address, 3);
-                    spi_start_half_duplex(&(trans->spi_transaction), cs_port_num, eeprom_out_buffer, 4, trans->data, trans->length);
-                } else {
-                    spi_start_half_duplex(&(trans->spi_transaction), cs_port_num, eeprom_out_buffer, 1, trans->data, trans->length);
-                }
-            }
+            // If we make it here we are ready to start a read transaction by falling through to write_en done
+        case WRITE_EN:
+            // Write EN done. Perform action
+            buffer[0] = (t->write) ? WRITE : READ;
+            buffer[1] = ((uint8_t*)(&t->address))[2];
+            buffer[2] = ((uint8_t*)(&t->address))[1];
+            buffer[3] = ((uint8_t*)(&t->address))[0];
+            if (t->write) memcpy(buffer + 4, t->data, t->length);
+            spi_start_half_duplex(&t->spi_id, cs_num, buffer, (t->write) ? t->length + 4 : 4,  buffer + 4,
+                                  (t->write) ? 0 : t->length);
+            t->state = ACTION;
             break;
         case ACTION:
-            // Action preformed, handle result and return to DPD
-            if (spi_transaction_done(trans->spi_transaction)) {
-                spi_clear_transaction(trans->spi_transaction);
-                trans->state = FINISHED;
-                eeprom_out_buffer[0] = DPD;
-                spi_start_half_duplex(&(trans->spi_transaction), cs_port_num, eeprom_out_buffer, 1, NULL, 0);
+            // Action finished. Check stat
+            if (t->write) {
+                buffer[0] = RDSR;
+                spi_start_half_duplex(&t->spi_id, cs_num, buffer, 1,  buffer + 1, 1);
+                t->state = CHECK_STAT;
+                break;
+            } else {
+                memcpy(t->data, buffer + 4, t->length);
+                buffer[1] = 0;
+            }
+        case CHECK_STAT:
+            // Finished reading STAT, check if WIP is set, if it is check stat again, if it isn't put eeprom to sleep
+            if (buffer[1] & (1<<SR_WIP)) {
+                // WIP still set
+                spi_start_half_duplex(&t->spi_id, cs_num, buffer, 1,  buffer + 1, 1);
+            } else {
+                // WIP cleared, enter sleep
+                buffer[0] = DPD;
+                spi_start_half_duplex(&t->spi_id, cs_num, buffer, 1,  NULL, 0);
+                t->state = SLEEP;
             }
             break;
-        case FINISHED:
-            // DPD entered, transaction done
-            if (spi_transaction_done(trans->spi_transaction)) {
-                spi_clear_transaction(trans->spi_transaction);
-                trans->done = 1;
-                trans->active = 0;
-                eeprom_start_next_transaction();
-            }
+        case SLEEP:
+            // Sleep mode has been entered, clean up and start the next transaction
+            t->state = DONE;
+            queue_head = (queue_head + 1) % QUEUE_LENGTH;
+            eeprom_start_next_transaction();
+            break;
+        case DONE:
+            // Shouldn't happen
             break;
     }
 }
@@ -213,115 +150,85 @@ void eeprom_25lc1024_service(void)
  *  @param transaction_id The id of the transaction which should be retrieved
  *  @return A pointer the transaction with an in matching transaction_id. Null if there is no such transaction.
  */
-static volatile eeprom_transaction_t *get_transaction (uint8_t transaction_id)
+static volatile eeprom_transaction_t *get_transaction_with_id (uint8_t id)
 {
-    if (transaction_id != EEPROM_TRANSACTION_VOID) {
-        for (int i = 0; i < EEPROM_NUM_TRANSACTIONS; i++) {
-            if (eeprom_transactions[i].transaction_id == transaction_id) {
-                return &eeprom_transactions[i];
-            }
-        }
+    for (eeprom_transaction_t *i = queue; i < queue + QUEUE_LENGTH; i++) {
+        if (i->id == id) return i;
     }
     return NULL;
 }
 
 uint8_t eeprom_25lc1024_transaction_done(uint8_t transaction_id)
 {
-    volatile eeprom_transaction_t *trans = get_transaction(transaction_id);
-    if (trans != NULL) {
-        return trans->done;
-    }
-    return 0;
+    volatile eeprom_transaction_t *t = get_transaction_with_id(transaction_id);
+    return (t != NULL) ? (t->state == DONE) : 0;
 }
 
 uint8_t eeprom_25lc1024_clear_transaction(uint8_t transaction_id)
 {
-    volatile eeprom_transaction_t *trans = get_transaction(transaction_id);
-    if ((trans != NULL) && !(trans->active)) {
-        trans->transaction_id = EEPROM_TRANSACTION_VOID;
+    volatile eeprom_transaction_t *t = get_transaction_with_id(transaction_id);
+    if ((t != NULL) && (t->state == DONE)) {
+        t->id = ID_INVALID;
         return 0;
     }
     return 1;
 }
 
-
 /**
  *  Gets a pointer to the next free slot in the transaction buffer
  *  @return A pointer to the next free transaction or NULL if there are no free transactions
  */
-static volatile eeprom_transaction_t *get_next_free_transaction(void)
+static eeprom_transaction_t *get_next_free_transaction(void)
 {
-    uint8_t i = eeprom_queue_position;
-    
+    uint8_t i = queue_head;
     do {
-        if (eeprom_transactions[i].transaction_id == EEPROM_TRANSACTION_VOID) {
-            return &eeprom_transactions[i];
-        }
-        i = ((i + 1) < EEPROM_NUM_TRANSACTIONS) ? i + 1 : 0;
-    } while (i != eeprom_queue_position);
-    
+        if (queue[i].id == ID_INVALID) return queue + i;
+        i = (i + 1) % QUEUE_LENGTH;
+    } while (i != queue_head);
     return NULL;
 }
 
 
-uint8_t eeprom_25lc1024_read(uint8_t *transaction_id, uint32_t address, uint8_t length, uint8_t *buffer)
+uint8_t eeprom_25lc1024_read(uint8_t *transaction_id, uint32_t address, uint8_t length, uint8_t *data)
 {
-    volatile eeprom_transaction_t *trans = get_next_free_transaction();
-    if (trans == NULL) {
-        return 1;
-    }
+    eeprom_transaction_t *t = get_next_free_transaction();
+    if (t == NULL) return 1;
     
-    uint8_t next = ((eeprom_next_transaction + 1) == EEPROM_TRANSACTION_VOID) ? EEPROM_TRANSACTION_FIRST : eeprom_next_transaction + 1;
+    t->id = next_id;
+    *transaction_id = next_id++;
+    if (next_id == ID_INVALID) next_id = ID_FIRST;
     
-    trans->transaction_id = eeprom_next_transaction;
-    *transaction_id = eeprom_next_transaction;
-    eeprom_next_transaction = next;
+    t->state = QUEUED;
+    t->spi_id = 0;
     
-    trans->state = QUEUED;
+    t->address = address;
+    t->data = data;
+    t->length = length;
     
-    trans->command = READ;
-    trans->address = ((uint8_t*)&address) + 1;
-    trans->data = buffer;
-    trans->length = length;
-    
-    trans->write = 0;
-    trans->send_addr = 1;
-    trans->active = 0;
-    trans->done = 0;
-    trans->successfull = 1;
+    t->write = 0;
     
     eeprom_start_next_transaction();
-    
     return 0;
 }
 
 uint8_t eeprom_25lc1024_write(uint8_t *transaction_id, uint32_t address, uint8_t length,  uint8_t *data)
 {
-    volatile eeprom_transaction_t *trans = get_next_free_transaction();
-    if (trans == NULL) {
-        return 1;
-    }
+    eeprom_transaction_t *t = get_next_free_transaction();
+    if (t == NULL) return 1;
     
-    uint8_t next = ((eeprom_next_transaction + 1) == EEPROM_TRANSACTION_VOID) ? EEPROM_TRANSACTION_FIRST : eeprom_next_transaction + 1;
+    t->id = next_id;
+    *transaction_id = next_id++;
+    if (next_id == ID_INVALID) next_id = ID_FIRST;
     
-    trans->transaction_id = eeprom_next_transaction;
-    *transaction_id = eeprom_next_transaction;
-    eeprom_next_transaction = next;
+    t->state = QUEUED;
+    t->spi_id = 0;
     
-    trans->state = QUEUED;
+    t->address = address;
+    t->data = data;
+    t->length = length;
     
-    trans->command = WRITE;
-    trans->address = ((uint8_t*)&address) + 1;
-    trans->data = data;
-    trans->length = length;
-    
-    trans->write = 1;
-    trans->send_addr = 1;
-    trans->active = 0;
-    trans->done = 0;
-    trans->successfull = 1;
+    t->write = 1;
     
     eeprom_start_next_transaction();
-    
     return 0;
 }
