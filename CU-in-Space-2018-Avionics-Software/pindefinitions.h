@@ -20,9 +20,9 @@
 #define LED_NUM             PINB0
 
 // MARK: Deployment
-#define ENGINE_VALVE_DDR    DDRD
-#define ENGINE_VALVE_PORT   PORTD
-#define ENGINE_VALVE_NUM    PIND7
+#define CAP_DISCHARGE_DDR   DDRD
+#define CAP_DISCHARGE_PORT  PORTD
+#define CAP_DISCHARGE_NUM   PIND4
 
 #define MAIN_TRIGGER_DDR    DDRD
 #define MAIN_TRIGGER_PORT   PORTD
@@ -33,13 +33,9 @@
 #define ARMED_SENSE_PIN     PIND
 #define ARMED_SENSE_NUM     PIND6
 
-#define CAP_DISCHARGE_DDR   DDRD
-#define CAP_DISCHARGE_PORT  PORTD
-#define CAP_DISCHARGE_NUM   PIND4
-
-#define DEPLOY_12V_EN_DDR   DDRC
-#define DEPLOY_12V_EN_PORT  PORTC
-#define DEPLOY_12V_EN_NUM   PINC5
+#define RELAY_ARM_DDR       DDRC
+#define RELAY_ARM_PORT      PORTC
+#define RELAY_ARM_NUM       PINC5
 
 // MARK: Sensor Interupts
 #define ALT_INT_DDR         DDRC
@@ -58,6 +54,10 @@
 #define GYRO_INT_NUM        PINC4
 
 // MARK: SPI Pins
+#define EEPROM2_CS_DDR      DDRB
+#define EEPROM2_CS_PORT     PORTB
+#define EEPROM2_CS_NUM      PINB1
+
 #define RADIO_ATTN_DDR      DDRB
 #define RADIO_ATTN_PORT     PORTB
 #define RADIO_ATTN_PIN      PINB

@@ -67,6 +67,9 @@ void initIO(void)
     // Set eeprom cs pin as ouput and drive high
     EEPROM_CS_DDR |= (1 << EEPROM_CS_NUM);
     EEPROM_CS_PORT |= (1 << EEPROM_CS_NUM);
+    // Set eeprom 2 cs pin as ouput and drive high
+    EEPROM2_CS_DDR |= (1 << EEPROM2_CS_NUM);
+    EEPROM2_CS_PORT |= (1 << EEPROM2_CS_NUM);
     
     // Set spi MOSI pin as an output
     SPI_MOSI_DDR |= (1<<SPI_MOSI_NUM);
@@ -80,6 +83,10 @@ void initIO(void)
 
     // Set main trigger as output
     MAIN_TRIGGER_DDR |= (1<<MAIN_TRIGGER_NUM);
+    
+    // Set relay arm as an output and disable
+    RELAY_ARM_PORT &= (1<<RELAY_ARM_NUM);
+    RELAY_ARM_DDR |= (1<<RELAY_ARM_NUM);
     
     // Set armed sense as an input with pullup
     ARMED_SENSE_DDR &= ~(1<<ARMED_SENSE_NUM);

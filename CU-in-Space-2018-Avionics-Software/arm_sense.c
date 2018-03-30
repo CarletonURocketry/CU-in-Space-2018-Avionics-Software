@@ -57,14 +57,14 @@ void arm(void)
 {
     // Disable capacitor discharge circuit
     CAP_DISCHARGE_PORT &= ~(1<<CAP_DISCHARGE_NUM);
-    // Enable 12v rail
-    DEPLOY_12V_EN_PORT |= (1<<DEPLOY_12V_EN_NUM);
+    // Unshort ignitors
+    RELAY_ARM_PORT |= (1<<RELAY_ARM_NUM);
 }
 
 void disarm(void)
 {
-    // Disable 12v rail
-    DEPLOY_12V_EN_PORT &= ~(1<<DEPLOY_12V_EN_NUM);
+    // Short ignitors
+    RELAY_ARM_PORT &= ~(1<<RELAY_ARM_NUM);
     // Enable capacitor discharge circuit
     CAP_DISCHARGE_PORT |= (1<<CAP_DISCHARGE_NUM);
 }
