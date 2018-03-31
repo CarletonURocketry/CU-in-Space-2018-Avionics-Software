@@ -16,10 +16,10 @@
 // MARK: Constants
 #define TIMER_FREQUENCY     1000
 
-#define ENABLE_DEBUG_FLASH
+//#define ENABLE_DEBUG_FLASH
 
 #define ENABLE_SPI
-#define ENABLE_I2C
+//#define ENABLE_I2C
 #define ENABLE_ADC
 
 //#define ENABLE_ALTIMETER

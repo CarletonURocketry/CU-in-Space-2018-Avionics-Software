@@ -155,7 +155,7 @@ int main(void)
     fgpmmopa6h_service();  // GPS
 #endif
 #ifdef ENABLE_EEPROM
-    init_25lc1024(EEPROM_CS_NUM); // EEPROM
+    init_25lc1024(EEPROM_CS_NUM, EEPROM2_CS_NUM); // EEPROM
 #endif
 
     for (;;) {
