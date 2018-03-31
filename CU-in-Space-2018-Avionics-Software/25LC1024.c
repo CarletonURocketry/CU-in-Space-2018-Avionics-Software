@@ -20,6 +20,7 @@ typedef struct {
     
     uint8_t spi_id;
 
+    uint8_t cs_num;
     uint32_t address;
     uint8_t *data;
     uint8_t length;
@@ -35,7 +36,10 @@ typedef struct {
 #define ID_FIRST     1  // The first valid transaction ID
 
 // MARK: Variable Definitions
-static volatile uint8_t cs_num;
+/** The chip select pin for the first eeprom */
+static volatile uint8_t cs_num_0;
+/** The chip select pin for the second eeprom*/
+static volatile uint8_t cs_num_1;
 
 /** The transaction queue */
 static eeprom_transaction_t queue[QUEUE_LENGTH];
@@ -49,9 +53,10 @@ static uint8_t next_id = ID_FIRST;
 static uint8_t buffer[BUFFER_LENGTH];
 
 // MARK: Function Definitions
-void init_25lc1024(uint8_t eeprom_cs_num)
+void init_25lc1024(uint8_t eeprom_cs_num_0, uint8_t eeprom_cs_num_1)
 {
-    cs_num = eeprom_cs_num;
+    cs_num_0 = eeprom_cs_num_0;
+    cs_num_1 = eeprom_cs_num_1;
 }
 
 /**
@@ -68,7 +73,7 @@ static void eeprom_start_next_transaction (void)
             queue_head = i;
             // Start transaction by waking the eeprom
             buffer[0] = RDID;
-            spi_start_half_duplex(&queue[i].spi_id, cs_num, buffer, 4,  buffer + 4, 1);
+            spi_start_half_duplex(&queue[i].spi_id, queue[i].cs_num, buffer, 4,  buffer + 4, 1);
             queue[i].state = WAKE;
             return;
         }
@@ -93,7 +98,7 @@ void eeprom_25lc1024_service(void)
             if (t->write) {
                 // WIP cleared, we need to enable writes now
                 buffer[0] = WREN;
-                spi_start_half_duplex(&t->spi_id, cs_num, buffer, 1, NULL, 0);
+                spi_start_half_duplex(&t->spi_id, t->cs_num, buffer, 1, NULL, 0);
                 t->state = WRITE_EN;
                 break;
             }
@@ -105,7 +110,7 @@ void eeprom_25lc1024_service(void)
             buffer[2] = ((uint8_t*)(&t->address))[1];
             buffer[3] = ((uint8_t*)(&t->address))[0];
             if (t->write) memcpy(buffer + 4, t->data, t->length);
-            spi_start_half_duplex(&t->spi_id, cs_num, buffer, (t->write) ? t->length + 4 : 4,  buffer + 4,
+            spi_start_half_duplex(&t->spi_id, t->cs_num, buffer, (t->write) ? t->length + 4 : 4,  buffer + 4,
                                   (t->write) ? 0 : t->length);
             t->state = ACTION;
             break;
@@ -113,7 +118,7 @@ void eeprom_25lc1024_service(void)
             // Action finished. Check stat
             if (t->write) {
                 buffer[0] = RDSR;
-                spi_start_half_duplex(&t->spi_id, cs_num, buffer, 1,  buffer + 1, 1);
+                spi_start_half_duplex(&t->spi_id, t->cs_num, buffer, 1,  buffer + 1, 1);
                 t->state = CHECK_STAT;
                 break;
             } else {
@@ -124,11 +129,11 @@ void eeprom_25lc1024_service(void)
             // Finished reading STAT, check if WIP is set, if it is check stat again, if it isn't put eeprom to sleep
             if (buffer[1] & (1<<SR_WIP)) {
                 // WIP still set
-                spi_start_half_duplex(&t->spi_id, cs_num, buffer, 1,  buffer + 1, 1);
+                spi_start_half_duplex(&t->spi_id, t->cs_num, buffer, 1,  buffer + 1, 1);
             } else {
                 // WIP cleared, enter sleep
                 buffer[0] = DPD;
-                spi_start_half_duplex(&t->spi_id, cs_num, buffer, 1,  NULL, 0);
+                spi_start_half_duplex(&t->spi_id, t->cs_num, buffer, 1,  NULL, 0);
                 t->state = SLEEP;
             }
             break;
@@ -201,7 +206,8 @@ uint8_t eeprom_25lc1024_read(uint8_t *transaction_id, uint32_t address, uint8_t 
     t->state = QUEUED;
     t->spi_id = 0;
     
-    t->address = address;
+    t->cs_num = (address <= MAX_ADDRESS) ? cs_num_0 : cs_num_1;
+    t->address = (address <= MAX_ADDRESS) ? address : address - MAX_ADDRESS - 1;
     t->data = data;
     t->length = length;
     
@@ -223,7 +229,8 @@ uint8_t eeprom_25lc1024_write(uint8_t *transaction_id, uint32_t address, uint8_t
     t->state = QUEUED;
     t->spi_id = 0;
     
-    t->address = address;
+    t->cs_num = (address <= MAX_ADDRESS) ? cs_num_0 : cs_num_1;
+    t->address = (address <= MAX_ADDRESS) ? address : address - MAX_ADDRESS - 1;
     t->data = data;
     t->length = length;
     

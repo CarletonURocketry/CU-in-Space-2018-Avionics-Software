@@ -14,9 +14,10 @@
 
 /**
  *  Initilize the 25LC1024 EEPROM with the given CS num
- *  @param cs_num The offset within the SPI output IO register for the CS pin of the EEPROM
+ *  @param cs_num_0 The offset within the SPI output IO register for the CS pin of the first EEPROM
+ *  @param cs_num_1 The offset within the SPI output IO register for the CS pin of the second EEPROM
  */
-extern void init_25lc1024(uint8_t cs_num);
+extern void init_25lc1024(uint8_t cs_num_0, uint8_t cs_num_1);
 
 /**
  *  Code to be run in each iteration of the main loop
@@ -42,7 +43,7 @@ extern uint8_t eeprom_25lc1024_clear_transaction(uint8_t transaction_id);
  *  @param transaction_id The identifier for the transaction will be stored in this memory
  *  @param address The memory address where the read operation should start
  *  @param length The number of bytes to be read
- *  @param buffer The memory in which the bytes which are read will be placed
+ *  @param data The memory in which the bytes which are read will be placed
  */
 extern uint8_t eeprom_25lc1024_read(uint8_t *transaction_id, uint32_t address, uint8_t length, uint8_t *data);
 
