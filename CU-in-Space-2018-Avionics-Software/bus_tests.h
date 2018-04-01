@@ -32,4 +32,9 @@ extern const char menu_cmd_iicraw_string[] PROGMEM;
 extern const char menu_help_iicraw[] PROGMEM;
 extern void menu_cmd_iicraw_handler(uint8_t arg_len, char** args);
 
+// I2C IO
+extern const char menu_cmd_iicio_string[] PROGMEM;
+extern const char menu_help_iicio[] PROGMEM;
+extern void menu_cmd_iicio_handler(uint8_t arg_len, char** args);
+
 #endif /* bus_tests_h */

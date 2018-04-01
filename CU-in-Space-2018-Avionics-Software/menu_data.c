@@ -245,6 +245,13 @@ void menu_cmd_stat_handler(uint8_t arg_len, char** args)
             serial_0_put_string_P(str_reset_poweron);
             break;
     }
+    
+    uint8_t x[] = {0x65, 0x43, 0x21};
+    uint16_t a = *((uint16_t*)x);
+    serial_0_put_string("a: 0x");
+    ultoa(a, str, 16);
+    serial_0_put_string(str);
+    serial_0_put_string_P(stat_str_time_units);
 }
 
 // EEPROM
@@ -520,7 +527,7 @@ void menu_cmd_altest_handler(uint8_t arg_len, char** args)
 }
 
 
-const uint8_t menu_num_items = 14;
+const uint8_t menu_num_items = 15;
 const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_version_string, .handler = menu_cmd_version_handler, .help_string = menu_help_version},
     {.string = menu_cmd_help_string, .handler = menu_cmd_help_handler, .help_string = menu_help_help},
@@ -535,5 +542,6 @@ const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_gps_string, .handler = menu_cmd_gps_handler, .help_string = menu_help_gps},
     {.string = menu_cmd_actest_string, .handler = menu_cmd_actest_handler, .help_string = menu_help_actest},
     {.string = menu_cmd_altest_string, .handler = menu_cmd_altest_handler, .help_string = menu_help_altest},
-    {.string = menu_cmd_iicraw_string, .handler = menu_cmd_iicraw_handler, .help_string = menu_help_iicraw}
+    {.string = menu_cmd_iicraw_string, .handler = menu_cmd_iicraw_handler, .help_string = menu_help_iicraw},
+    {.string = menu_cmd_iicio_string, .handler = menu_cmd_iicio_handler, .help_string = menu_help_iicio}
 };

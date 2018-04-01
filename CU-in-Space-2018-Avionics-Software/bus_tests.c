@@ -326,3 +326,57 @@ error:
     goto quit;
 #endif
 }
+
+// IIC IO
+const char menu_cmd_iicio_string[] PROGMEM = "iicio";
+const char menu_help_iicio[] PROGMEM = "Run a test sequence on an MCP23O17 IO expander\n";
+
+static const char iicio_string_write_success[] PROGMEM = "Successfully wrote to IO Expander\n";
+static const char iicio_string_write_fail[] PROGMEM = "Failed to write to IO Expander\n";
+static const char iicio_string_read_success[] PROGMEM = "Successfully read from IO Expander: 0b";
+static const char iicio_string_read_fail[] PROGMEM = "Failed to read from IO Expander\n";
+
+void menu_cmd_iicio_handler(uint8_t arg_len, char** args)
+{
+    if (arg_len != 1) {
+        serial_0_put_string_P(menu_help_iicraw);
+        return;
+    }
+    uint8_t id;
+    
+    // Set port A as inputs and port B as outputs
+    uint8_t data[] = {0xff, 0x0};
+    i2c_write(&id, 0b0100000, 0x00, data, 2);
+
+    while (!i2c_transaction_done(id));
+
+    serial_0_put_string_P((i2c_transaction_successful(id)) ? iicio_string_write_success : iicio_string_write_fail);
+
+    i2c_clear_transaction(id);
+
+    // Read port A
+    data[0] = 0x0;
+    i2c_read(&id, 0b0100000, 0x12, data, 1);
+    while (!i2c_transaction_done(id));
+
+    if (i2c_transaction_successful(id)) {
+        serial_0_put_string_P(iicio_string_read_success);
+        ultoa(data[0], str, 2);
+        serial_0_put_string(str);
+        serial_0_put_string_P(string_nl);
+    } else {
+        serial_0_put_string_P(iicio_string_read_fail);
+    }
+
+    i2c_clear_transaction(id);
+    
+    // Write to port B
+    data[0] = 0b10101010;
+    i2c_write(&id, 0b0100000, 0x15, data, 1);
+    
+    while (!i2c_transaction_done(id));
+    
+    serial_0_put_string_P((i2c_transaction_successful(id)) ? iicio_string_write_success : iicio_string_write_fail);
+    
+    i2c_clear_transaction(id);
+}
