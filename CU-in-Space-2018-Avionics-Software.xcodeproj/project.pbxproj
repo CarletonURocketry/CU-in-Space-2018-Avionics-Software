@@ -7,7 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		BC3214CB2059835900DB108E /* arm_sense.c in Sources */ = {isa = PBXBuildFile; fileRef = BC3214CA2059835900DB108E /* arm_sense.c */; };
+		BC2FB4A7206AB5F600B8890A /* bus_tests.c in Sources */ = {isa = PBXBuildFile; fileRef = BC2FB4A6206AB5F600B8890A /* bus_tests.c */; };
+		BC36611B2073CFC9009D4B19 /* ematch_detect.c in Sources */ = {isa = PBXBuildFile; fileRef = BC36611A2073CFC9009D4B19 /* ematch_detect.c */; };
 		BC3B8BC8201123EC00C7B0BA /* I2C-Example.c in Sources */ = {isa = PBXBuildFile; fileRef = BC3B8BC7201123EC00C7B0BA /* I2C-Example.c */; };
 		BC588CAE1FA9261D003E8C15 /* ADC.c in Sources */ = {isa = PBXBuildFile; fileRef = BC588CAD1FA9261D003E8C15 /* ADC.c */; };
 		BC933A1B1FAA8C7000476F3F /* 25LC1024.c in Sources */ = {isa = PBXBuildFile; fileRef = BC933A1A1FAA8C7000476F3F /* 25LC1024.c */; };
@@ -28,9 +29,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		BC3214C92059835900DB108E /* arm_sense.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = arm_sense.h; sourceTree = "<group>"; };
-		BC3214CA2059835900DB108E /* arm_sense.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = arm_sense.c; sourceTree = "<group>"; };
+		BC2FB4A5206AB5F600B8890A /* bus_tests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bus_tests.h; sourceTree = "<group>"; };
+		BC2FB4A6206AB5F600B8890A /* bus_tests.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = bus_tests.c; sourceTree = "<group>"; };
 		BC3214CC20599B0F00DB108E /* telemetry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = telemetry.h; sourceTree = "<group>"; };
+		BC3661192073CFC9009D4B19 /* ematch_detect.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ematch_detect.h; sourceTree = "<group>"; };
+		BC36611A2073CFC9009D4B19 /* ematch_detect.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ematch_detect.c; sourceTree = "<group>"; };
 		BC3B8BC7201123EC00C7B0BA /* I2C-Example.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "I2C-Example.c"; sourceTree = "<group>"; };
 		BC588CAC1FA9261D003E8C15 /* ADC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ADC.h; sourceTree = "<group>"; };
 		BC588CAD1FA9261D003E8C15 /* ADC.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ADC.c; sourceTree = "<group>"; };
@@ -148,6 +151,8 @@
 				BC93ECBF1FA4F9A700AD7504 /* menu.c */,
 				BC93ECC31FA4FA0100AD7504 /* menu_data.h */,
 				BC93ECC41FA4FA0100AD7504 /* menu_data.c */,
+				BC2FB4A5206AB5F600B8890A /* bus_tests.h */,
+				BC2FB4A6206AB5F600B8890A /* bus_tests.c */,
 			);
 			name = Debug;
 			sourceTree = "<group>";
@@ -187,8 +192,8 @@
 			children = (
 				BC3214CC20599B0F00DB108E /* telemetry.h */,
 				BCD115251FAD48AC00AC1997 /* telemetry.c */,
-				BC3214C92059835900DB108E /* arm_sense.h */,
-				BC3214CA2059835900DB108E /* arm_sense.c */,
+				BC3661192073CFC9009D4B19 /* ematch_detect.h */,
+				BC36611A2073CFC9009D4B19 /* ematch_detect.c */,
 			);
 			name = Application;
 			sourceTree = "<group>";
@@ -272,7 +277,7 @@
 		BC93EC971FA4F5F200AD7504 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0900;
+				LastUpgradeCheck = 0930;
 				ORGANIZATIONNAME = "Samuel Dewan";
 				TargetAttributes = {
 					BC93EC9B1FA4F5F200AD7504 = {
@@ -326,7 +331,6 @@
 				BC93ECDF1FA4FC7500AD7504 /* Gyro-FXAS21002C.c in Sources */,
 				BC93ECA51FA4F5F200AD7504 /* main.c in Sources */,
 				BC3B8BC8201123EC00C7B0BA /* I2C-Example.c in Sources */,
-				BC3214CB2059835900DB108E /* arm_sense.c in Sources */,
 				BC93ECE21FA4FC9700AD7504 /* GPS-FGPMMOPA6H.c in Sources */,
 				BC93ECCB1FA4FA3200AD7504 /* serial1.c in Sources */,
 				BC93ECCE1FA4FA5100AD7504 /* SPI.c in Sources */,
@@ -338,8 +342,10 @@
 				BC933A1B1FAA8C7000476F3F /* 25LC1024.c in Sources */,
 				BCD115261FAD48AC00AC1997 /* telemetry.c in Sources */,
 				BC93ECBD1FA4F98500AD7504 /* serial0.c in Sources */,
+				BC2FB4A7206AB5F600B8890A /* bus_tests.c in Sources */,
 				BC93ECC51FA4FA0100AD7504 /* menu_data.c in Sources */,
 				BC93ECC01FA4F9A700AD7504 /* menu.c in Sources */,
+				BC36611B2073CFC9009D4B19 /* ematch_detect.c in Sources */,
 				BC93ECDA1FA4FC5300AD7504 /* Accel-ADXL343.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -361,6 +367,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -368,6 +375,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -421,6 +429,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -428,6 +437,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;

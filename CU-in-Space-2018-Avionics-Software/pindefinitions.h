@@ -19,6 +19,11 @@
 #define LED_PORT            PORTB
 #define LED_NUM             PINB0
 
+#define RESET_JUMPER_DDR    DDRC
+#define RESET_JUMPER_PORT   PORTC
+#define RESET_JUMPER_PIN    PINC
+#define RESET_JUMPER_NUM    PINC6
+
 // MARK: Deployment
 #define CAP_DISCHARGE_DDR   DDRD
 #define CAP_DISCHARGE_PORT  PORTD
@@ -28,14 +33,19 @@
 #define MAIN_TRIGGER_PORT   PORTD
 #define MAIN_TRIGGER_NUM    PIND5
 
-#define ARMED_SENSE_DDR     DDRD
-#define ARMED_SENSE_PORT    PORTD
-#define ARMED_SENSE_PIN     PIND
-#define ARMED_SENSE_NUM     PIND6
+#define EMATCH_SENSE_1_DDR  DDRD
+#define EMATCH_SENSE_1_PORT PORTD
+#define EMATCH_SENSE_1_PIN  PIND
+#define EMATCH_SENSE_1_NUM  PIND6
 
-#define RELAY_ARM_DDR       DDRC
-#define RELAY_ARM_PORT      PORTC
-#define RELAY_ARM_NUM       PINC5
+#define EMATCH_SENSE_2_DDR  DDRD
+#define EMATCH_SENSE_2_PORT PORTD
+#define EMATCH_SENSE_2_PIN  PIND
+#define EMATCH_SENSE_2_NUM  PIND7
+
+#define ENABLE_12V_DDR      DDRC
+#define ENABLE_12V_PORT     PORTC
+#define ENABLE_12V_NUM      PINC5
 
 // MARK: Sensor Interupts
 #define ALT_INT_DDR         DDRC
@@ -82,7 +92,7 @@
 #define SPI_SCK_DDR         DDRB
 #define SPI_SCK_NUM         PINB7
 
-// MARK: Analog Inputsd
+// MARK: Analog Inputs
 #define CAP_REF_ANALOG_PIN      0
 #define TEMP_1_ANALOG_PIN       1
 #define TEMP_2_ANALOG_PIN       2

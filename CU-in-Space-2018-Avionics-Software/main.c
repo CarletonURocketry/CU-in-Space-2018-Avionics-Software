@@ -12,7 +12,7 @@
 
 #include "pindefinitions.h"
 
-#include "arm_sense.h"
+#include "ematch_detect.h"
 #include "menu.h"
 #include "telemetry.h"
 #include "SPI.h"
@@ -58,6 +58,41 @@ void get_mcusr(void)
 
 void initIO(void)
 {
+    // Set LED pin as an output
+    LED_DDR |= (1<<LED_NUM);
+    // Set reset jumper pin as an input with pullup
+    RESET_JUMPER_DDR &= ~(1<<RESET_JUMPER_NUM);
+    RESET_JUMPER_PORT |= (1<<RESET_JUMPER_NUM);
+    
+    // Set cap discharge pin as an output and drive low
+    CAP_DISCHARGE_DDR |= (1<<CAP_DISCHARGE_NUM);
+    CAP_DISCHARGE_PORT &= ~(1<<CAP_DISCHARGE_NUM);
+    // Set main triggger pin as an output and drive low
+    MAIN_TRIGGER_DDR |= (1<<MAIN_TRIGGER_NUM);
+    MAIN_TRIGGER_PORT &= ~(1<<MAIN_TRIGGER_NUM);
+    // Set e-match sense 1 pin as an input without pullup
+    EMATCH_SENSE_1_DDR &= ~(1 << EMATCH_SENSE_1_NUM);
+    EMATCH_SENSE_1_PORT &= ~(1 << EMATCH_SENSE_1_NUM);
+    // Set e-match sense 2 pin as an input without pullup
+    EMATCH_SENSE_2_DDR &= ~(1 << EMATCH_SENSE_2_NUM);
+    EMATCH_SENSE_2_PORT &= ~(1 << EMATCH_SENSE_2_NUM);
+    // Set 12v enable pin as an output and drive high
+    ENABLE_12V_DDR |= (1 << ENABLE_12V_NUM);
+    ENABLE_12V_PORT |= (1 << ENABLE_12V_NUM);
+    
+    // Set altimeter interupt pin as an input without pullup
+    ALT_INT_DDR &= ~(1 << ALT_INT_NUM);
+    ALT_INT_PORT &= ~(1 << ALT_INT_NUM);
+    // Set accelerometer interupt pin as an input without pullup
+    ACCEL_INT_DDR &= ~(1 << ACCEL_INT_NUM);
+    ACCEL_INT_PORT &= ~(1 << ACCEL_INT_NUM);
+    // Set gyroscope interupt pin as an input without pullup
+    GYRO_INT_DDR &= ~(1 << GYRO_INT_NUM);
+    GYRO_INT_PORT &= ~(1 << GYRO_INT_NUM);
+    
+    // Set eeprom 2 cs pin as ouput and drive high
+    EEPROM2_CS_DDR |= (1 << EEPROM2_CS_NUM);
+    EEPROM2_CS_PORT |= (1 << EEPROM2_CS_NUM);
     // Set radio attn pin as input without pullup
     RADIO_ATTN_DDR &= ~(1 << RADIO_ATTN_NUM);
     RADIO_ATTN_PORT &= ~(1 << RADIO_ATTN_NUM);
@@ -67,30 +102,12 @@ void initIO(void)
     // Set eeprom cs pin as ouput and drive high
     EEPROM_CS_DDR |= (1 << EEPROM_CS_NUM);
     EEPROM_CS_PORT |= (1 << EEPROM_CS_NUM);
-    // Set eeprom 2 cs pin as ouput and drive high
-    EEPROM2_CS_DDR |= (1 << EEPROM2_CS_NUM);
-    EEPROM2_CS_PORT |= (1 << EEPROM2_CS_NUM);
-    
     // Set spi MOSI pin as an output
     SPI_MOSI_DDR |= (1<<SPI_MOSI_NUM);
     // Set spi MISO pin as an input
     SPI_MISO_DDR &= ~(1<<SPI_MISO_NUM);
     // Set spi SCK pin as an output
     SPI_SCK_DDR |= (1<<SPI_SCK_NUM);
-    
-    // Set LED pin as an output
-    LED_DDR |= (1<<LED_NUM);
-
-    // Set main trigger as output
-    MAIN_TRIGGER_DDR |= (1<<MAIN_TRIGGER_NUM);
-    
-    // Set relay arm as an output and disable
-    RELAY_ARM_PORT &= (1<<RELAY_ARM_NUM);
-    RELAY_ARM_DDR |= (1<<RELAY_ARM_NUM);
-    
-    // Set armed sense as an input with pullup
-    ARMED_SENSE_DDR &= ~(1<<ARMED_SENSE_NUM);
-    ARMED_SENSE_PORT |= (1<<ARMED_SENSE_NUM);
 }
 
 void init_timers(void)
@@ -119,8 +136,6 @@ int main(void)
 
     initIO();
     init_timers();
-    
-    disarm();
 
     // Initilize IO peripherals
 #ifdef ENABLE_ADC
@@ -149,10 +164,10 @@ int main(void)
     init_adxl343(); // Accelerometer
 #endif
 #ifdef ENABLE_GYROSCOPE
-    init_fxas21002c();  // Gyroscope
+    init_fxas21002c(); // Gyroscope
 #endif
-#ifdef ENABLE_GYROSCOPE
-    fgpmmopa6h_service();  // GPS
+#ifdef ENABLE_GPS
+    fgpmmopa6h_service(); // GPS
 #endif
 #ifdef ENABLE_EEPROM
     init_25lc1024(EEPROM_CS_NUM, EEPROM2_CS_NUM); // EEPROM
@@ -204,7 +219,7 @@ static void main_loop ()
 #endif
     
     // Run Software Module Servies
-    arm_sense_db_service();
+    ematch_detect_service();
     telemetry_service();
     menu_service();
 }

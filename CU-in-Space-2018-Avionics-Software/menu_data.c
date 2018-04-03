@@ -16,7 +16,7 @@
 
 #include "bus_tests.h"
 
-#include "arm_sense.h"
+#include "ematch_detect.h"
 
 #include "25LC1024.h"
 #include "SPI.h"
@@ -146,9 +146,10 @@ static const char stat_str_time_units[] PROGMEM = " ms\n";
 static const char stat_str_state_title[] PROGMEM = "Current State\n";
 static const char stat_str_state_time[] PROGMEM = "\tMission Time: ";
 static const char stat_str_state_state[] PROGMEM = "\tMain FSM State: ";
-static const char stat_str_state_armed[] PROGMEM = "\tDeployment State: ";
-static const char stat_str_state_armed_t[] PROGMEM = "ARMED\n";
-static const char stat_str_state_armed_f[] PROGMEM = "DISARMED\n";
+static const char stat_str_state_ematch_1[] PROGMEM = "\tE-Match 1: ";
+static const char stat_str_state_ematch_2[] PROGMEM = "\tE-Match 2: ";
+static const char stat_str_state_ematch_t[] PROGMEM = "READY\n";
+static const char stat_str_state_ematch_f[] PROGMEM = "NOT PRESENT\n";
 
 static const char stat_str_volt_title[] PROGMEM = "Voltages\n";
 static const char stat_str_volt_bat[] PROGMEM = "\tBattery: ";
@@ -180,13 +181,11 @@ void menu_cmd_stat_handler(uint8_t arg_len, char** args)
     // FSM State
     serial_0_put_string_P(stat_str_state_state);
     serial_0_put_string_P(string_nl);
-    // Is armed
-    serial_0_put_string_P(stat_str_state_armed);
-    if (is_armed()) {
-        serial_0_put_string_P(stat_str_state_armed_t);
-    } else {
-        serial_0_put_string_P(stat_str_state_armed_f);
-    }
+    // E-Matches present
+    serial_0_put_string_P(stat_str_state_ematch_1);
+    serial_0_put_string_P((ematch_1_is_ready()) ? stat_str_state_ematch_t : stat_str_state_ematch_f);
+    serial_0_put_string_P(stat_str_state_ematch_2);
+    serial_0_put_string_P((ematch_2_is_ready()) ? stat_str_state_ematch_t : stat_str_state_ematch_f);
     while (!serial_0_out_buffer_empty());
     
     // Voltages
@@ -245,13 +244,6 @@ void menu_cmd_stat_handler(uint8_t arg_len, char** args)
             serial_0_put_string_P(str_reset_poweron);
             break;
     }
-    
-    uint8_t x[] = {0x65, 0x43, 0x21};
-    uint16_t a = *((uint16_t*)x);
-    serial_0_put_string("a: 0x");
-    ultoa(a, str, 16);
-    serial_0_put_string(str);
-    serial_0_put_string_P(stat_str_time_units);
 }
 
 // EEPROM

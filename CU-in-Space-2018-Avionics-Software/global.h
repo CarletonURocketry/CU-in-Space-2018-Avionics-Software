@@ -13,24 +13,24 @@
 
 #include <stdint.h>                     // Int types are needed everywehre
 
-// MARK: Constants
-#define TIMER_FREQUENCY     1000
-
-//#define ENABLE_DEBUG_FLASH
+// MARK: Compile Time Settings
+#define ENABLE_DEBUG_FLASH
 
 #define ENABLE_SPI
-//#define ENABLE_I2C
+#define ENABLE_I2C
 #define ENABLE_ADC
 
 //#define ENABLE_ALTIMETER
-#define ENABLE_ACCELEROMETER
+//#define ENABLE_ACCELEROMETER
 //#define ENABLE_GYROSCOPE
 //#define ENABLE_GPS
 
 //#define ENABLE_XBEE
-//#define ENABLE_RADIO
 
 #define ENABLE_EEPROM
+
+// MARK: Constants
+#define TIMER_FREQUENCY     1000
 
 // MARK: Startup cause enum
 typedef enum {JTAG, WATCHDOG, BROWNOUT, EXTERNAL, POWERON} reset_reason;
