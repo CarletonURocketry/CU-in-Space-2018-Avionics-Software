@@ -6,6 +6,7 @@
 //
 
 #include "GPS-FGPMMOPA6H.h"
+#include <string.h>
 
 //sanity checks currently in place
 //ensuring headers
