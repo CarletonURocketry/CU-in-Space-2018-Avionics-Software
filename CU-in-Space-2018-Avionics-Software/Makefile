@@ -13,7 +13,8 @@
 # Sander Pool
 # Frederik Rouleau
 #
-# Modified to support C++ by Ian Dewan and Samuel Dewan
+# Samuel Dewan
+# Ian Dewan
 #
 #----------------------------------------------------------------------------
 # On command line:
@@ -52,10 +53,18 @@ MCU = atmega1284p
 #     automatically to create a 32-bit value in your source code.
 F_CPU = 12000000
 
+ifeq ($(AVR_PROG),)
 AVRDUDE_PROGRAMMER = stk500v2
+else
+AVRDUDE_PROGRAMMER = $(AVR_PROG)
+endif
 
 # com1 = serial port. Use lpt1 to connect to parallel port.
+ifeq ($(AVR_PORT),)
 AVRDUDE_PORT = /dev/tty.usbserial-AL00EUX7    # programmer connected to serial device
+else
+AVRDUDE_PORT = $(AVR_PORT)
+endif
 
 # Output format. (can be srec, ihex, binary)
 FORMAT = ihex
