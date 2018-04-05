@@ -97,7 +97,7 @@ DEBUG = stabs
 #     Each directory must be seperated by a space.
 #     Use forward slashes for directory separators.
 #     For a directory that has spaces, enclose it in quotes.
-EXTRAINCDIRS = 
+EXTRAINCDIRS = /usr/avr/sys-root/include
 
 
 # Compiler flag to set the C Standard level.
@@ -268,12 +268,12 @@ DEBUG_HOST = localhost
 
 # Define programs and commands.
 SHELL = sh
-CC = /opt/local/bin/avr-gcc
-OBJCOPY = /opt/local/bin/avr-objcopy
-OBJDUMP = /opt/local/bin/avr-objdump
-SIZE = /opt/local/bin/avr-size
-NM = /opt/local/bin/avr-nm
-AVRDUDE = /opt/local/bin/avrdude
+CC = $(shell which avr-gcc)
+OBJCOPY = $(shell which avr-objcopy)
+OBJDUMP = $(shell which avr-objdump)
+SIZE = $(shell which avr-size)
+NM = $(shell which avr-nm)
+AVRDUDE = $(shell which avrdude)
 REMOVE = rm -f
 COPY = cp
 WINSHELL = cmd
