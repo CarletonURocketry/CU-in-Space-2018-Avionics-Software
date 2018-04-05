@@ -344,7 +344,7 @@ lss: $(OBJDIR)/$(TARGET).lss
 sym: $(OBJDIR)/$(TARGET).sym
 
 $(OBJDIR):
-	@mkdir -p $@
+	@mkdir -p $@/.dep
 
 # Eye candy.
 # AVR Studio 3.x does not check make's exit code but relies on
