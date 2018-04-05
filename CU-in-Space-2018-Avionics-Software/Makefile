@@ -265,15 +265,16 @@ DEBUG_HOST = localhost
 
 #============================================================================
 
+export PATH := /opt/local/bin:$(PATH)
 
 # Define programs and commands.
 SHELL = sh
-CC = $(shell which avr-gcc)
-OBJCOPY = $(shell which avr-objcopy)
-OBJDUMP = $(shell which avr-objdump)
-SIZE = $(shell which avr-size)
-NM = $(shell which avr-nm)
-AVRDUDE = $(shell which avrdude)
+CC = avr-gcc
+OBJCOPY = avr-objcopy
+OBJDUMP = avr-objdump
+SIZE = avr-size
+NM = avr-nm
+AVRDUDE = avrdude
 REMOVE = rm -f
 COPY = cp
 WINSHELL = cmd
