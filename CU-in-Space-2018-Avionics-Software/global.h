@@ -11,9 +11,11 @@
 #ifndef global_h
 #define global_h
 
-#include <stdint.h>                     // Int types are needed everywehre
+#include <inttypes.h>                   // Int types are needed everywehre
 
 // MARK: Compile Time Settings
+#define ENABLE_SENSORS_AT_RESET
+
 #define ENABLE_DEBUG_FLASH
 
 #define ENABLE_SPI
