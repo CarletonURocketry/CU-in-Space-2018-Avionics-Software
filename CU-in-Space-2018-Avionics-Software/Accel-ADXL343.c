@@ -10,6 +10,7 @@
 #include "I2C.h"
 
 #define POLL_INTERVAL (1000/(ADXL343_SAMPLE_RATE)) // interval between each poll in milliseconds
+#define ROUND_DIVIDE(a,b) ( ( (b)-(a)%(b) > (a)%(b) )? (a)/(b) : (a)/(b)+1 ) // Equivalent to round(a/b)
 
 static uint8_t fifo_setting[] = {0x0};          // disable FIFO
 static uint8_t int_setting[] = {0x0};           // not using any interrupt
@@ -22,7 +23,7 @@ static uint8_t power_ctl_setting[] = {(1<<PWR_CTL_MEASURE)};
 
 static uint8_t accel_data_buffer[6];
 static uint8_t accel_transaction_id[MAX_TRANSACTION_ID_NUM];
-typedef enum {ACCEL_INIT, ACCEL_WAIT, ACCEL_READ} sensor_state;
+typedef enum {ACCEL_INIT, ACCEL_WAIT, ACCEL_READ, ACCEL_CALIB_WAIT, ACCEL_CALIB_START, ACCEL_CALIB_READ} sensor_state;
 static sensor_state state;
 
 uint32_t adxl343_sample_time;
@@ -33,11 +34,11 @@ int16_t adxl343_accel_z;
 //TODO: implement self testing, if fail, return 1
 uint8_t init_adxl343(void)
 {
-	i2c_write(&accel_transaction_id[0], ADDRESS, FIFO_CTL, fifo_setting, 1);
-	i2c_write(&accel_transaction_id[1], ADDRESS, INT_ENABLE, int_setting, 1);
-	i2c_write(&accel_transaction_id[2], ADDRESS, DATA_FORMAT, data_format_setting, 1);
-	i2c_write(&accel_transaction_id[3], ADDRESS, BW_RATE, bw_rate_setting, 1);
-	i2c_write(&accel_transaction_id[4], ADDRESS, POWER_CTL, power_ctl_setting, 1);
+	if(i2c_write(&accel_transaction_id[0], ADDRESS, FIFO_CTL, fifo_setting, 1)) return 1;
+	if(i2c_write(&accel_transaction_id[1], ADDRESS, INT_ENABLE, int_setting, 1)) return 1;
+	if(i2c_write(&accel_transaction_id[2], ADDRESS, DATA_FORMAT, data_format_setting, 1)) return 1;
+	if(i2c_write(&accel_transaction_id[3], ADDRESS, BW_RATE, bw_rate_setting, 1)) return 1;
+	if(i2c_write(&accel_transaction_id[4], ADDRESS, POWER_CTL, power_ctl_setting, 1)) return 1;
 	state = ACCEL_INIT;
 	return 0;
 }
@@ -49,23 +50,22 @@ void adxl343_service(void)
             ; // Labels must be followed by statements
 			uint8_t all_clear_flag = 1;
 			for (uint8_t i = 0; i < MAX_TRANSACTION_ID_NUM; ++i) {
-				if (i2c_transaction_done(accel_transaction_id[i]) && accel_transaction_id[i]) {
-					i2c_clear_transaction(accel_transaction_id[i]);
-					accel_transaction_id[i] = 0;
-				}
-				else {
-					all_clear_flag = 0;
+				if (accel_transaction_id[i]) {
+					if (i2c_transaction_done(accel_transaction_id[i])) {
+						i2c_clear_transaction(accel_transaction_id[i]);
+						accel_transaction_id[i] = 0;
+					}
+					else all_clear_flag = 0;
 				}
 			}
 			if (all_clear_flag) {
-				state = ACCEL_WAIT;
-				adxl343_sample_time = millis;
+				state = ACCEL_CALIB_START;
 			}
 			break;
 		case ACCEL_WAIT:
 			if ((millis - adxl343_sample_time) >= POLL_INTERVAL) {
-				i2c_read(&accel_transaction_id[0], ADDRESS, DATAX0, &accel_data_buffer[0], 6); // multibyte reading starting from DATAX0
-				state = ACCEL_READ;
+				if (!i2c_read(&accel_transaction_id[0], ADDRESS, DATAX0, &accel_data_buffer[0], 6)) // multibyte reading starting from DATAX0
+					state = ACCEL_READ;
 			}
 			break;
 		case ACCEL_READ:
@@ -78,5 +78,26 @@ void adxl343_service(void)
 				adxl343_accel_z = ((accel_data_buffer[5] << 8) | accel_data_buffer[4]);
 				state = ACCEL_WAIT;
 			}
+			break;
+		case ACCEL_CALIB_READ:
+			if (i2c_transaction_done(accel_transaction_id[0])) {
+				i2c_clear_transaction(accel_transaction_id[0]);
+				accel_transaction_id[0] = 0;
+				int8_t offsets[3]; // {x,y,z}
+				offsets[0] = (int8_t) -ROUND_DIVIDE((int16_t)((accel_data_buffer[1] << 8) | accel_data_buffer[0]), 4);
+				offsets[1] = (int8_t) -ROUND_DIVIDE((int16_t)((accel_data_buffer[3] << 8) | accel_data_buffer[2]), 4);
+				offsets[2] = (int8_t) ROUND_DIVIDE(125 - (int16_t)( (accel_data_buffer[5] << 8) | accel_data_buffer[4]), 4); // 125 is the result of 1000/4, @res=4mg/LSB
+				if (!i2c_write(&accel_transaction_id[0], ADDRESS, OFSX, offsets, 3)) state = ACCEL_CALIB_WAIT; // multibyte writing of offset
+			}
+			break;
+		case ACCEL_CALIB_WAIT:
+			if (i2c_transaction_done(accel_transaction_id[0])) {
+				i2c_clear_transaction(accel_transaction_id[0]);
+				accel_transaction_id[0] = 0;
+				state = ACCEL_WAIT;
+			}
+			break;
+		case ACCEL_CALIB_START:
+			if (!i2c_read(&accel_transaction_id[0], ADDRESS, DATAX0, &accel_data_buffer[0], 6)) state = ACCEL_CALIB_READ;
 	}
 }
