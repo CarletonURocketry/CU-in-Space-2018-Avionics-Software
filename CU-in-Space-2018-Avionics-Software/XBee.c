@@ -6,3 +6,5 @@
 //
 
 #include "XBee.h"
+
+//The address configuring, initializing, and also the routing will be done in this.

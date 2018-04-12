@@ -29,6 +29,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		6E14D7B0207C8CA100E8537A /* Radio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Radio.h; sourceTree = "<group>"; };
 		BC2FB4A5206AB5F600B8890A /* bus_tests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bus_tests.h; sourceTree = "<group>"; };
 		BC2FB4A6206AB5F600B8890A /* bus_tests.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = bus_tests.c; sourceTree = "<group>"; };
 		BC3214CC20599B0F00DB108E /* telemetry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = telemetry.h; sourceTree = "<group>"; };
@@ -67,7 +68,7 @@
 		BC93ECE01FA4FC9700AD7504 /* GPS-FGPMMOPA6H.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "GPS-FGPMMOPA6H.h"; sourceTree = "<group>"; };
 		BC93ECE11FA4FC9700AD7504 /* GPS-FGPMMOPA6H.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "GPS-FGPMMOPA6H.c"; sourceTree = "<group>"; };
 		BCD115251FAD48AC00AC1997 /* telemetry.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = telemetry.c; sourceTree = "<group>"; };
-		BCD1152A1FAD494B00AC1997 /* Radio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Radio.h; sourceTree = "<group>"; };
+		BCD1152A1FAD494B00AC1997 /* Radio_commands.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Radio_commands.h; sourceTree = "<group>"; };
 		BCD1152B1FAD494B00AC1997 /* Radio.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Radio.c; sourceTree = "<group>"; };
 		BCD1152D1FAD4A9300AC1997 /* Barometer-MPL3115A2-Registers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Barometer-MPL3115A2-Registers.h"; sourceTree = "<group>"; };
 		BCD1152E1FAD4B0700AC1997 /* Accel-ADXL343-Registers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Accel-ADXL343-Registers.h"; sourceTree = "<group>"; };
@@ -160,7 +161,8 @@
 		BC93ECCF1FA4FA6B00AD7504 /* Radio */ = {
 			isa = PBXGroup;
 			children = (
-				BCD1152A1FAD494B00AC1997 /* Radio.h */,
+				BCD1152A1FAD494B00AC1997 /* Radio_commands.h */,
+				6E14D7B0207C8CA100E8537A /* Radio.h */,
 				BCD1152B1FAD494B00AC1997 /* Radio.c */,
 				BC93ECD01FA4FA7E00AD7504 /* XBee.h */,
 				BC93ECD11FA4FA7E00AD7504 /* XBee.c */,
