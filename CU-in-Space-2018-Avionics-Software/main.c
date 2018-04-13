@@ -234,6 +234,6 @@ ISR(BADISR_vect)
 {
     for (;;) {
         for (uint32_t i = 0; i < 750000; i++);
-        LED_PORT ^= (1<<LED_NUM);
+        LED_PORT ^= (LED_NUM);
     }
 }
