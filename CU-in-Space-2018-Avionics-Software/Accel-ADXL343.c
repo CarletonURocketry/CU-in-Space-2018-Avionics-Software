@@ -100,7 +100,7 @@ void adxl343_service(void)
 				offsets[1] = (int8_t) -ROUND_DIVIDE((int16_t)((accel_data_buffer[3] << 8) | accel_data_buffer[2]), 4);
 				offsets[2] = (int8_t) ROUND_DIVIDE(125 - (int16_t)( (accel_data_buffer[5] << 8) | accel_data_buffer[4]), 4); 
 				// 125 is the result of 1000/4, @res=4mg/LSB
-				if (!i2c_write(&accel_transaction_id[0], ADDRESS, OFSX, (uint8_t*)offsets, 3)) state = ACCEL_CALIB_WAIT; 
+				if (!i2c_write(&accel_transaction_id[0], ADDRESS, OFSX, (uint8_t*)offsets, 3)) state = ACCEL_CALIB_WAIT;
 				// Multibyte writing of offset to prevent occupying too many transaction queues
 				// If i2c_write queue allocation is successful (i.e. it returns 0), change the state
 
