@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <util/atomic.h>
+
 #include "global.h"
 #include "pindefinitions.h"
 #include "serial0.h"
@@ -22,6 +24,7 @@
 #include "SPI.h"
 #include "I2C.h"
 #include "ADC.h"
+#include "EEPROM.h"
 
 #include "Accel-ADXL343.h"
 #include "Barometer-MPL3115A2.h"
@@ -248,7 +251,7 @@ void menu_cmd_stat_handler(uint8_t arg_len, char** args)
 
 // EEPROM
 static const char menu_cmd_eeprom_string[] PROGMEM = "eeprom";
-static const char menu_help_eeprom[] PROGMEM = "Test external 25LC1024 EEPROM.\nValid Usage:\n\tRead: eeprom read <address>\n\tWrite: eprom write <address> <data>\n";
+static const char menu_help_eeprom[] PROGMEM = "Test external 25LC1024 EEPROM.\nValid Usage:\n\tRead: eeprom read <address>\n\tWrite: eeprom write <address> <data>\n";
 
 static const char eeprom_string_read[] PROGMEM = "read";
 static const char eeprom_string_write[] PROGMEM = "write";
@@ -445,7 +448,7 @@ void menu_cmd_sensors_handler(uint8_t arg_len, char** args)
 static const char menu_cmd_gps_string[] PROGMEM = "gps";
 static const char menu_help_gps[] PROGMEM = "Read from GPS\n";
 
-static const char gps_str_time[] PROGMEM = "UTC Time: ";
+static const char gps_str_time[] PROGMEM = "\tUTC Time: ";
 
 void menu_cmd_gps_handler(uint8_t arg_len, char** args)
 {
@@ -518,8 +521,64 @@ void menu_cmd_altest_handler(uint8_t arg_len, char** args)
     serial_0_put_string_P(string_nl);
 }
 
+// introm
+static const char menu_cmd_introm_string[] PROGMEM = "introm";
+static const char menu_help_introm[] PROGMEM = "Read from or write to internal eeprom\n\tRead: introm read <address>\n\tWrite: introm write <address> <data>\n\tSyncronous Read (Single Byte): introm readsync <address>\n";
 
-const uint8_t menu_num_items = 15;
+static const char introm_string_sync[] PROGMEM = "readsync";
+
+void menu_cmd_introm_handler(uint8_t arg_len, char** args)
+{
+    if (arg_len < 3) goto invalid_args;
+    
+    uint8_t id;
+    char* end;
+    uint32_t addr = strtoul(args[2], &end, 0);
+    if (*end != '\0') goto invalid_args;
+    
+    if (!strcasecmp_P(args[1], eeprom_string_read)) {
+        uint32_t buffer;
+        eeprom_read(&id, addr, (uint8_t*)&buffer, 4);
+        while (!eeprom_transaction_done(id));
+        
+//        for (uint8_t i = 0; i < 4; i++) {
+//            ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+//                EEAR = addr + i;
+//                EECR = (1<<EERE);
+//                ((uint8_t*)&buffer)[i] = EEDR;
+//            }
+//        }
+        
+        serial_0_put_string_P(eeprom_string_hex);
+        ultoa(buffer, str, 16);
+        serial_0_put_string(str);
+        serial_0_put_string_P(string_nl);
+    } else if (!strcasecmp_P(args[1], introm_string_sync)) {
+        serial_0_put_string_P(eeprom_string_hex);
+        ultoa(eeprom_read_byte_sync(addr), str, 16);
+        serial_0_put_string(str);
+        serial_0_put_string_P(string_nl);
+    } else if (!strcasecmp_P(args[1], eeprom_string_write)) {
+        if (arg_len < 4) goto invalid_args;
+        
+        uint32_t data = strtoul(args[3], &end, 0);
+        if (*end != '\0') goto invalid_args;
+        
+        eeprom_write(&id, addr, (uint8_t*)&data, 4);
+        while (!eeprom_transaction_done(id));
+    } else {
+        goto invalid_args;
+    }
+    eeprom_clear_transaction(id);
+    
+    return;
+invalid_args:
+    serial_0_put_string_P(menu_help_introm);
+}
+
+
+
+const uint8_t menu_num_items = 16;
 const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_version_string, .handler = menu_cmd_version_handler, .help_string = menu_help_version},
     {.string = menu_cmd_help_string, .handler = menu_cmd_help_handler, .help_string = menu_help_help},
@@ -535,5 +594,6 @@ const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_actest_string, .handler = menu_cmd_actest_handler, .help_string = menu_help_actest},
     {.string = menu_cmd_altest_string, .handler = menu_cmd_altest_handler, .help_string = menu_help_altest},
     {.string = menu_cmd_iicraw_string, .handler = menu_cmd_iicraw_handler, .help_string = menu_help_iicraw},
-    {.string = menu_cmd_iicio_string, .handler = menu_cmd_iicio_handler, .help_string = menu_help_iicio}
+    {.string = menu_cmd_iicio_string, .handler = menu_cmd_iicio_handler, .help_string = menu_help_iicio},
+    {.string = menu_cmd_introm_string, .handler = menu_cmd_introm_handler, .help_string = menu_help_introm}
 };
