@@ -8,6 +8,7 @@
 #include "Accel-ADXL343.h"
 #include "Accel-ADXL343-Registers.h"
 #include "I2C.h"
+#include <math.h> // round()
 
 #define POLL_INTERVAL (1000/(ADXL343_SAMPLE_RATE)) // Calculate interval between each poll in milliseconds based on defined sample rate
 #define ROUND_DIVIDE(a,b) ( ((a)+(b)/2) / (b) ) // idea: http://www.nongnu.org/avr-libc/user-manual/FAQ.html#faq_wrong_baud_rate
@@ -22,6 +23,8 @@ static uint8_t power_ctl_setting[] = {(1<<PWR_CTL_MEASURE)};
 #define MAX_TRANSACTION_ID_NUM 5
 #define ACCEL_DATA_BUFFER_SIZE 6
 #define ACCEL_SCALE_FACTOR 0.0039 // 3.9mg per LSB in full res mode
+#define OFFSET_SCALE_FACTOR 0.0156 // 15.6mg per LSB for offset registers
+#define OFFSET_TO_ACCEL_CONV_FACTOR ((int8_t)round(OFFSET_SCALE_FACTOR/ACCEL_SCALE_FACTOR))
 
 static uint8_t accel_data_buffer[ACCEL_DATA_BUFFER_SIZE];
 static uint8_t accel_transaction_id[MAX_TRANSACTION_ID_NUM];
@@ -96,9 +99,9 @@ void adxl343_service(void)
 				accel_transaction_id[0] = 0;
 				int8_t offsets[3]; // {x,y,z}
 				// Offsets are added to the data registers, not subtracted.
-				offsets[0] = (int8_t) -ROUND_DIVIDE((int16_t)((accel_data_buffer[1] << 8) | accel_data_buffer[0]), 4);
-				offsets[1] = (int8_t) -ROUND_DIVIDE((int16_t)((accel_data_buffer[3] << 8) | accel_data_buffer[2]), 4);
-				offsets[2] = (int8_t) ROUND_DIVIDE(125 - (int16_t)( (accel_data_buffer[5] << 8) | accel_data_buffer[4]), 4); 
+				offsets[0] = (int8_t) -ROUND_DIVIDE((int16_t)((accel_data_buffer[1] << 8) | accel_data_buffer[0]), OFFSET_TO_ACCEL_CONV_FACTOR);
+				offsets[1] = (int8_t) -ROUND_DIVIDE((int16_t)((accel_data_buffer[3] << 8) | accel_data_buffer[2]), OFFSET_TO_ACCEL_CONV_FACTOR);
+				offsets[2] = (int8_t) round((1. - (int16_t)((accel_data_buffer[5] << 8) | accel_data_buffer[4])*ACCEL_SCALE_FACTOR) / OFFSET_SCALE_FACTOR); 
 				// 125 is the result of 1000/4, @res=4mg/LSB
 				if (!i2c_write(&accel_transaction_id[0], ADDRESS, OFSX, (uint8_t*)offsets, 3)) state = ACCEL_CALIB_WAIT;
 				// Multibyte writing of offset to prevent occupying too many transaction queues
