@@ -22,7 +22,7 @@ void at_command(uint8_t frame_id, uint8_t length_msb, uint8_t length_lsb, uint8_
     uint8_t api_packet[9] = {0x78, length_msb, length_lsb, frame_id, AT_COMMAND, command1, command2, parameter, checksum};
     uint8_t in_buffer[256];
     
-    spi_start_half_duplex(&transaction_id, RADIO_CS_NUM, api_packet,9 , in_buffer, RADIO_ATTN_NUM);
+    spi_start_full_duplex(&transaction_id, RADIO_CS_NUM, api_packet,9, in_buffer, RADIO_ATTN_NUM);
     
     //while (!spi_transaction_done(transaction_id))
 }
@@ -34,7 +34,7 @@ void at_queue_command(uint8_t frame_id, uint8_t length_msb, uint8_t length_lsb, 
     uint8_t api_queue_packet[9] = {0x78, length_msb, length_lsb, QUEUE_PARAMETER, frame_id, command1, command2, parameter, checksum};
     uint8_t in_buffer[256];
     
-    spi_start_half_duplex(&transaction_id, RADIO_CS_NUM, api_queue_packet,9, in_buffer, RADIO_ATTN_NUM);
+    spi_start_full_duplex(&transaction_id, RADIO_CS_NUM, api_queue_packet,9, in_buffer, RADIO_ATTN_NUM);
     
 }
 
@@ -45,7 +45,7 @@ void transmit_request(uint8_t frame_id, uint8_t length_msb, uint8_t length_lsb, 
     uint8_t api_transmit_packet[26] = {0x78, length_msb, length_lsb, TRANSMIT_REQUEST, frame_id, address_64_1, address_64_2, address_64_3, address_64_4, address_64_5, address_64_6, address_64_7, address_64_8, address_16_1, address_16_2, broadcast_radius, frame_option, rfdata1, rfdata2, rfdata3, rfdata4, rfdata5, rfdata6, rfdata7, rfdata8, checksum};
     uint8_t in_buffer[256];
     
-    spi_start_half_duplex(&transaction_id, RADIO_CS_NUM, api_transmit_packet,26, in_buffer, RADIO_ATTN_NUM);
+    spi_start_full_duplex(&transaction_id, RADIO_CS_NUM, api_transmit_packet,26, in_buffer, RADIO_ATTN_NUM);
     
 }
 
@@ -58,5 +58,35 @@ void xbee_service(void) {
         spi_start_full_duplex(&transaction_id, RADIO_CS_NUM, NULL,0, in_buffer, RADIO_ATTN_NUM);
         
     }
+    
+    if(in_buffer[4] == 0x90) {
+        
+    } else if {
+        
+    }
+
+void explicit_zigbee_transmit_request(uint8_t length_msb, uint8_t length_lsb, uint8_t frame_id, uint8_t address_64_1, uint8_t address_64_2, uint8_t address_64_3, uint8_t address_64_4, uint8_t address_64_5, uint8_t address_64_6, uint8_t address_64_7, uint8_t address_64_8, uint8_t address_16_1, uint8_t address_16_2, uint8_t source_end, uint8_t destination_end, uint8_t cluster_id, uint8_t profile_id, uint8_t broadcast_radius, uint8_t transmit_option, uint8_t rfdata1, uint8_t rfdata2, uint8_t rfdata3, uint8_t rfdata4, uint8_t rfdata5, uint8_t rfdata6) {
+    
+    
+}
+
+void create_source_route(uint8_t length_msb, uint8_t length_lsb, uint8_t frame_id, uint8_t address_64_1, uint8_t address_64_2, uint8_t address_64_3, uint8_t address_64_4, uint8_t address_64_5, uint8_t address_64_6, uint8_t address_64_7, uint8_t address_64_8, uint8_t address_16_1, uint8_t address_16_2, uint8_t address_amount, uint8_t address_1_msb, uint8_t address_1_lsb, uint8_t address_2_msb, uint8_t address_2_lsb, uint8_t address_3_msb, uint8_t address_3_lsb) {
+    
+}
+
+void at_command_response(void) {
+    
+}
+
+void modem_status(void) {
+    
+}
+
+void zigbee_transmit_status(void) {
+    
+}
+
+void zigbee_receive_packet(void) {
+    
 }
 
