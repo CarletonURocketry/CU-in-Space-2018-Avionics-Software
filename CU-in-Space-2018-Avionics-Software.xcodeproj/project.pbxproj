@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		BC2FB4A7206AB5F600B8890A /* bus_tests.c in Sources */ = {isa = PBXBuildFile; fileRef = BC2FB4A6206AB5F600B8890A /* bus_tests.c */; };
 		BC36611B2073CFC9009D4B19 /* ematch_detect.c in Sources */ = {isa = PBXBuildFile; fileRef = BC36611A2073CFC9009D4B19 /* ematch_detect.c */; };
+		BC36612120743764009D4B19 /* EEPROM.c in Sources */ = {isa = PBXBuildFile; fileRef = BC36612020743764009D4B19 /* EEPROM.c */; };
 		BC3B8BC8201123EC00C7B0BA /* I2C-Example.c in Sources */ = {isa = PBXBuildFile; fileRef = BC3B8BC7201123EC00C7B0BA /* I2C-Example.c */; };
 		BC588CAE1FA9261D003E8C15 /* ADC.c in Sources */ = {isa = PBXBuildFile; fileRef = BC588CAD1FA9261D003E8C15 /* ADC.c */; };
 		BC933A1B1FAA8C7000476F3F /* 25LC1024.c in Sources */ = {isa = PBXBuildFile; fileRef = BC933A1A1FAA8C7000476F3F /* 25LC1024.c */; };
@@ -35,6 +36,8 @@
 		BC3214CC20599B0F00DB108E /* telemetry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = telemetry.h; sourceTree = "<group>"; };
 		BC3661192073CFC9009D4B19 /* ematch_detect.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ematch_detect.h; sourceTree = "<group>"; };
 		BC36611A2073CFC9009D4B19 /* ematch_detect.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ematch_detect.c; sourceTree = "<group>"; };
+		BC36611F20743764009D4B19 /* EEPROM.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EEPROM.h; sourceTree = "<group>"; };
+		BC36612020743764009D4B19 /* EEPROM.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = EEPROM.c; sourceTree = "<group>"; };
 		BC3B8BC7201123EC00C7B0BA /* I2C-Example.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "I2C-Example.c"; sourceTree = "<group>"; };
 		BC588CAC1FA9261D003E8C15 /* ADC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ADC.h; sourceTree = "<group>"; };
 		BC588CAD1FA9261D003E8C15 /* ADC.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ADC.c; sourceTree = "<group>"; };
@@ -83,6 +86,8 @@
 				BCD115301FBA0F0800AC1997 /* 25LC1024-Commands.h */,
 				BC933A191FAA8C7000476F3F /* 25LC1024.h */,
 				BC933A1A1FAA8C7000476F3F /* 25LC1024.c */,
+				BC36611F20743764009D4B19 /* EEPROM.h */,
+				BC36612020743764009D4B19 /* EEPROM.c */,
 			);
 			name = EEPROM;
 			sourceTree = "<group>";
@@ -331,6 +336,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BC93ECDF1FA4FC7500AD7504 /* Gyro-FXAS21002C.c in Sources */,
+				BC36612120743764009D4B19 /* EEPROM.c in Sources */,
 				BC93ECA51FA4F5F200AD7504 /* main.c in Sources */,
 				BC3B8BC8201123EC00C7B0BA /* I2C-Example.c in Sources */,
 				BC93ECE21FA4FC9700AD7504 /* GPS-FGPMMOPA6H.c in Sources */,

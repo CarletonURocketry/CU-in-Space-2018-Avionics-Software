@@ -8,6 +8,7 @@
 //Different ways to interface with the radio. Very basic start
 
 #include "Radio.h"
+
 #include "Radio_commands.h"
 #include "SPI.h"
 #include "pindefinitions.h"
@@ -89,4 +90,3 @@ void zigbee_transmit_status(void) {
 void zigbee_receive_packet(void) {
     
 }
-
