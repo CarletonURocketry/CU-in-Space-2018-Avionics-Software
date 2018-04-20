@@ -50,6 +50,18 @@ void transmit_request(uint8_t frame_id, uint8_t length_msb, uint8_t length_lsb, 
     
 }
 
+void explicit_zigbee_transmit_request(uint8_t length_msb, uint8_t length_lsb, uint8_t frame_id, uint8_t address_64_1, uint8_t address_64_2, uint8_t address_64_3, uint8_t address_64_4, uint8_t address_64_5, uint8_t address_64_6, uint8_t address_64_7, uint8_t address_64_8, uint8_t address_16_1, uint8_t address_16_2, uint8_t source_end, uint8_t destination_end, uint8_t cluster_id, uint8_t profile_id, uint8_t broadcast_radius, uint8_t transmit_option, uint8_t rfdata1, uint8_t rfdata2, uint8_t rfdata3, uint8_t rfdata4, uint8_t rfdata5, uint8_t rfdata6) {
+    
+    
+}
+
+void create_source_route(uint8_t length_msb, uint8_t length_lsb, uint8_t frame_id, uint8_t address_64_1, uint8_t address_64_2, uint8_t address_64_3, uint8_t address_64_4, uint8_t address_64_5, uint8_t address_64_6, uint8_t address_64_7, uint8_t address_64_8, uint8_t address_16_1, uint8_t address_16_2, uint8_t address_amount, uint8_t address_1_msb, uint8_t address_1_lsb, uint8_t address_2_msb, uint8_t address_2_lsb, uint8_t address_3_msb, uint8_t address_3_lsb) {
+}
+
+
+void remote_at_command_request(uint8_t length_msb, uint8_t length_lsb, uint8_t frame_id, uint8_t address_64_1, uint8_t address_64_2, uint8_t address_64_3, uint8_t address_64_4, uint8_t address_64_5, uint8_t address_64_6, uint8_t address_64_7, uint8_t address_64_8, uint8_t address_16_1, uint8_t address_16_2, uint8_t remote_options, uint8_t command1, uint8_t command2, uint8_t parameter) {
+}
+
 void xbee_service(void) {
     
     uint8_t transaction_id;
@@ -60,33 +72,62 @@ void xbee_service(void) {
         
     }
     
-    if(in_buffer[4] == 0x90) {
-        
-    } else if {
-        
+    if(in_buffer[4] == AT_COMMAND_RESPONSE) {
+        at_command_response(in_buffer);
+    } else if (in_buffer[4] == ZIGBEE_RECEIVE_PACKET) {
+        zigbee_receive_packet(in_buffer);
+    } else if (in_buffer[4] == MODEM_STATUS) {
+        modem_status();
+    } else if (in_buffer[4] == ZIGBEE_TRANSMIT_STATUS) {
+        zigbee_transmit_status(in_buffer);
+    } else if (in_buffer[4] == ZIGBEE_EXPLICIT_RX_INDICATOR) {
+        zigbee_explicit_rx_indicator(in_buffer);
+    } else if (in_buffer[4] == ZIGBEE_IO_DATA_SAMPLE_RX_INDICATOR) {
+        zigbee_explicit_rx_indicator(in_buffer);
+    } else if (in_buffer[4] == NODE_IDENTIFICATION_INDICATOR) {
+        node_identification_indicator(in_buffer);
+    } else if (in_buffer[4] == REMOTE_COMMAND_RESPONSE) {
+        remote_command_response(in_buffer);
+    } else if (in_buffer[4] == OVER_AIR_FIRMWARE_UPDATE_STATUS) {
+        overairfirmwarestatus(in_buffer);
+    } else if (in_buffer[4] == ROUTE_RECORD_INDICATOR) {
+        route_record_indicator(in_buffer);
+    } else if (in_buffer[4] == MANY_TO_ONE_ROUTE_REQUEST_INDICATOR) {
+        many_to_one_route_request_indicator(in_buffer);
     }
-
-void explicit_zigbee_transmit_request(uint8_t length_msb, uint8_t length_lsb, uint8_t frame_id, uint8_t address_64_1, uint8_t address_64_2, uint8_t address_64_3, uint8_t address_64_4, uint8_t address_64_5, uint8_t address_64_6, uint8_t address_64_7, uint8_t address_64_8, uint8_t address_16_1, uint8_t address_16_2, uint8_t source_end, uint8_t destination_end, uint8_t cluster_id, uint8_t profile_id, uint8_t broadcast_radius, uint8_t transmit_option, uint8_t rfdata1, uint8_t rfdata2, uint8_t rfdata3, uint8_t rfdata4, uint8_t rfdata5, uint8_t rfdata6) {
-    
-    
 }
 
-void create_source_route(uint8_t length_msb, uint8_t length_lsb, uint8_t frame_id, uint8_t address_64_1, uint8_t address_64_2, uint8_t address_64_3, uint8_t address_64_4, uint8_t address_64_5, uint8_t address_64_6, uint8_t address_64_7, uint8_t address_64_8, uint8_t address_16_1, uint8_t address_16_2, uint8_t address_amount, uint8_t address_1_msb, uint8_t address_1_lsb, uint8_t address_2_msb, uint8_t address_2_lsb, uint8_t address_3_msb, uint8_t address_3_lsb) {
-    
+void at_command_response(int *in_buffer) {
 }
 
-void at_command_response(void) {
-    
+void modem_status(int *in_buffer) {
 }
 
-void modem_status(void) {
-    
+void zigbee_transmit_status(int *in_buffer) {
 }
 
-void zigbee_transmit_status(void) {
-    
+void zigbee_receive_packet(int *in_buffer) {
 }
 
-void zigbee_receive_packet(void) {
-    
+void zigbee_explicit_rx_indicator(int *in_buffer) {
+}
+
+
+void zigbee_io_data_sample_rx_indicator(int *in_buffer) {
+}
+
+void node_identification_indicator(int *in_buffer) {
+}
+
+
+void remote_command_response(int *in_buffer) {
+}
+
+void route_record_indicator(int *in_buffer) {
+}
+
+void many_to_one_route_request_indicator(int *in_buffer) {
+}
+
+void overairfirmwarestatus(int *in_buffer) {
 }

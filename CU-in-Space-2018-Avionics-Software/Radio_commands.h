@@ -16,26 +16,29 @@
 #define API_PARAMETER 1
 
 //API frame types. Do not mix up with the frame ids.
+
+//command frames sent to module
 #define AT_COMMAND 0x08
 #define QUEUE_PARAMETER 0x09
 #define TRANSMIT_REQUEST 0x10
 #define EXPLICIT_COMMAND_FRAME 0x11
 #define REMOTE_COMMAND_REQEUEST 0x17
 #define CREATE_SOURCE_ROUTE 0x21
+
+//command frames responses
 #define AT_COMMAND_RESPONSE 0x88
 #define MODEM_STATUS 0x8A
 #define ZIGBEE_TRANSMIT_STATUS 0x8B
-#define ZIGBEE_RECEIVE_PACKET 0x90
+#define ZIGBEE_RECEIVE_PACKET 0x90 //Also known as the Rx indicator in other datasheets
 #define ZIGBEE_EXPLICIT_RX_INDICATOR 0x91 //can't be used for this. AO = 1 needed.
 #define ZIGBEE_IO_DATA_SAMPLE_RX_INDICATOR 0x92
-#define XBEE_SENSOR_READ_INDICATOR 0x94
+#define XBEE_SENSOR_READ_INDICATOR 0x94 //can't be used because there is no 1 wire digi adapter.
 #define NODE_IDENTIFICATION_INDICATOR 0x95
 #define REMOTE_COMMAND_RESPONSE 0x97
 #define OVER_AIR_FIRMWARE_UPDATE_STATUS 0xA0
 #define ROUTE_RECORD_INDICATOR 0xA1
 #define MANY_TO_ONE_ROUTE_REQUEST_INDICATOR 0xA3 //pretty sure this is the one we need
 
-//API commands
 
 //AT commands
 #define AT_FRAME_ID_RESPONSE 0x52 //R tells the xbee to send a response command

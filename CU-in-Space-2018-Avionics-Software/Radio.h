@@ -13,7 +13,7 @@
 
 /* Note to myself: Some response's payload are in ASCII format, like "NI" (Node Identifier), some in Integer format, like "SL" (lower 32 bits of the XBee address) */
 
-void xbee_service(void);
+extern void xbee_service(void);
 /*
  * This function will need to be continuously checked in the event the radio decides to send data back to the microcontroller.
  */
@@ -55,32 +55,32 @@ extern void create_source_route(uint8_t length_msb, uint8_t length_lsb, uint8_t 
  * endpoint.
  */
 
-extern void at_command_response(void);
+extern void at_command_response(int *in_buffer);
 /* Once the transmission and processing of the command has been completed, the result will be sent back to the microcontroller
  * via an 0x88 frame.
  */
 
-extern void modem_status(void);
+extern void modem_status(int *in_buffer);
 /*
  * Sends a status value of how the network setup went after it was created.
  */
 
-extern void zigbee_transmit_status(void);
+extern void zigbee_transmit_status(int *in_buffer);
 /*
  * Returns a status value for the transmission of data.
  */
 
-extern void zigbee_receive_packet(void);
+extern void zigbee_receive_packet(int *in_buffer);
 /*
  * A mini status report of what RF data was sent and what the transmission status was
  */
 
-extern void zigbee_explicit_rx_indicator(void);
+extern void zigbee_explicit_rx_indicator(int *in_buffer);
 /*
  * Shows clusters, endpoints, rf data sent, receive options, and all the addresses of the sent data.
  */
 
-extern void zigbee_io_data_sample_rx_indicator(void);
+extern void zigbee_io_data_sample_rx_indicator(int *in_buffer);
 /*
  * If sensor data is sent to the xbee from another device, it sends a sample of the data that you can view with this.
  */
@@ -90,25 +90,29 @@ extern void zigbee_io_data_sample_rx_indicator(void);
  * Won't work because we don't have a 1 wire digi adapter device.
  */
 
-extern void node_identification_indicator(void);
+extern void node_identification_indicator(int *in_buffer);
 /*
  * A remote device or any other device can send this as an identifier to make the other device recognize who is the sender.
  */
 
-extern void remote_command_response(void);
+extern void remote_command_response(int *in_buffer);
 /*
  * Basically sends a carbon copy of the command you sent to the remote device.
  */
 
-extern void route_record_indicator(void);
+extern void route_record_indicator(int *in_buffer);
 /*
- *
+ * This is received whenever a device sends a ZigBee route record command.
  */
 
-extern void many_to_one_route_request_indicator(void);
+extern void many_to_one_route_request_indicator(int *in_buffer);
 /*
- *
+ * Sent out when a many-to-one route request is received.
  */
 
+extern void overairfirmwarestatus(int *in_buffer);
+/*
+ * Provides a status indication of a firmware update transmission attempt.
+ */
 
 #endif /* Radio_h */
