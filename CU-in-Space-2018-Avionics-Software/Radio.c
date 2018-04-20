@@ -41,7 +41,7 @@ void at_queue_command(uint8_t frame_id, uint8_t length_msb, uint8_t length_lsb, 
 
 void transmit_request(uint8_t frame_id, uint8_t length_msb, uint8_t length_lsb, uint8_t address_64_1, uint8_t address_64_2, uint8_t address_64_3, uint8_t address_64_4, uint8_t address_64_5, uint8_t address_64_6, uint8_t address_64_7, uint8_t address_64_8, uint8_t address_16_1, uint8_t address_16_2, uint8_t broadcast_radius, uint8_t frame_option, uint8_t rfdata1, uint8_t rfdata2, uint8_t rfdata3, uint8_t rfdata4, uint8_t rfdata5, uint8_t rfdata6, uint8_t rfdata7, uint8_t rfdata8) {
     
-    uint8_t checksum = 0xff - TRANSMIT_REQUEST + frame_id + length_msb + length_lsb + address_16_1 + address_16_2 + address_64_1 + address_16_2 + address_64_3 + address_64_4 + address_64_5 + address_64_6 + address_64_7 + address_64_8 + broadcast_radius + frame_option + rfdata1 + rfdata2 + rfdata3 + rfdata4 + rfdata5 + rfdata6 + rfdata7 + rfdata8;
+    uint8_t checksum = 0xff - TRANSMIT_REQUEST + frame_id + length_msb + length_lsb + address_16_1 + address_16_2 + address_64_1 + address_64_2 + address_64_3 + address_64_4 + address_64_5 + address_64_6 + address_64_7 + address_64_8 + broadcast_radius + frame_option + rfdata1 + rfdata2 + rfdata3 + rfdata4 + rfdata5 + rfdata6 + rfdata7 + rfdata8;
     uint8_t transaction_id;
     uint8_t api_transmit_packet[26] = {0x78, length_msb, length_lsb, TRANSMIT_REQUEST, frame_id, address_64_1, address_64_2, address_64_3, address_64_4, address_64_5, address_64_6, address_64_7, address_64_8, address_16_1, address_16_2, broadcast_radius, frame_option, rfdata1, rfdata2, rfdata3, rfdata4, rfdata5, rfdata6, rfdata7, rfdata8, checksum};
     uint8_t in_buffer[256];
@@ -52,10 +52,23 @@ void transmit_request(uint8_t frame_id, uint8_t length_msb, uint8_t length_lsb, 
 
 void explicit_zigbee_transmit_request(uint8_t length_msb, uint8_t length_lsb, uint8_t frame_id, uint8_t address_64_1, uint8_t address_64_2, uint8_t address_64_3, uint8_t address_64_4, uint8_t address_64_5, uint8_t address_64_6, uint8_t address_64_7, uint8_t address_64_8, uint8_t address_16_1, uint8_t address_16_2, uint8_t source_end, uint8_t destination_end, uint8_t cluster_id, uint8_t profile_id, uint8_t broadcast_radius, uint8_t transmit_option, uint8_t rfdata1, uint8_t rfdata2, uint8_t rfdata3, uint8_t rfdata4, uint8_t rfdata5, uint8_t rfdata6) {
     
+    uint8_t checksum = 0xff - ZIGBEE_EXPLICIT_RX_INDICATOR + frame_id + length_msb + length_lsb + address_16_1 + address_16_2 + address_64_1 + address_64_2 + address_64_3 + address_64_4 + address_64_5 + address_64_6 + address_64_7 + address_64_8 + + source_end + destination_end + cluster_id + profile_id + broadcast_radius + transmit_option + rfdata1 + rfdata2 + rfdata3 + rfdata4 + rfdata5 + rfdata6;
+    uint8_t transaction_id;
+    uint8_t api_explicit_transmit_packet[28] = {0x78, length_msb, length_lsb, ZIGBEE_EXPLICIT_RX_INDICATOR, frame_id, address_64_1, address_64_2, address_64_3, address_64_4, address_64_5, address_64_6, address_64_7, address_64_8, address_16_1, address_16_2, source_end, destination_end, cluster_id, profile_id, broadcast_radius, transmit_option, rfdata1, rfdata2, rfdata3, rfdata4, rfdata5, rfdata6, checksum};
+    uint8_t in_buffer[256];
+    
+    spi_start_full_duplex(&transaction_id, RADIO_CS_NUM, api_explicit_transmit_packet,28, in_buffer, RADIO_ATTN_NUM);
     
 }
 
 void create_source_route(uint8_t length_msb, uint8_t length_lsb, uint8_t frame_id, uint8_t address_64_1, uint8_t address_64_2, uint8_t address_64_3, uint8_t address_64_4, uint8_t address_64_5, uint8_t address_64_6, uint8_t address_64_7, uint8_t address_64_8, uint8_t address_16_1, uint8_t address_16_2, uint8_t address_amount, uint8_t address_1_msb, uint8_t address_1_lsb, uint8_t address_2_msb, uint8_t address_2_lsb, uint8_t address_3_msb, uint8_t address_3_lsb) {
+
+    uint8_t transaction_id;
+    uint8_t checksum = 0xff - CREATE_SOURCE_ROUTE + frame_id + length_msb + length_lsb + address_16_1 + address_16_2 + address_64_1 + address_64_2 + address_64_3 + address_64_4 + address_64_5 + address_64_6 + address_64_7 + address_64_8 + address_amount + address_1_msb + address_1_lsb + address_2_msb + address_2_lsb + address_3_msb + address_3_lsb;
+    uint8_t source_route_packet[23] = {0x78, length_msb, length_lsb, CREATE_SOURCE_ROUTE, frame_id, address_64_1, address_64_2, address_64_3, address_64_4, address_64_5, address_64_6, address_64_7, address_64_8, address_16_1, address_16_2, address_amount, address_1_msb, address_1_lsb, address_2_msb, address_2_lsb, address_3_msb, address_3_lsb, checksum};
+    uint8_t in_buffer[256];
+    
+    spi_start_full_duplex(&transaction_id, RADIO_CS_NUM, source_route_packet,23, in_buffer, RADIO_ATTN_NUM);
 }
 
 
@@ -97,6 +110,7 @@ void xbee_service(void) {
     }
 }
 
+
 void at_command_response(int *in_buffer) {
 }
 
@@ -118,7 +132,6 @@ void zigbee_io_data_sample_rx_indicator(int *in_buffer) {
 
 void node_identification_indicator(int *in_buffer) {
 }
-
 
 void remote_command_response(int *in_buffer) {
 }
