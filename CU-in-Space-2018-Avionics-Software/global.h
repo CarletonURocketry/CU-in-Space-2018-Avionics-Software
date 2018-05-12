@@ -25,7 +25,7 @@
 //#define ENABLE_ALTIMETER
 //#define ENABLE_ACCELEROMETER
 //#define ENABLE_GYROSCOPE
-//#define ENABLE_GPS
+#define ENABLE_GPS
 
 //#define ENABLE_XBEE
 

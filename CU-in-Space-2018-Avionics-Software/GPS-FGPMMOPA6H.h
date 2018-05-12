@@ -11,9 +11,6 @@
 
 #include "global.h"
 
-// MARK: Constants
-#define FGPMMOPA6H_SAMPLE_RATE   5   // The number of times per second that the sensor should be polled
-
 // MARK: Variables
 /**
  *  The value of the global millis variable when the last sample was recieved from the sensor
@@ -26,11 +23,11 @@ extern uint32_t fgpmmopa6h_sample_time;
 extern uint32_t fgpmmopa6h_utc_time;
 
 /**
- *  The lattitude according to the GPS module in microdegrees, positive if in norhern hemisphere, negtive if in southern
+ *  The latitude according to the GPS module in 100 micro-minutes, positive if in norhern hemisphere, negtive if in southern
  */
-extern int32_t fgpmmopa6h_lattitude;
+extern int32_t fgpmmopa6h_latitude;
 /**
- *  The longitude according to the GPS module, positive if in eastern hemisphere, negative if in southern
+ *  The longitude according to the GPS module in 100 micro-minutes, positive if in eastern hemisphere, negative if in western
  */
 extern int32_t fgpmmopa6h_longitude;
 
@@ -42,6 +39,16 @@ extern int16_t fgpmmopa6h_speed;
  *  The course according to the GPS module in hundredths of a degree
  */
 extern int16_t fgpmmopa6h_course;
+
+/**
+ *  The number of sattelites which the GPS module is recieving singals from
+ */
+extern uint8_t fgpmmopa6h_satellites_in_view;
+
+/**
+ *  For each location packet recieved, a 1 is shifted into this byte if the packet contains valid data.
+ */
+extern uint8_t fgpmmopa6h_data_valid;
 
 // MARK: Function declarations
 /**

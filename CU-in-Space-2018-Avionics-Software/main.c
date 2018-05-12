@@ -121,6 +121,33 @@ void init_timers(void)
     TCCR1B |= (1<<CS11);                            // set prescaler to 8 and start timer 1
 }
 
+void init_sensors (void)
+{
+#ifdef ENABLE_ALTIMETER
+    init_mpl3115a2(); // Barometric Altimeter
+#endif
+#ifdef ENABLE_ACCELEROMETER
+    init_adxl343(); // Accelerometer
+#endif
+#ifdef ENABLE_GYROSCOPE
+    init_fxas21002c(); // Gyroscope
+#endif
+#ifdef ENABLE_GPS
+    init_fgpmmopa6h(); // GPS
+#endif
+}
+
+void init_fsm (void)
+{
+    if (RESET_JUMPER_PIN & ~(1<<RESET_JUMPER_NUM)) {
+        // Reset jumper not shorted
+        fsm_state = STANDBY;
+    } else {
+        // Reset jumper shorted
+        fsm_state = STANDBY;
+    }
+}
+
 int main(void)
 {
     // Get reset reason
@@ -148,7 +175,7 @@ int main(void)
 #ifdef ENABLE_I2C
     init_i2c();
 #endif
-
+    
     // Initilize software modules
     init_menu();
 
@@ -157,17 +184,8 @@ int main(void)
     sei();
 
     // Initilize external peripherals
-#ifdef ENABLE_ALTIMETER
-    init_mpl3115a2(); // Barometric Altimeter
-#endif
-#ifdef ENABLE_ACCELEROMETER
-    init_adxl343(); // Accelerometer
-#endif
-#ifdef ENABLE_GYROSCOPE
-    init_fxas21002c(); // Gyroscope
-#endif
-#ifdef ENABLE_GPS
-    fgpmmopa6h_service(); // GPS
+#ifdef ENABLE_SENSORS_AT_RESET
+    init_sensors();
 #endif
 #ifdef ENABLE_EEPROM
     init_25lc1024(EEPROM_CS_NUM, EEPROM2_CS_NUM); // EEPROM
@@ -202,17 +220,20 @@ static void main_loop ()
 #endif
     
     // Run Peripheral Services
+#ifndef ENABLE_SENSORS_AT_RESET
+    if (fsm_state != STANDBY) {
+#endif
 #ifdef ENABLE_ALTIMETER
-    mpl3115a2_service(); // Barometric Altimeter
+        mpl3115a2_service(); // Barometric Altimeter
 #endif
 #ifdef ENABLE_ACCELEROMETER
-    adxl343_service();  // Accelerometer
+        adxl343_service();  // Accelerometer
 #endif
 #ifdef ENABLE_GYROSCOPE
-    fxas21002c_service();  // Gyroscope
+        fxas21002c_service();  // Gyroscope
 #endif
 #ifdef ENABLE_GPS
-    fgpmmopa6h_service();  // GPS
+        fgpmmopa6h_service();  // GPS
 #endif
 #ifdef ENABLE_EEPROM
     eeprom_25lc1024_service(); // EEPROM
