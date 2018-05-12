@@ -20,6 +20,7 @@
 
 #include "ematch_detect.h"
 
+#include "serial1.h"
 #include "25LC1024.h"
 #include "SPI.h"
 #include "I2C.h"
@@ -32,7 +33,8 @@
 #include "GPS-FGPMMOPA6H.h"
 
 
-static char str[25];
+#define STR_LEN 128
+static char str[STR_LEN];
 
 // MARK: Strings
 
@@ -448,7 +450,28 @@ void menu_cmd_sensors_handler(uint8_t arg_len, char** args)
 static const char menu_cmd_gps_string[] PROGMEM = "gps";
 static const char menu_help_gps[] PROGMEM = "Read from GPS\n";
 
+static const char gps_str_title[] PROGMEM = "GPS Data\n";
+static const char gps_str_mission_time[] PROGMEM = "\tTime since last packet: ";
+static const char gps_str_mission_time_units[] PROGMEM = " ms\n";
+static const char gps_str_colon[] PROGMEM = ":";
 static const char gps_str_time[] PROGMEM = "\tUTC Time: ";
+static const char gps_str_space[] PROGMEM = " ";
+static const char gps_str_loc[] PROGMEM = "\n\tLocation: ";
+static const char gps_str_lat_N[] PROGMEM = "N   ";
+static const char gps_str_lat_S[] PROGMEM = "S   ";
+static const char gps_str_long_E[] PROGMEM = "E\n";
+static const char gps_str_long_W[] PROGMEM = "W\n";
+static const char gps_str_lat[] PROGMEM = "\tLatitude: ";
+static const char gps_str_long[] PROGMEM = "\tLongitude: ";
+static const char gps_str_coord_units[] PROGMEM = " 100 micro-minutes\n";
+static const char gps_str_speed[] PROGMEM = "\tSpeed over Ground: ";
+static const char gps_str_speed_units[] PROGMEM = " centi-knots\n";
+static const char gps_str_course[] PROGMEM = "\tCourse: ";
+static const char gps_str_course_units[] PROGMEM = " centi-degrees\n";
+static const char gps_str_sats[] PROGMEM = "\tSatellites in View: ";
+static const char gps_str_valid[] PROGMEM = "\tData Validity: ";
+static const char gps_str_valid_0[] PROGMEM = "0";
+static const char gps_str_valid_1[] PROGMEM = "1";
 
 void menu_cmd_gps_handler(uint8_t arg_len, char** args)
 {
@@ -457,18 +480,166 @@ void menu_cmd_gps_handler(uint8_t arg_len, char** args)
         return;
     }
     
-    double val = 0;
+    serial_0_put_string_P(gps_str_title);
     
+    // Mission Time
+    serial_0_put_string_P(gps_str_mission_time);
+    itoa(millis - fgpmmopa6h_sample_time, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_mission_time_units);
+    
+    // UTC Time
     serial_0_put_string_P(gps_str_time);
+    uint32_t hours = fgpmmopa6h_utc_time / 3600000;
+    uint32_t hours_rem = fgpmmopa6h_utc_time % 3600000;
+    uint32_t mins = hours_rem / 60000;
+    uint32_t minutes_rem = hours_rem % 60000;
+    double seconds = ((double)minutes_rem) / 1000.0;
     
+    ltoa(hours, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_colon);
+    ltoa(mins, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_colon);
+    dtostrf(seconds, 6, 3, str);
+    serial_0_put_string(str);
+    
+    // Latitude
+    serial_0_put_string_P(gps_str_loc);
+    uint8_t south = fgpmmopa6h_latitude < 0;
+    int32_t lat = south ? (fgpmmopa6h_latitude * -1) : fgpmmopa6h_latitude;
+    
+    int32_t degrees = lat / 600000;
+    double minutes = ((double)(lat % 600000)) / 10000.0;
+    
+    ltoa(degrees, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_space);
+    dtostrf(minutes, 7, 4, str);
+    serial_0_put_string(str);
+    serial_0_put_string_P(south ? gps_str_lat_S : gps_str_lat_N);
+    
+    // Longitude
+    uint8_t west = fgpmmopa6h_longitude < 0;
+    int32_t lng = west ? (fgpmmopa6h_longitude * -1) : fgpmmopa6h_longitude;
+    
+    degrees = lng / 600000;
+    minutes = ((double)(lng % 600000)) / 10000.0;
+    
+    ltoa(degrees, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_space);
+    dtostrf(minutes, 7, 4, str);
+    serial_0_put_string(str);
+    serial_0_put_string_P(west ? gps_str_long_W : gps_str_long_E);
+    
+    // Raw latitude
+    serial_0_put_string_P(gps_str_lat);
+    ltoa(fgpmmopa6h_latitude, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_coord_units);
+    
+    while (!serial_0_out_buffer_empty());
+    
+    // Raw longitude
+    serial_0_put_string_P(gps_str_long);
+    ltoa(fgpmmopa6h_longitude, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_coord_units);
+    
+    // Ground Speed
+    serial_0_put_string_P(gps_str_speed);
+    itoa(fgpmmopa6h_speed, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_speed_units);
+    
+    // Course
+    serial_0_put_string_P(gps_str_course);
+    itoa(fgpmmopa6h_course, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_course_units);
+    
+    // Sattelites in View
+    serial_0_put_string_P(gps_str_sats);
+    itoa(fgpmmopa6h_satellites_in_view, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(string_nl);
+    
+    // Valid
+    serial_0_put_string_P(gps_str_valid);
+    for (int8_t i = 7; i >= 0; i--) {
+        serial_0_put_string_P((fgpmmopa6h_data_valid & (1<<i)) ? gps_str_valid_1 : gps_str_valid_0);
+    }
+    serial_0_put_string_P(string_nl);
+}
 
-    serial_0_put_string(str);
-    serial_0_put_string_P(sensors_str_alt_units);
-    serial_0_put_string_P(sensors_str_temp);
-    val = ((double)(mpl3115a2_temp_msb + (((double)(mpl3115a2_temp_lsb >> 4)) / 16)));
-    dtostrf(val, 9, 4, str);
-    serial_0_put_string(str);
-    serial_0_put_string_P(sensors_str_temp_units);
+// GPS serial
+static const char menu_cmd_gps_ser_string[] PROGMEM = "gpsser";
+static const char menu_help_gps_ser[] PROGMEM = "Manually communicate with GPS\nValid Usage:\n\tRead last line: gpsser read\n\tWrite: gpsser write <command>\n\tRead Continuously: gpsser readcont <time in seconds>\n";
+
+#ifdef ENABLE_GPS
+static const char gps_ser_string_enabled[] PROGMEM = "Cannot use gpsser, GPS driver is enabled.\n";
+#else
+static const char gps_ser_read[] PROGMEM = "read";
+static const char gps_ser_write[] PROGMEM = "write";
+static const char gps_ser_readcont[] PROGMEM = "readcont";
+static const char gps_ser_noline[] PROGMEM = "No Data Avaliable\n";
+static const char gps_ser_cmdend[]  PROGMEM = "\r\n";
+#endif
+
+void menu_cmd_gps_ser_handler(uint8_t arg_len, char** args)
+{
+#ifdef ENABLE_GPS
+    serial_0_put_string_P(gps_ser_string_enabled);
+#else
+    if (arg_len == 1) {
+        goto invalid_args;
+    }
+    
+    if (!strcasecmp_P(args[1], gps_ser_read)) {
+        if (serial_1_has_line('\n')) {
+            serial_1_get_line('\n', str, STR_LEN);
+            str[strlen(str)-1] = '\n';
+            serial_0_put_string(str);
+        } else {
+            serial_0_put_string_P(gps_ser_noline);
+        }
+    } else if (!strcasecmp_P(args[1], gps_ser_write)) {
+        if (arg_len != 3) {
+            goto invalid_args;
+        }
+        
+        serial_1_put_string(args[2]);
+        serial_1_put_string_P(gps_ser_cmdend);
+    } else if (!strcasecmp_P(args[1], gps_ser_readcont)) {
+        if (arg_len != 3) {
+            goto invalid_args;
+        }
+        
+        char* end;
+        uint32_t time = strtoul(args[2], &end, 0);
+        if (*end != '\0') {
+            goto invalid_args;
+        }
+        
+        for (time = (time * 1000) + millis; millis <= time;) {
+            if (serial_1_has_line('\n')) {
+                serial_1_get_line('\n', str, STR_LEN);
+                str[strlen(str)-1] = '\n';
+                serial_0_put_string(str);
+            }
+            wdt_reset();
+        }
+        
+    } else {
+        goto invalid_args;
+    }
+    return;
+    
+invalid_args:
+    serial_0_put_string_P(menu_help_gps_ser);
+#endif
 }
 
 // actest
@@ -578,7 +749,7 @@ invalid_args:
 
 
 
-const uint8_t menu_num_items = 16;
+const uint8_t menu_num_items = 17;
 const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_version_string, .handler = menu_cmd_version_handler, .help_string = menu_help_version},
     {.string = menu_cmd_help_string, .handler = menu_cmd_help_handler, .help_string = menu_help_help},
@@ -591,6 +762,7 @@ const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_analog_string, .handler = menu_cmd_analog_handler, .help_string = menu_help_analog},
     {.string = menu_cmd_sensors_string, .handler = menu_cmd_sensors_handler, .help_string = menu_help_sensors},
     {.string = menu_cmd_gps_string, .handler = menu_cmd_gps_handler, .help_string = menu_help_gps},
+    {.string = menu_cmd_gps_ser_string, .handler = menu_cmd_gps_ser_handler, .help_string = menu_help_gps_ser},
     {.string = menu_cmd_actest_string, .handler = menu_cmd_actest_handler, .help_string = menu_help_actest},
     {.string = menu_cmd_altest_string, .handler = menu_cmd_altest_handler, .help_string = menu_help_altest},
     {.string = menu_cmd_iicraw_string, .handler = menu_cmd_iicraw_handler, .help_string = menu_help_iicraw},
