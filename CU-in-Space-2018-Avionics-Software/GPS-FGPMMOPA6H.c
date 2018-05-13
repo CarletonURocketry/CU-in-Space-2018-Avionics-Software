@@ -56,8 +56,6 @@ static uint8_t verify_checksum(char *str);
 static void func_rmc(uint8_t argc, char **argv);
 static void func_gsv(uint8_t argc, char **argv);
 
-static void parse_RMC(char*data);
-
 // MARK: Packet handlers
 static const uint8_t num_handlers = 2;
 static const gps_handler_t gps_handlers[] PROGMEM = {
