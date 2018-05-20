@@ -253,27 +253,33 @@ void menu_cmd_stat_handler(uint8_t arg_len, char** args)
 
 // EEPROM
 static const char menu_cmd_eeprom_string[] PROGMEM = "eeprom";
-static const char menu_help_eeprom[] PROGMEM = "Test external 25LC1024 EEPROM.\nValid Usage:\n\tRead: eeprom read <address>\n\tWrite: eeprom write <address> <data>\n";
+static const char menu_help_eeprom[] PROGMEM = "Test external 25LC1024 EEPROM.\nValid Usage:\n\tRead: eeprom read <address>\n\tWrite: eeprom write <address> <data>\n\tErase: eeprom erase\n";
 
 static const char eeprom_string_read[] PROGMEM = "read";
 static const char eeprom_string_write[] PROGMEM = "write";
+static const char eeprom_string_erase[] PROGMEM = "erase";
 
 static const char eeprom_string_hex[] PROGMEM = "0x";
 
 void menu_cmd_epprom_handler(uint8_t arg_len, char** args)
 {
-    if (arg_len < 3) {
+    if (arg_len < 2) {
         goto invalid_args;
     }
     
     uint8_t id;
     char* end;
-    uint32_t addr = strtoul(args[2], &end, 0);
-    if (*end != '\0') {
-        goto invalid_args;
-    }
     
     if (!strcasecmp_P(args[1], eeprom_string_read)) {
+        if (arg_len != 3) {
+            goto invalid_args;
+        }
+        
+        uint32_t addr = strtoul(args[2], &end, 0);
+        if (*end != '\0') {
+            goto invalid_args;
+        }
+        
         uint32_t buffer;
         eeprom_25lc1024_read(&id, addr, 4, (uint8_t*)&buffer);
         
@@ -284,7 +290,12 @@ void menu_cmd_epprom_handler(uint8_t arg_len, char** args)
         serial_0_put_string(str);
         serial_0_put_string_P(string_nl);
     } else if (!strcasecmp_P(args[1], eeprom_string_write)) {
-        if (arg_len < 4) {
+        if (arg_len != 4) {
+            goto invalid_args;
+        }
+        
+        uint32_t addr = strtoul(args[2], &end, 0);
+        if (*end != '\0') {
             goto invalid_args;
         }
 
@@ -294,6 +305,14 @@ void menu_cmd_epprom_handler(uint8_t arg_len, char** args)
         }
         
         eeprom_25lc1024_write(&id, addr, 4, (uint8_t*)&data);
+        
+        while (!eeprom_25lc1024_transaction_done(id)) eeprom_25lc1024_service();
+    } else if (!strcasecmp_P(args[1], eeprom_string_erase)) {
+        if (arg_len != 2) {
+            goto invalid_args;
+        }
+        
+        eeprom_25lc1024_chip_erase(&id);
         
         while (!eeprom_25lc1024_transaction_done(id)) eeprom_25lc1024_service();
     } else {

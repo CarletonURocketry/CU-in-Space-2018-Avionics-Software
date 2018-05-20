@@ -57,5 +57,10 @@ extern uint8_t eeprom_25lc1024_read(uint8_t *transaction_id, uint32_t address, u
  */
 extern uint8_t eeprom_25lc1024_write(uint8_t *transaction_id, uint32_t address, uint8_t length,  uint8_t *data);
 
+/**
+ *  Add a transaction to the queue which will erase the entire eeprom
+ *  @param transaction_id The identifier for the transaction will be stored in this memory
+ */
+extern uint8_t eeprom_25lc1024_chip_erase(uint8_t *transaction_id);
 
 #endif /* _5LC1024_h */

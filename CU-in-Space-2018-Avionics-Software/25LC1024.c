@@ -15,22 +15,32 @@
 typedef enum {QUEUED, WAKE, WRITE_EN, ACTION, CHECK_STAT, SLEEP, DONE} eeprom_state_t;
 
 typedef struct {
+    /** A unique identifer for this transaction */
     uint8_t id;
+    /** The current state of this transaction */
     eeprom_state_t state;
     
+    /** The ID of the SPI transaction used by this eeprom transaction */
     uint8_t spi_id;
 
+    /** The pin number of the CS pin used in this transaction */
     uint8_t cs_num;
+    /** The EEPROM address used in this transaction */
     uint32_t address;
+    /** The data buffer used in this transaction */
     uint8_t *data;
+    /** The number of bytes to be read or written in this transaction */
     uint8_t length;
     
+    /** Whether this is a write transaction */
     uint8_t write: 1;
+    /** Whether this is an erase transaction */
+    uint8_t erase: 1;
 } eeprom_transaction_t;
 
 // MARK: Constants
-#define QUEUE_LENGTH 5  // The number of SPI transactions which can be queued
-#define BUFFER_LENGTH 260 // The size of the output buffer
+#define QUEUE_LENGTH    5   // The number of SPI transactions which can be queued
+#define BUFFER_LENGTH   260 // The size of the output buffer
 
 #define ID_INVALID   0  // The transaction ID for an unused transaction
 #define ID_FIRST     1  // The first valid transaction ID
@@ -89,13 +99,11 @@ void eeprom_25lc1024_service(void)
     
     switch (t->state) {
         case QUEUED:
-            //serial_0_put_string("\tEEPROM: QUEUED\n");
-            //while (!serial_0_out_buffer_empty());
             // Shouldn't happen
             break;
         case WAKE:
             // Finished reading SIG, move on to read action or right enable
-            if (t->write) {
+            if (t->write || t->erase) {
                 // WIP cleared, we need to enable writes now
                 buffer[0] = WREN;
                 spi_start_half_duplex(&t->spi_id, t->cs_num, buffer, 1, NULL, 0);
@@ -105,13 +113,18 @@ void eeprom_25lc1024_service(void)
             // If we make it here we are ready to start a read transaction by falling through to write_en done
         case WRITE_EN:
             // Write EN done. Perform action
-            buffer[0] = (t->write) ? WRITE : READ;
-            buffer[1] = ((uint8_t*)(&t->address))[2];
-            buffer[2] = ((uint8_t*)(&t->address))[1];
-            buffer[3] = ((uint8_t*)(&t->address))[0];
-            if (t->write) memcpy(buffer + 4, t->data, t->length);
-            spi_start_half_duplex(&t->spi_id, t->cs_num, buffer, (t->write) ? t->length + 4 : 4,  buffer + 4,
-                                  (t->write) ? 0 : t->length);
+            if (!t->erase) {
+                buffer[0] = (t->write) ? WRITE : READ;
+                buffer[1] = ((uint8_t*)(&t->address))[2];
+                buffer[2] = ((uint8_t*)(&t->address))[1];
+                buffer[3] = ((uint8_t*)(&t->address))[0];
+                if (t->write) memcpy(buffer + 4, t->data, t->length);
+                spi_start_half_duplex(&t->spi_id, t->cs_num, buffer, (t->write) ? t->length + 4 : 4,  buffer + 4,
+                                      (t->write) ? 0 : t->length);
+            } else {
+                buffer[0] = CE;
+                spi_start_half_duplex(&t->spi_id, t->cs_num, buffer, 1, NULL, 0);
+            }
             t->state = ACTION;
             break;
         case ACTION:
@@ -139,9 +152,17 @@ void eeprom_25lc1024_service(void)
             break;
         case SLEEP:
             // Sleep mode has been entered, clean up and start the next transaction
-            t->state = DONE;
-            queue_head = (queue_head + 1) % QUEUE_LENGTH;
-            eeprom_start_next_transaction();
+            if (t->erase && (t->cs_num == cs_num_0)) {
+                // If this is an erase transaction we need to restart from the begining to erase the second chip
+                t->cs_num = cs_num_1;
+                buffer[0] = RDID;
+                spi_start_half_duplex(&t->spi_id, t->cs_num, buffer, 4, buffer + 4, 1);
+                t->state = WAKE;
+            } else {
+                t->state = DONE;
+                queue_head = (queue_head + 1) % QUEUE_LENGTH;
+                eeprom_start_next_transaction();
+            }
             break;
         case DONE:
             // Shouldn't happen
@@ -212,6 +233,7 @@ uint8_t eeprom_25lc1024_read(uint8_t *transaction_id, uint32_t address, uint8_t 
     t->length = length;
     
     t->write = 0;
+    t->erase = 0;
     
     eeprom_start_next_transaction();
     return 0;
@@ -235,6 +257,31 @@ uint8_t eeprom_25lc1024_write(uint8_t *transaction_id, uint32_t address, uint8_t
     t->length = length;
     
     t->write = 1;
+    t->erase = 0;
+    
+    eeprom_start_next_transaction();
+    return 0;
+}
+
+uint8_t eeprom_25lc1024_chip_erase(uint8_t *transaction_id)
+{
+    eeprom_transaction_t *t = get_next_free_transaction();
+    if (t == NULL) return 1;
+    
+    t->id = next_id;
+    *transaction_id = next_id++;
+    if (next_id == ID_INVALID) next_id = ID_FIRST;
+    
+    t->state = QUEUED;
+    t->spi_id = 0;
+    
+    t->cs_num = cs_num_0;
+    t->address = 0;
+    t->data = NULL;
+    t->length = 0;
+    
+    t->write = 0;
+    t->erase = 1;
     
     eeprom_start_next_transaction();
     return 0;
