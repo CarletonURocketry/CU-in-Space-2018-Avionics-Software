@@ -236,7 +236,10 @@ static void main_loop ()
         fgpmmopa6h_service();  // GPS
 #endif
 #ifdef ENABLE_EEPROM
-    eeprom_25lc1024_service(); // EEPROM
+        eeprom_25lc1024_service(); // EEPROM
+#endif
+#ifndef ENABLE_SENSORS_AT_RESET
+    }
 #endif
     
     // Run Software Module Servies

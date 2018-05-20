@@ -716,7 +716,7 @@ void menu_cmd_actest_handler(uint8_t arg_len, char** args)
 static const char menu_cmd_altest_string[] PROGMEM = "altest";
 static const char menu_help_altest[] PROGMEM = "Test MPL3115A2 Barometric Altimiter\n";
 
-static const char altest_devid[] PROGMEM = "Who Am I: 0x";
+static const char altest_space[] PROGMEM = " ";
 
 void menu_cmd_altest_handler(uint8_t arg_len, char** args)
 {
@@ -726,15 +726,172 @@ void menu_cmd_altest_handler(uint8_t arg_len, char** args)
     }
     
     uint8_t transaction_id;
-    uint8_t buffer;
+    uint8_t buffer[5];
     
-    i2c_read(&transaction_id, 0x60, 0x0c, &buffer, 1);
+    i2c_read(&transaction_id, 0x60, 0x14, buffer, 2);
     while (!i2c_transaction_done(transaction_id)) i2c_service();
-    serial_0_put_string_P(altest_devid);
-    ultoa(buffer, str, 16);
-    serial_0_put_string(str);
     i2c_clear_transaction(transaction_id);
+    
+    serial_0_put_string("Sea Level: ");
+    for (int8_t i = 7; i >= 0; i--) {
+        serial_0_put_string_P((buffer[0] & (1<<i)) ? gps_str_valid_1 : gps_str_valid_0);
+    }
+    serial_0_put_string_P(altest_space);
+    for (int8_t i = 7; i >= 0; i--) {
+        serial_0_put_string_P((buffer[1] & (1<<i)) ? gps_str_valid_1 : gps_str_valid_0);
+    }
     serial_0_put_string_P(string_nl);
+    
+    
+    // Write PT_DATA_CFG to enable data events on new pressure/altitude value
+    buffer[0] = 0b00000010;
+    i2c_write(&transaction_id, 0x60, 0x13, buffer, 1);
+    while (!i2c_transaction_done(transaction_id)) i2c_service();
+    i2c_clear_transaction(transaction_id);
+
+    serial_0_put_string("Wrote PT_DATA_CFG\n");
+
+    // Write CTRL_REG_1 to start collecting data
+    buffer[0] = 0b00111010;
+    i2c_write(&transaction_id, 0x60, 0x26, buffer, 1);
+    while (!i2c_transaction_done(transaction_id)) i2c_service();
+    i2c_clear_transaction(transaction_id);
+
+    serial_0_put_string("Wrote CTRL_REG_1\n");
+
+    // Wait for data to be ready
+    do {
+        i2c_read(&transaction_id, 0x60, 0x0, buffer, 1);
+        while (!i2c_transaction_done(transaction_id)) i2c_service();
+        i2c_clear_transaction(transaction_id);
+    } while (!(buffer[0] & 0x04));
+
+    serial_0_put_string("Data Ready\n");
+
+    // Read data
+    i2c_read(&transaction_id, 0x60, 0x01, buffer, 5);
+    while (!i2c_transaction_done(transaction_id)) i2c_service();
+    i2c_clear_transaction(transaction_id);
+    
+    for (int8_t i = 7; i >= 0; i--) {
+        serial_0_put_string_P((buffer[0] & (1<<i)) ? gps_str_valid_1 : gps_str_valid_0);
+    }
+    serial_0_put_string_P(altest_space);
+    for (int8_t i = 7; i >= 0; i--) {
+        serial_0_put_string_P((buffer[1] & (1<<i)) ? gps_str_valid_1 : gps_str_valid_0);
+    }
+    serial_0_put_string_P(altest_space);
+    for (int8_t i = 7; i >= 0; i--) {
+        serial_0_put_string_P((buffer[2] & (1<<i)) ? gps_str_valid_1 : gps_str_valid_0);
+    }
+    serial_0_put_string_P(string_nl);
+
+    double alt = (double)1024 * buffer[0];
+    alt += (double)4 * buffer[1];
+    alt += 0.25 * (double)((buffer[2] >> 4) & 0b1111);
+
+    dtostrf(alt, 10, 4, str);
+    serial_0_put_string(str);
+    serial_0_put_string_P(string_nl);
+    
+    // write back pressure
+    uint8_t high = (buffer[0] << 1) | !!(buffer[1] & (1<<7));
+    uint8_t low = (buffer[1] << 1) | !!(buffer[2] & (1<<7));
+    
+    buffer[1] = low;
+    buffer[0] = high;
+    i2c_write(&transaction_id, 0x60, 0x14, buffer, 2);
+    while (!i2c_transaction_done(transaction_id)) i2c_service();
+    i2c_clear_transaction(transaction_id);
+}
+
+// checkid
+static const char menu_cmd_checkid_string[] PROGMEM = "checkid";
+static const char menu_help_checkid[] PROGMEM = "Check the device IDs of attached peripherals\n";
+
+static const char checkid_eeprom_1_title[] PROGMEM = "EEPROM 1 (25LC1024)\n";
+static const char checkid_eeprom_2_title[] PROGMEM = "EEPROM 2 (25LC1024)\n";
+
+static const char checkid_devid[] PROGMEM = "\tDevice ID: 0x";
+static const char checkid_who_am_i[] PROGMEM = "\tWho Am I: 0x";
+static const char checkid_sig[] PROGMEM = "\tElectronic Signature: 0x";
+
+static const char checkid_good[] PROGMEM = " (Good)\n";
+static const char checkid_bad[] PROGMEM = " (Bad)\n";
+
+void menu_cmd_checkid_handler(uint8_t arg_len, char** args)
+{
+    if (arg_len != 1) {
+        serial_0_put_string_P(menu_help_checkid);
+        return;
+    }
+    
+    uint8_t alt_id, accel_id, gyro_id, eeprom_1_id, eeprom_2_id;
+    uint8_t alt_buffer, accel_buffer, gyro_buffer, eeprom_1_buffer, eeprom_2_buffer;
+    uint8_t eeprom_deep_power_down = 0b10111001;
+    uint8_t eeprom_read_id[] = {0b10101011, 0, 0, 0};
+    
+    i2c_read(&alt_id, 0x60, 0x0c, &alt_buffer, 1); // 0xC4
+    i2c_read(&accel_id, 0x53, 0x0, &accel_buffer, 1); // 0xE5
+    i2c_read(&gyro_id, 0x20, 0x0c, &gyro_buffer, 1); // 0xD7
+    spi_start_half_duplex(&eeprom_1_id, EEPROM_CS_NUM, eeprom_read_id, 4, &eeprom_1_buffer, 1); // 0x29
+    spi_start_half_duplex(&eeprom_2_id, EEPROM2_CS_NUM, eeprom_read_id, 4, &eeprom_2_buffer, 1); // 0x29
+    
+    // Altimeter
+    serial_0_put_string_P(sensors_str_baro_title);
+    serial_0_put_string_P(checkid_who_am_i);
+    while (!i2c_transaction_done(alt_id)) i2c_service();
+    i2c_clear_transaction(alt_id);
+    utoa(alt_buffer, str, 16);
+    serial_0_put_string(str);
+    serial_0_put_string_P((alt_buffer == 0xc4) ? checkid_good : checkid_bad);
+    
+    // Accelerometer
+    serial_0_put_string_P(sensors_str_accel_title);
+    serial_0_put_string_P(checkid_devid);
+    while (!i2c_transaction_done(accel_id)) i2c_service();
+    i2c_clear_transaction(accel_id);
+    utoa(accel_buffer, str, 16);
+    serial_0_put_string(str);
+    serial_0_put_string_P((accel_buffer == 0xe5) ? checkid_good : checkid_bad);
+    
+    while (!serial_0_out_buffer_empty());
+
+    // Gyroscope
+    serial_0_put_string_P(sensors_str_gyro_title);
+    serial_0_put_string_P(checkid_who_am_i);
+    while (!i2c_transaction_done(gyro_id)) i2c_service();
+    i2c_clear_transaction(gyro_id);
+    utoa(gyro_buffer, str, 16);
+    serial_0_put_string(str);
+    serial_0_put_string_P((gyro_buffer == 0xd7) ? checkid_good : checkid_bad);
+
+    // Eeprom 1
+    serial_0_put_string_P(checkid_eeprom_1_title);
+    serial_0_put_string_P(checkid_sig);
+    while (!spi_transaction_done(eeprom_1_id)) spi_service();
+    spi_clear_transaction(eeprom_1_id);
+    utoa(eeprom_1_buffer, str, 16);
+    serial_0_put_string(str);
+    serial_0_put_string_P((eeprom_1_buffer == 0x29) ? checkid_good : checkid_bad);
+    
+    // Eeprom 2
+    serial_0_put_string_P(checkid_eeprom_2_title);
+    serial_0_put_string_P(checkid_sig);
+    while (!spi_transaction_done(eeprom_2_id)) spi_service();
+    spi_clear_transaction(eeprom_2_id);
+    utoa(eeprom_2_buffer, str, 16);
+    serial_0_put_string(str);
+    serial_0_put_string_P((eeprom_2_buffer == 0x29) ? checkid_good : checkid_bad);
+    
+    // Put eeproms back in deep power down
+    spi_start_half_duplex(&eeprom_1_id, EEPROM_CS_NUM, &eeprom_deep_power_down, 1, NULL, 0);
+    spi_start_half_duplex(&eeprom_2_id, EEPROM2_CS_NUM, &eeprom_deep_power_down, 1, NULL, 0);
+    
+    while (!spi_transaction_done(eeprom_1_id)) spi_service();
+    spi_clear_transaction(eeprom_1_id);
+    while (!spi_transaction_done(eeprom_2_id)) spi_service();
+    spi_clear_transaction(eeprom_2_id);
 }
 
 // introm
@@ -791,7 +948,6 @@ void menu_cmd_introm_handler(uint8_t arg_len, char** args)
 invalid_args:
     serial_0_put_string_P(menu_help_introm);
 }
-
 
 
 const uint8_t menu_num_items = 19;
