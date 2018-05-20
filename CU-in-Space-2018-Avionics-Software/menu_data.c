@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include <util/atomic.h>
+#include <avr/wdt.h>
 
 #include "global.h"
 #include "pindefinitions.h"
@@ -142,6 +143,16 @@ void menu_cmd_clear_handler(uint8_t arg_len, char** args)
     serial_0_put_string("[H");
 }
 
+// Reset
+static const char menu_cmd_reset_string[] PROGMEM = "reset";
+static const char menu_help_reset[] PROGMEM = "Performs a software reset with the watchdog timer.\n";
+
+void menu_cmd_reset_handler(uint8_t arg_len, char** args)
+{
+    wdt_enable(WDTO_15MS);
+    for (;;);
+}
+
 // Stat
 static const char menu_cmd_stat_string[] PROGMEM = "stat";
 static const char menu_help_stat[] PROGMEM = "Get status information\n";
@@ -197,12 +208,12 @@ void menu_cmd_stat_handler(uint8_t arg_len, char** args)
     serial_0_put_string_P(stat_str_volt_title);
     // Battery Voltage
     serial_0_put_string_P(stat_str_volt_bat);
-    dtostrf(0.01501651249 * (double)adc_avg_data[ADC_NUM_CHANNELS - 1], 7, 3, str);
+    dtostrf(0.01434657506 * (double)adc_avg_data[ADC_NUM_CHANNELS - 1], 7, 3, str);
     serial_0_put_string(str);
     serial_0_put_string_P(stat_str_volt_units);
     // Capacitor Voltage
     serial_0_put_string_P(stat_str_volt_cap);
-    dtostrf(0.02560460069 * (double)adc_avg_data[0], 7, 3, str);
+    dtostrf(0.02625071131 * (double)adc_avg_data[0], 7, 3, str);
     serial_0_put_string(str);
     serial_0_put_string_P(stat_str_volt_units);
     while (!serial_0_out_buffer_empty());
@@ -356,8 +367,8 @@ void menu_cmd_analog_handler(uint8_t arg_len, char** args)
         if (i == 0) {
             // Capacitor Voltage
             serial_0_put_string_P(analog_string_two);
-            // Vcap = ((3.3/1024)*n)/(6.75/(6.75+46.88))
-            dtostrf(0.02560460069 * (double)adc_avg_data[i], 7, 3, str);
+            // Vcap = ((3.3/1024)*n)/(6.59/(6.59+47.09))
+            dtostrf(0.02625071131 * (double)adc_avg_data[i], 7, 3, str);
             serial_0_put_string(str);
             serial_0_put_string_P(analog_string_five);
         } else if (i == 1 || i == 2) {
@@ -371,8 +382,8 @@ void menu_cmd_analog_handler(uint8_t arg_len, char** args)
         } else if (i == (ADC_NUM_CHANNELS - 1)) {
             // Battery Voltage
             serial_0_put_string_P(analog_string_two);
-            // Vbat = ((3.3/1024)*n)/(5.383/(5.383+19.7))
-            dtostrf(0.01501651249 * (double)adc_avg_data[i], 7, 3, str);
+            // Vbat = ((3.3/1024)*n)/(5.6/(5.6+19.33))
+            dtostrf(0.01434657506 * (double)adc_avg_data[i], 7, 3, str);
             serial_0_put_string(str);
             serial_0_put_string_P(analog_string_four);
         } else {
@@ -385,9 +396,12 @@ void menu_cmd_analog_handler(uint8_t arg_len, char** args)
 static const char menu_cmd_sensors_string[] PROGMEM = "sensors";
 static const char menu_help_sensors[] PROGMEM = "Print data from sensors\n";
 
-static const char sensors_str_baro_title[] PROGMEM = "Barometric Altimiter (MPL3115A2)\n";
+static const char sensors_str_baro_title[] PROGMEM = "Barometric Altimeter (MPL3115A2)\n";
 static const char sensors_str_baro_alt[] PROGMEM = "\tAltitude: ";
 static const char sensors_str_temp[] PROGMEM = "\tTempurature: ";
+static const char sensors_str_raw_1[] PROGMEM = " csb: 0b";
+static const char sensors_str_raw_2[] PROGMEM = " lsb: 0b";
+static const char sensors_str_raw_3[] PROGMEM = ")\n";
 static const char sensors_str_accel_title[] PROGMEM = "Accelerometer (ADXL343)\n";
 static const char sensors_str_accel_x[] PROGMEM = "\tX: ";
 static const char sensors_str_accel_y[] PROGMEM = "\tY: ";
@@ -398,7 +412,7 @@ static const char sensors_str_gyro_roll[] PROGMEM = "\tRoll: ";
 static const char sensors_str_gyro_yaw[] PROGMEM = "\tYaw: ";
 
 static const char sensors_str_temp_units[] PROGMEM = " ºC\n";
-static const char sensors_str_alt_units[] PROGMEM = " m\n";
+static const char sensors_str_alt_units[] PROGMEM = " m\t(msb: 0b";
 static const char sensors_str_accel_units[] PROGMEM = " g\n";
 static const char sensors_str_gyro_units[] PROGMEM = " º/s\n";
 
@@ -411,6 +425,7 @@ void menu_cmd_sensors_handler(uint8_t arg_len, char** args)
     
     double val = 0;
 
+    // Altimeter
     serial_0_put_string_P(sensors_str_baro_title);
     serial_0_put_string_P(sensors_str_baro_alt);
     val = ((double)(mpl3115a2_alt_csb + (((uint16_t)mpl3115a2_alt_msb) << 8))) +
@@ -418,6 +433,15 @@ void menu_cmd_sensors_handler(uint8_t arg_len, char** args)
     dtostrf(val, 12, 4, str);
     serial_0_put_string(str);
     serial_0_put_string_P(sensors_str_alt_units);
+    utoa(mpl3115a2_alt_msb, str, 2);
+    serial_0_put_string(str);
+    serial_0_put_string_P(sensors_str_raw_1);
+    utoa(mpl3115a2_alt_csb, str, 2);
+    serial_0_put_string(str);
+    serial_0_put_string_P(sensors_str_raw_2);
+    utoa(mpl3115a2_alt_lsb, str, 2);
+    serial_0_put_string(str);
+    serial_0_put_string_P(sensors_str_raw_3);
     serial_0_put_string_P(sensors_str_temp);
     val = ((double)(mpl3115a2_temp_msb + (((double)(mpl3115a2_temp_lsb >> 4)) / 16)));
     dtostrf(val, 9, 4, str);
@@ -425,6 +449,7 @@ void menu_cmd_sensors_handler(uint8_t arg_len, char** args)
     serial_0_put_string_P(sensors_str_temp_units);
     while (!serial_0_out_buffer_empty());
     
+    // Accelerometer
     serial_0_put_string_P(sensors_str_accel_title);
     serial_0_put_string_P(sensors_str_accel_x);
     val = (double)adxl343_accel_x * 0.0039; // 3.9 milli-g per LSB
@@ -443,6 +468,7 @@ void menu_cmd_sensors_handler(uint8_t arg_len, char** args)
     serial_0_put_string_P(sensors_str_accel_units);
     while (!serial_0_out_buffer_empty());
     
+    // Gyroscope
     serial_0_put_string_P(sensors_str_gyro_title);
     serial_0_put_string_P(sensors_str_gyro_pitch);
     val = (double)fxas21002c_pitch_rate * 0.0625;
@@ -470,7 +496,7 @@ static const char menu_cmd_gps_string[] PROGMEM = "gps";
 static const char menu_help_gps[] PROGMEM = "Read from GPS\n";
 
 static const char gps_str_title[] PROGMEM = "GPS Data\n";
-static const char gps_str_mission_time[] PROGMEM = "\tTime since last packet: ";
+static const char gps_str_mission_time[] PROGMEM = "\tTime since last valid RMC packet: ";
 static const char gps_str_mission_time_units[] PROGMEM = " ms\n";
 static const char gps_str_colon[] PROGMEM = ":";
 static const char gps_str_time[] PROGMEM = "\tUTC Time: ";
@@ -503,7 +529,7 @@ void menu_cmd_gps_handler(uint8_t arg_len, char** args)
     
     // Mission Time
     serial_0_put_string_P(gps_str_mission_time);
-    itoa(millis - fgpmmopa6h_sample_time, str, 10);
+    ultoa(millis - fgpmmopa6h_sample_time, str, 10);
     serial_0_put_string(str);
     serial_0_put_string_P(gps_str_mission_time_units);
     
@@ -768,11 +794,12 @@ invalid_args:
 
 
 
-const uint8_t menu_num_items = 17;
+const uint8_t menu_num_items = 19;
 const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_version_string, .handler = menu_cmd_version_handler, .help_string = menu_help_version},
     {.string = menu_cmd_help_string, .handler = menu_cmd_help_handler, .help_string = menu_help_help},
     {.string = menu_cmd_clear_string, .handler = menu_cmd_clear_handler, .help_string = menu_help_clear},
+    {.string = menu_cmd_reset_string, .handler = menu_cmd_reset_handler, .help_string = menu_help_reset},
     {.string = menu_cmd_stat_string, .handler = menu_cmd_stat_handler, .help_string = menu_help_stat},
     {.string = menu_cmd_eeprom_string, .handler = menu_cmd_epprom_handler, .help_string = menu_help_eeprom},
     {.string = menu_cmd_spitest_string, .handler = menu_cmd_spitest_handler, .help_string = menu_help_spitest},
@@ -786,5 +813,6 @@ const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_altest_string, .handler = menu_cmd_altest_handler, .help_string = menu_help_altest},
     {.string = menu_cmd_iicraw_string, .handler = menu_cmd_iicraw_handler, .help_string = menu_help_iicraw},
     {.string = menu_cmd_iicio_string, .handler = menu_cmd_iicio_handler, .help_string = menu_help_iicio},
-    {.string = menu_cmd_introm_string, .handler = menu_cmd_introm_handler, .help_string = menu_help_introm}
+    {.string = menu_cmd_introm_string, .handler = menu_cmd_introm_handler, .help_string = menu_help_introm},
+    {.string = menu_cmd_checkid_string, .handler = menu_cmd_checkid_handler, .help_string = menu_help_checkid}
 };
