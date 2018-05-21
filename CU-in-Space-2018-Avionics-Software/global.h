@@ -16,16 +16,16 @@
 // MARK: Compile Time Settings
 #define ENABLE_SENSORS_AT_RESET
 
-#define ENABLE_DEBUG_FLASH
+//#define ENABLE_DEBUG_FLASH
 
 #define ENABLE_SPI
 #define ENABLE_I2C
 #define ENABLE_ADC
 
-//#define ENABLE_ALTIMETER
-//#define ENABLE_ACCELEROMETER
+#define ENABLE_ALTIMETER
+#define ENABLE_ACCELEROMETER
 //#define ENABLE_GYROSCOPE
-//#define ENABLE_GPS
+#define ENABLE_GPS
 
 //#define ENABLE_XBEE
 

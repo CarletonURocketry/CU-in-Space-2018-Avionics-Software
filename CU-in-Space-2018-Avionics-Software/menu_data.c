@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include <util/atomic.h>
+#include <avr/wdt.h>
 
 #include "global.h"
 #include "pindefinitions.h"
@@ -20,6 +21,7 @@
 
 #include "ematch_detect.h"
 
+#include "serial1.h"
 #include "25LC1024.h"
 #include "SPI.h"
 #include "I2C.h"
@@ -32,7 +34,8 @@
 #include "GPS-FGPMMOPA6H.h"
 
 
-static char str[25];
+#define STR_LEN 128
+static char str[STR_LEN];
 
 // MARK: Strings
 
@@ -140,6 +143,16 @@ void menu_cmd_clear_handler(uint8_t arg_len, char** args)
     serial_0_put_string("[H");
 }
 
+// Reset
+static const char menu_cmd_reset_string[] PROGMEM = "reset";
+static const char menu_help_reset[] PROGMEM = "Performs a software reset with the watchdog timer.\n";
+
+void menu_cmd_reset_handler(uint8_t arg_len, char** args)
+{
+    wdt_enable(WDTO_15MS);
+    for (;;);
+}
+
 // Stat
 static const char menu_cmd_stat_string[] PROGMEM = "stat";
 static const char menu_help_stat[] PROGMEM = "Get status information\n";
@@ -195,12 +208,12 @@ void menu_cmd_stat_handler(uint8_t arg_len, char** args)
     serial_0_put_string_P(stat_str_volt_title);
     // Battery Voltage
     serial_0_put_string_P(stat_str_volt_bat);
-    dtostrf(0.01501651249 * (double)adc_avg_data[ADC_NUM_CHANNELS - 1], 7, 3, str);
+    dtostrf(0.01434657506 * (double)adc_avg_data[ADC_NUM_CHANNELS - 1], 7, 3, str);
     serial_0_put_string(str);
     serial_0_put_string_P(stat_str_volt_units);
     // Capacitor Voltage
     serial_0_put_string_P(stat_str_volt_cap);
-    dtostrf(0.02560460069 * (double)adc_avg_data[0], 7, 3, str);
+    dtostrf(0.02625071131 * (double)adc_avg_data[0], 7, 3, str);
     serial_0_put_string(str);
     serial_0_put_string_P(stat_str_volt_units);
     while (!serial_0_out_buffer_empty());
@@ -251,27 +264,33 @@ void menu_cmd_stat_handler(uint8_t arg_len, char** args)
 
 // EEPROM
 static const char menu_cmd_eeprom_string[] PROGMEM = "eeprom";
-static const char menu_help_eeprom[] PROGMEM = "Test external 25LC1024 EEPROM.\nValid Usage:\n\tRead: eeprom read <address>\n\tWrite: eeprom write <address> <data>\n";
+static const char menu_help_eeprom[] PROGMEM = "Test external 25LC1024 EEPROM.\nValid Usage:\n\tRead: eeprom read <address>\n\tWrite: eeprom write <address> <data>\n\tErase: eeprom erase\n";
 
 static const char eeprom_string_read[] PROGMEM = "read";
 static const char eeprom_string_write[] PROGMEM = "write";
+static const char eeprom_string_erase[] PROGMEM = "erase";
 
 static const char eeprom_string_hex[] PROGMEM = "0x";
 
 void menu_cmd_epprom_handler(uint8_t arg_len, char** args)
 {
-    if (arg_len < 3) {
+    if (arg_len < 2) {
         goto invalid_args;
     }
     
     uint8_t id;
     char* end;
-    uint32_t addr = strtoul(args[2], &end, 0);
-    if (*end != '\0') {
-        goto invalid_args;
-    }
     
     if (!strcasecmp_P(args[1], eeprom_string_read)) {
+        if (arg_len != 3) {
+            goto invalid_args;
+        }
+        
+        uint32_t addr = strtoul(args[2], &end, 0);
+        if (*end != '\0') {
+            goto invalid_args;
+        }
+        
         uint32_t buffer;
         eeprom_25lc1024_read(&id, addr, 4, (uint8_t*)&buffer);
         
@@ -282,7 +301,12 @@ void menu_cmd_epprom_handler(uint8_t arg_len, char** args)
         serial_0_put_string(str);
         serial_0_put_string_P(string_nl);
     } else if (!strcasecmp_P(args[1], eeprom_string_write)) {
-        if (arg_len < 4) {
+        if (arg_len != 4) {
+            goto invalid_args;
+        }
+        
+        uint32_t addr = strtoul(args[2], &end, 0);
+        if (*end != '\0') {
             goto invalid_args;
         }
 
@@ -292,6 +316,14 @@ void menu_cmd_epprom_handler(uint8_t arg_len, char** args)
         }
         
         eeprom_25lc1024_write(&id, addr, 4, (uint8_t*)&data);
+        
+        while (!eeprom_25lc1024_transaction_done(id)) eeprom_25lc1024_service();
+    } else if (!strcasecmp_P(args[1], eeprom_string_erase)) {
+        if (arg_len != 2) {
+            goto invalid_args;
+        }
+        
+        eeprom_25lc1024_chip_erase(&id);
         
         while (!eeprom_25lc1024_transaction_done(id)) eeprom_25lc1024_service();
     } else {
@@ -335,8 +367,8 @@ void menu_cmd_analog_handler(uint8_t arg_len, char** args)
         if (i == 0) {
             // Capacitor Voltage
             serial_0_put_string_P(analog_string_two);
-            // Vcap = ((3.3/1024)*n)/(6.75/(6.75+46.88))
-            dtostrf(0.02560460069 * (double)adc_avg_data[i], 7, 3, str);
+            // Vcap = ((3.3/1024)*n)/(6.59/(6.59+47.09))
+            dtostrf(0.02625071131 * (double)adc_avg_data[i], 7, 3, str);
             serial_0_put_string(str);
             serial_0_put_string_P(analog_string_five);
         } else if (i == 1 || i == 2) {
@@ -350,8 +382,8 @@ void menu_cmd_analog_handler(uint8_t arg_len, char** args)
         } else if (i == (ADC_NUM_CHANNELS - 1)) {
             // Battery Voltage
             serial_0_put_string_P(analog_string_two);
-            // Vbat = ((3.3/1024)*n)/(5.383/(5.383+19.7))
-            dtostrf(0.01501651249 * (double)adc_avg_data[i], 7, 3, str);
+            // Vbat = ((3.3/1024)*n)/(5.6/(5.6+19.33))
+            dtostrf(0.01434657506 * (double)adc_avg_data[i], 7, 3, str);
             serial_0_put_string(str);
             serial_0_put_string_P(analog_string_four);
         } else {
@@ -364,9 +396,12 @@ void menu_cmd_analog_handler(uint8_t arg_len, char** args)
 static const char menu_cmd_sensors_string[] PROGMEM = "sensors";
 static const char menu_help_sensors[] PROGMEM = "Print data from sensors\n";
 
-static const char sensors_str_baro_title[] PROGMEM = "Barometric Altimiter (MPL3115A2)\n";
+static const char sensors_str_baro_title[] PROGMEM = "Barometric Altimeter (MPL3115A2)\n";
 static const char sensors_str_baro_alt[] PROGMEM = "\tAltitude: ";
 static const char sensors_str_temp[] PROGMEM = "\tTempurature: ";
+static const char sensors_str_raw_1[] PROGMEM = " csb: 0b";
+static const char sensors_str_raw_2[] PROGMEM = " lsb: 0b";
+static const char sensors_str_raw_3[] PROGMEM = ")\n";
 static const char sensors_str_accel_title[] PROGMEM = "Accelerometer (ADXL343)\n";
 static const char sensors_str_accel_x[] PROGMEM = "\tX: ";
 static const char sensors_str_accel_y[] PROGMEM = "\tY: ";
@@ -377,7 +412,7 @@ static const char sensors_str_gyro_roll[] PROGMEM = "\tRoll: ";
 static const char sensors_str_gyro_yaw[] PROGMEM = "\tYaw: ";
 
 static const char sensors_str_temp_units[] PROGMEM = " ºC\n";
-static const char sensors_str_alt_units[] PROGMEM = " m\n";
+static const char sensors_str_alt_units[] PROGMEM = " m\t(msb: 0b";
 static const char sensors_str_accel_units[] PROGMEM = " g\n";
 static const char sensors_str_gyro_units[] PROGMEM = " º/s\n";
 
@@ -390,6 +425,7 @@ void menu_cmd_sensors_handler(uint8_t arg_len, char** args)
     
     double val = 0;
 
+    // Altimeter
     serial_0_put_string_P(sensors_str_baro_title);
     serial_0_put_string_P(sensors_str_baro_alt);
     val = ((double)(mpl3115a2_alt_csb + (((uint16_t)mpl3115a2_alt_msb) << 8))) +
@@ -397,6 +433,15 @@ void menu_cmd_sensors_handler(uint8_t arg_len, char** args)
     dtostrf(val, 12, 4, str);
     serial_0_put_string(str);
     serial_0_put_string_P(sensors_str_alt_units);
+    utoa(mpl3115a2_alt_msb, str, 2);
+    serial_0_put_string(str);
+    serial_0_put_string_P(sensors_str_raw_1);
+    utoa(mpl3115a2_alt_csb, str, 2);
+    serial_0_put_string(str);
+    serial_0_put_string_P(sensors_str_raw_2);
+    utoa(mpl3115a2_alt_lsb, str, 2);
+    serial_0_put_string(str);
+    serial_0_put_string_P(sensors_str_raw_3);
     serial_0_put_string_P(sensors_str_temp);
     val = ((double)(mpl3115a2_temp_msb + (((double)(mpl3115a2_temp_lsb >> 4)) / 16)));
     dtostrf(val, 9, 4, str);
@@ -404,6 +449,7 @@ void menu_cmd_sensors_handler(uint8_t arg_len, char** args)
     serial_0_put_string_P(sensors_str_temp_units);
     while (!serial_0_out_buffer_empty());
     
+    // Accelerometer
     serial_0_put_string_P(sensors_str_accel_title);
     serial_0_put_string_P(sensors_str_accel_x);
     val = (double)adxl343_accel_x * 0.0039; // 3.9 milli-g per LSB
@@ -422,6 +468,7 @@ void menu_cmd_sensors_handler(uint8_t arg_len, char** args)
     serial_0_put_string_P(sensors_str_accel_units);
     while (!serial_0_out_buffer_empty());
     
+    // Gyroscope
     serial_0_put_string_P(sensors_str_gyro_title);
     serial_0_put_string_P(sensors_str_gyro_pitch);
     val = (double)fxas21002c_pitch_rate * 0.0625;
@@ -448,7 +495,28 @@ void menu_cmd_sensors_handler(uint8_t arg_len, char** args)
 static const char menu_cmd_gps_string[] PROGMEM = "gps";
 static const char menu_help_gps[] PROGMEM = "Read from GPS\n";
 
+static const char gps_str_title[] PROGMEM = "GPS Data\n";
+static const char gps_str_mission_time[] PROGMEM = "\tTime since last valid RMC packet: ";
+static const char gps_str_mission_time_units[] PROGMEM = " ms\n";
+static const char gps_str_colon[] PROGMEM = ":";
 static const char gps_str_time[] PROGMEM = "\tUTC Time: ";
+static const char gps_str_space[] PROGMEM = " ";
+static const char gps_str_loc[] PROGMEM = "\n\tLocation: ";
+static const char gps_str_lat_N[] PROGMEM = "N   ";
+static const char gps_str_lat_S[] PROGMEM = "S   ";
+static const char gps_str_long_E[] PROGMEM = "E\n";
+static const char gps_str_long_W[] PROGMEM = "W\n";
+static const char gps_str_lat[] PROGMEM = "\tLatitude: ";
+static const char gps_str_long[] PROGMEM = "\tLongitude: ";
+static const char gps_str_coord_units[] PROGMEM = " 100 micro-minutes\n";
+static const char gps_str_speed[] PROGMEM = "\tSpeed over Ground: ";
+static const char gps_str_speed_units[] PROGMEM = " centi-knots\n";
+static const char gps_str_course[] PROGMEM = "\tCourse: ";
+static const char gps_str_course_units[] PROGMEM = " centi-degrees\n";
+static const char gps_str_sats[] PROGMEM = "\tSatellites in View: ";
+static const char gps_str_valid[] PROGMEM = "\tData Validity: ";
+static const char gps_str_valid_0[] PROGMEM = "0";
+static const char gps_str_valid_1[] PROGMEM = "1";
 
 void menu_cmd_gps_handler(uint8_t arg_len, char** args)
 {
@@ -457,18 +525,166 @@ void menu_cmd_gps_handler(uint8_t arg_len, char** args)
         return;
     }
     
-    double val = 0;
+    serial_0_put_string_P(gps_str_title);
     
+    // Mission Time
+    serial_0_put_string_P(gps_str_mission_time);
+    ultoa(millis - fgpmmopa6h_sample_time, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_mission_time_units);
+    
+    // UTC Time
     serial_0_put_string_P(gps_str_time);
+    uint32_t hours = fgpmmopa6h_utc_time / 3600000;
+    uint32_t hours_rem = fgpmmopa6h_utc_time % 3600000;
+    uint32_t mins = hours_rem / 60000;
+    uint32_t minutes_rem = hours_rem % 60000;
+    double seconds = ((double)minutes_rem) / 1000.0;
     
+    ltoa(hours, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_colon);
+    ltoa(mins, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_colon);
+    dtostrf(seconds, 6, 3, str);
+    serial_0_put_string(str);
+    
+    // Latitude
+    serial_0_put_string_P(gps_str_loc);
+    uint8_t south = fgpmmopa6h_latitude < 0;
+    int32_t lat = south ? (fgpmmopa6h_latitude * -1) : fgpmmopa6h_latitude;
+    
+    int32_t degrees = lat / 600000;
+    double minutes = ((double)(lat % 600000)) / 10000.0;
+    
+    ltoa(degrees, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_space);
+    dtostrf(minutes, 7, 4, str);
+    serial_0_put_string(str);
+    serial_0_put_string_P(south ? gps_str_lat_S : gps_str_lat_N);
+    
+    // Longitude
+    uint8_t west = fgpmmopa6h_longitude < 0;
+    int32_t lng = west ? (fgpmmopa6h_longitude * -1) : fgpmmopa6h_longitude;
+    
+    degrees = lng / 600000;
+    minutes = ((double)(lng % 600000)) / 10000.0;
+    
+    ltoa(degrees, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_space);
+    dtostrf(minutes, 7, 4, str);
+    serial_0_put_string(str);
+    serial_0_put_string_P(west ? gps_str_long_W : gps_str_long_E);
+    
+    // Raw latitude
+    serial_0_put_string_P(gps_str_lat);
+    ltoa(fgpmmopa6h_latitude, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_coord_units);
+    
+    while (!serial_0_out_buffer_empty());
+    
+    // Raw longitude
+    serial_0_put_string_P(gps_str_long);
+    ltoa(fgpmmopa6h_longitude, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_coord_units);
+    
+    // Ground Speed
+    serial_0_put_string_P(gps_str_speed);
+    itoa(fgpmmopa6h_speed, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_speed_units);
+    
+    // Course
+    serial_0_put_string_P(gps_str_course);
+    itoa(fgpmmopa6h_course, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(gps_str_course_units);
+    
+    // Sattelites in View
+    serial_0_put_string_P(gps_str_sats);
+    itoa(fgpmmopa6h_satellites_in_view, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(string_nl);
+    
+    // Valid
+    serial_0_put_string_P(gps_str_valid);
+    for (int8_t i = 7; i >= 0; i--) {
+        serial_0_put_string_P((fgpmmopa6h_data_valid & (1<<i)) ? gps_str_valid_1 : gps_str_valid_0);
+    }
+    serial_0_put_string_P(string_nl);
+}
 
-    serial_0_put_string(str);
-    serial_0_put_string_P(sensors_str_alt_units);
-    serial_0_put_string_P(sensors_str_temp);
-    val = ((double)(mpl3115a2_temp_msb + (((double)(mpl3115a2_temp_lsb >> 4)) / 16)));
-    dtostrf(val, 9, 4, str);
-    serial_0_put_string(str);
-    serial_0_put_string_P(sensors_str_temp_units);
+// GPS serial
+static const char menu_cmd_gps_ser_string[] PROGMEM = "gpsser";
+static const char menu_help_gps_ser[] PROGMEM = "Manually communicate with GPS\nValid Usage:\n\tRead last line: gpsser read\n\tWrite: gpsser write <command>\n\tRead Continuously: gpsser readcont <time in seconds>\n";
+
+#ifdef ENABLE_GPS
+static const char gps_ser_string_enabled[] PROGMEM = "Cannot use gpsser, GPS driver is enabled.\n";
+#else
+static const char gps_ser_read[] PROGMEM = "read";
+static const char gps_ser_write[] PROGMEM = "write";
+static const char gps_ser_readcont[] PROGMEM = "readcont";
+static const char gps_ser_noline[] PROGMEM = "No Data Avaliable\n";
+static const char gps_ser_cmdend[]  PROGMEM = "\r\n";
+#endif
+
+void menu_cmd_gps_ser_handler(uint8_t arg_len, char** args)
+{
+#ifdef ENABLE_GPS
+    serial_0_put_string_P(gps_ser_string_enabled);
+#else
+    if (arg_len == 1) {
+        goto invalid_args;
+    }
+    
+    if (!strcasecmp_P(args[1], gps_ser_read)) {
+        if (serial_1_has_line('\n')) {
+            serial_1_get_line('\n', str, STR_LEN);
+            str[strlen(str)-1] = '\n';
+            serial_0_put_string(str);
+        } else {
+            serial_0_put_string_P(gps_ser_noline);
+        }
+    } else if (!strcasecmp_P(args[1], gps_ser_write)) {
+        if (arg_len != 3) {
+            goto invalid_args;
+        }
+        
+        serial_1_put_string(args[2]);
+        serial_1_put_string_P(gps_ser_cmdend);
+    } else if (!strcasecmp_P(args[1], gps_ser_readcont)) {
+        if (arg_len != 3) {
+            goto invalid_args;
+        }
+        
+        char* end;
+        uint32_t time = strtoul(args[2], &end, 0);
+        if (*end != '\0') {
+            goto invalid_args;
+        }
+        
+        for (time = (time * 1000) + millis; millis <= time;) {
+            if (serial_1_has_line('\n')) {
+                serial_1_get_line('\n', str, STR_LEN);
+                str[strlen(str)-1] = '\n';
+                serial_0_put_string(str);
+            }
+            wdt_reset();
+        }
+        
+    } else {
+        goto invalid_args;
+    }
+    return;
+    
+invalid_args:
+    serial_0_put_string_P(menu_help_gps_ser);
+#endif
 }
 
 // actest
@@ -500,7 +716,7 @@ void menu_cmd_actest_handler(uint8_t arg_len, char** args)
 static const char menu_cmd_altest_string[] PROGMEM = "altest";
 static const char menu_help_altest[] PROGMEM = "Test MPL3115A2 Barometric Altimiter\n";
 
-static const char altest_devid[] PROGMEM = "Who Am I: 0x";
+static const char altest_space[] PROGMEM = " ";
 
 void menu_cmd_altest_handler(uint8_t arg_len, char** args)
 {
@@ -510,15 +726,172 @@ void menu_cmd_altest_handler(uint8_t arg_len, char** args)
     }
     
     uint8_t transaction_id;
-    uint8_t buffer;
+    uint8_t buffer[5];
     
-    i2c_read(&transaction_id, 0x60, 0x0c, &buffer, 1);
+    i2c_read(&transaction_id, 0x60, 0x14, buffer, 2);
     while (!i2c_transaction_done(transaction_id)) i2c_service();
-    serial_0_put_string_P(altest_devid);
-    ultoa(buffer, str, 16);
-    serial_0_put_string(str);
     i2c_clear_transaction(transaction_id);
+    
+    serial_0_put_string("Sea Level: ");
+    for (int8_t i = 7; i >= 0; i--) {
+        serial_0_put_string_P((buffer[0] & (1<<i)) ? gps_str_valid_1 : gps_str_valid_0);
+    }
+    serial_0_put_string_P(altest_space);
+    for (int8_t i = 7; i >= 0; i--) {
+        serial_0_put_string_P((buffer[1] & (1<<i)) ? gps_str_valid_1 : gps_str_valid_0);
+    }
     serial_0_put_string_P(string_nl);
+    
+    
+    // Write PT_DATA_CFG to enable data events on new pressure/altitude value
+    buffer[0] = 0b00000010;
+    i2c_write(&transaction_id, 0x60, 0x13, buffer, 1);
+    while (!i2c_transaction_done(transaction_id)) i2c_service();
+    i2c_clear_transaction(transaction_id);
+
+    serial_0_put_string("Wrote PT_DATA_CFG\n");
+
+    // Write CTRL_REG_1 to start collecting data
+    buffer[0] = 0b00111010;
+    i2c_write(&transaction_id, 0x60, 0x26, buffer, 1);
+    while (!i2c_transaction_done(transaction_id)) i2c_service();
+    i2c_clear_transaction(transaction_id);
+
+    serial_0_put_string("Wrote CTRL_REG_1\n");
+
+    // Wait for data to be ready
+    do {
+        i2c_read(&transaction_id, 0x60, 0x0, buffer, 1);
+        while (!i2c_transaction_done(transaction_id)) i2c_service();
+        i2c_clear_transaction(transaction_id);
+    } while (!(buffer[0] & 0x04));
+
+    serial_0_put_string("Data Ready\n");
+
+    // Read data
+    i2c_read(&transaction_id, 0x60, 0x01, buffer, 5);
+    while (!i2c_transaction_done(transaction_id)) i2c_service();
+    i2c_clear_transaction(transaction_id);
+    
+    for (int8_t i = 7; i >= 0; i--) {
+        serial_0_put_string_P((buffer[0] & (1<<i)) ? gps_str_valid_1 : gps_str_valid_0);
+    }
+    serial_0_put_string_P(altest_space);
+    for (int8_t i = 7; i >= 0; i--) {
+        serial_0_put_string_P((buffer[1] & (1<<i)) ? gps_str_valid_1 : gps_str_valid_0);
+    }
+    serial_0_put_string_P(altest_space);
+    for (int8_t i = 7; i >= 0; i--) {
+        serial_0_put_string_P((buffer[2] & (1<<i)) ? gps_str_valid_1 : gps_str_valid_0);
+    }
+    serial_0_put_string_P(string_nl);
+
+    double alt = (double)1024 * buffer[0];
+    alt += (double)4 * buffer[1];
+    alt += 0.25 * (double)((buffer[2] >> 4) & 0b1111);
+
+    dtostrf(alt, 10, 4, str);
+    serial_0_put_string(str);
+    serial_0_put_string_P(string_nl);
+    
+    // write back pressure
+    uint8_t high = (buffer[0] << 1) | !!(buffer[1] & (1<<7));
+    uint8_t low = (buffer[1] << 1) | !!(buffer[2] & (1<<7));
+    
+    buffer[1] = low;
+    buffer[0] = high;
+    i2c_write(&transaction_id, 0x60, 0x14, buffer, 2);
+    while (!i2c_transaction_done(transaction_id)) i2c_service();
+    i2c_clear_transaction(transaction_id);
+}
+
+// checkid
+static const char menu_cmd_checkid_string[] PROGMEM = "checkid";
+static const char menu_help_checkid[] PROGMEM = "Check the device IDs of attached peripherals\n";
+
+static const char checkid_eeprom_1_title[] PROGMEM = "EEPROM 1 (25LC1024)\n";
+static const char checkid_eeprom_2_title[] PROGMEM = "EEPROM 2 (25LC1024)\n";
+
+static const char checkid_devid[] PROGMEM = "\tDevice ID: 0x";
+static const char checkid_who_am_i[] PROGMEM = "\tWho Am I: 0x";
+static const char checkid_sig[] PROGMEM = "\tElectronic Signature: 0x";
+
+static const char checkid_good[] PROGMEM = " (Good)\n";
+static const char checkid_bad[] PROGMEM = " (Bad)\n";
+
+void menu_cmd_checkid_handler(uint8_t arg_len, char** args)
+{
+    if (arg_len != 1) {
+        serial_0_put_string_P(menu_help_checkid);
+        return;
+    }
+    
+    uint8_t alt_id, accel_id, gyro_id, eeprom_1_id, eeprom_2_id;
+    uint8_t alt_buffer, accel_buffer, gyro_buffer, eeprom_1_buffer, eeprom_2_buffer;
+    uint8_t eeprom_deep_power_down = 0b10111001;
+    uint8_t eeprom_read_id[] = {0b10101011, 0, 0, 0};
+    
+    i2c_read(&alt_id, 0x60, 0x0c, &alt_buffer, 1); // 0xC4
+    i2c_read(&accel_id, 0x53, 0x0, &accel_buffer, 1); // 0xE5
+    i2c_read(&gyro_id, 0x20, 0x0c, &gyro_buffer, 1); // 0xD7
+    spi_start_half_duplex(&eeprom_1_id, EEPROM_CS_NUM, eeprom_read_id, 4, &eeprom_1_buffer, 1); // 0x29
+    spi_start_half_duplex(&eeprom_2_id, EEPROM2_CS_NUM, eeprom_read_id, 4, &eeprom_2_buffer, 1); // 0x29
+    
+    // Altimeter
+    serial_0_put_string_P(sensors_str_baro_title);
+    serial_0_put_string_P(checkid_who_am_i);
+    while (!i2c_transaction_done(alt_id)) i2c_service();
+    i2c_clear_transaction(alt_id);
+    utoa(alt_buffer, str, 16);
+    serial_0_put_string(str);
+    serial_0_put_string_P((alt_buffer == 0xc4) ? checkid_good : checkid_bad);
+    
+    // Accelerometer
+    serial_0_put_string_P(sensors_str_accel_title);
+    serial_0_put_string_P(checkid_devid);
+    while (!i2c_transaction_done(accel_id)) i2c_service();
+    i2c_clear_transaction(accel_id);
+    utoa(accel_buffer, str, 16);
+    serial_0_put_string(str);
+    serial_0_put_string_P((accel_buffer == 0xe5) ? checkid_good : checkid_bad);
+    
+    while (!serial_0_out_buffer_empty());
+
+    // Gyroscope
+    serial_0_put_string_P(sensors_str_gyro_title);
+    serial_0_put_string_P(checkid_who_am_i);
+    while (!i2c_transaction_done(gyro_id)) i2c_service();
+    i2c_clear_transaction(gyro_id);
+    utoa(gyro_buffer, str, 16);
+    serial_0_put_string(str);
+    serial_0_put_string_P((gyro_buffer == 0xd7) ? checkid_good : checkid_bad);
+
+    // Eeprom 1
+    serial_0_put_string_P(checkid_eeprom_1_title);
+    serial_0_put_string_P(checkid_sig);
+    while (!spi_transaction_done(eeprom_1_id)) spi_service();
+    spi_clear_transaction(eeprom_1_id);
+    utoa(eeprom_1_buffer, str, 16);
+    serial_0_put_string(str);
+    serial_0_put_string_P((eeprom_1_buffer == 0x29) ? checkid_good : checkid_bad);
+    
+    // Eeprom 2
+    serial_0_put_string_P(checkid_eeprom_2_title);
+    serial_0_put_string_P(checkid_sig);
+    while (!spi_transaction_done(eeprom_2_id)) spi_service();
+    spi_clear_transaction(eeprom_2_id);
+    utoa(eeprom_2_buffer, str, 16);
+    serial_0_put_string(str);
+    serial_0_put_string_P((eeprom_2_buffer == 0x29) ? checkid_good : checkid_bad);
+    
+    // Put eeproms back in deep power down
+    spi_start_half_duplex(&eeprom_1_id, EEPROM_CS_NUM, &eeprom_deep_power_down, 1, NULL, 0);
+    spi_start_half_duplex(&eeprom_2_id, EEPROM2_CS_NUM, &eeprom_deep_power_down, 1, NULL, 0);
+    
+    while (!spi_transaction_done(eeprom_1_id)) spi_service();
+    spi_clear_transaction(eeprom_1_id);
+    while (!spi_transaction_done(eeprom_2_id)) spi_service();
+    spi_clear_transaction(eeprom_2_id);
 }
 
 // introm
@@ -577,12 +950,12 @@ invalid_args:
 }
 
 
-
-const uint8_t menu_num_items = 16;
+const uint8_t menu_num_items = 19;
 const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_version_string, .handler = menu_cmd_version_handler, .help_string = menu_help_version},
     {.string = menu_cmd_help_string, .handler = menu_cmd_help_handler, .help_string = menu_help_help},
     {.string = menu_cmd_clear_string, .handler = menu_cmd_clear_handler, .help_string = menu_help_clear},
+    {.string = menu_cmd_reset_string, .handler = menu_cmd_reset_handler, .help_string = menu_help_reset},
     {.string = menu_cmd_stat_string, .handler = menu_cmd_stat_handler, .help_string = menu_help_stat},
     {.string = menu_cmd_eeprom_string, .handler = menu_cmd_epprom_handler, .help_string = menu_help_eeprom},
     {.string = menu_cmd_spitest_string, .handler = menu_cmd_spitest_handler, .help_string = menu_help_spitest},
@@ -591,9 +964,11 @@ const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_analog_string, .handler = menu_cmd_analog_handler, .help_string = menu_help_analog},
     {.string = menu_cmd_sensors_string, .handler = menu_cmd_sensors_handler, .help_string = menu_help_sensors},
     {.string = menu_cmd_gps_string, .handler = menu_cmd_gps_handler, .help_string = menu_help_gps},
+    {.string = menu_cmd_gps_ser_string, .handler = menu_cmd_gps_ser_handler, .help_string = menu_help_gps_ser},
     {.string = menu_cmd_actest_string, .handler = menu_cmd_actest_handler, .help_string = menu_help_actest},
     {.string = menu_cmd_altest_string, .handler = menu_cmd_altest_handler, .help_string = menu_help_altest},
     {.string = menu_cmd_iicraw_string, .handler = menu_cmd_iicraw_handler, .help_string = menu_help_iicraw},
     {.string = menu_cmd_iicio_string, .handler = menu_cmd_iicio_handler, .help_string = menu_help_iicio},
-    {.string = menu_cmd_introm_string, .handler = menu_cmd_introm_handler, .help_string = menu_help_introm}
+    {.string = menu_cmd_introm_string, .handler = menu_cmd_introm_handler, .help_string = menu_help_introm},
+    {.string = menu_cmd_checkid_string, .handler = menu_cmd_checkid_handler, .help_string = menu_help_checkid}
 };
