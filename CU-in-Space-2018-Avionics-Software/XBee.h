@@ -8,4 +8,21 @@
 #ifndef XBee_h
 #define XBee_h
 
+
+extern void init_xbee(void);
+/*
+ * xbee radio initialization sequence.
+ */
+
+extern void create_network(void);
+/*
+ * Creates the point to multipoint network with the groundstation through this.
+ */
+
+
+
+
+
+
+
 #endif /* XBee_h */

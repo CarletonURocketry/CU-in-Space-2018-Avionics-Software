@@ -12,8 +12,14 @@
 
 #define DELIMITER_COMMAND 0x7E
 //MSB is first. SPI needs to be mode 0.
-
 #define API_PARAMETER 1
+
+
+//Transaction Stuff
+#define QUEUE_LENGTH 4
+
+#define ID_INVALID   0  // The transaction ID for an unused transaction
+#define ID_FIRST     1  // The first valid transaction ID
 
 //API frame types. Do not mix up with the frame ids.
 
