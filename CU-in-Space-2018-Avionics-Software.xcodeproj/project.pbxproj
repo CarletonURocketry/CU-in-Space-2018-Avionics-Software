@@ -70,6 +70,7 @@
 		BC93ECDE1FA4FC7500AD7504 /* Gyro-FXAS21002C.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "Gyro-FXAS21002C.c"; sourceTree = "<group>"; };
 		BC93ECE01FA4FC9700AD7504 /* GPS-FGPMMOPA6H.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "GPS-FGPMMOPA6H.h"; sourceTree = "<group>"; };
 		BC93ECE11FA4FC9700AD7504 /* GPS-FGPMMOPA6H.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "GPS-FGPMMOPA6H.c"; sourceTree = "<group>"; };
+		BCBD767D20B8DF3700E4EBBC /* telemetry_format.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = telemetry_format.h; sourceTree = "<group>"; };
 		BCD115251FAD48AC00AC1997 /* telemetry.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = telemetry.c; sourceTree = "<group>"; };
 		BCD1152A1FAD494B00AC1997 /* Radio_commands.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Radio_commands.h; sourceTree = "<group>"; };
 		BCD1152B1FAD494B00AC1997 /* Radio.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Radio.c; sourceTree = "<group>"; };
@@ -197,6 +198,7 @@
 		BCD115231FAD489A00AC1997 /* Application */ = {
 			isa = PBXGroup;
 			children = (
+				BCBD767D20B8DF3700E4EBBC /* telemetry_format.h */,
 				BC3214CC20599B0F00DB108E /* telemetry.h */,
 				BCD115251FAD48AC00AC1997 /* telemetry.c */,
 				BC3661192073CFC9009D4B19 /* ematch_detect.h */,

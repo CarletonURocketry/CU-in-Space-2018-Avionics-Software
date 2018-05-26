@@ -5,6 +5,7 @@
 //
 
 #include "telemetry.h"
+#include "telemetry_format.h"
 
 void telemetry_service(void)
 {
