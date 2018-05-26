@@ -9,6 +9,8 @@
 #include <avr/interrupt.h>
 #include <avr/power.h>
 #include <avr/wdt.h>
+#include <math.h>
+#include <stdlib.h>
 
 #include "pindefinitions.h"
 
@@ -18,6 +20,7 @@
 #include "SPI.h"
 #include "I2C.h"
 #include "ADC.h"
+#include "EEPROM.h"
 
 #include "Accel-ADXL343.h"
 #include "Barometer-MPL3115A2.h"
@@ -32,6 +35,7 @@
  *  The code which runs endlessly forever
  */
 static void main_loop(void);
+static void advance_fsm(void);
 
 /**
  *  Runs during the init3 section to fetch MCUSR and disable the watchdog timer
@@ -41,12 +45,16 @@ void get_mcusr(void) __attribute__((naked)) __attribute__((section(".init3")));
 // MARK: Variable Definitions
 volatile uint32_t millis;
 volatile uint8_t flags;
-reset_reason reset_type;
+reset_reason_t reset_type;
 
 volatile static uint32_t last_led;
 
+global_state_t fsm_state;
+
 // Mirror of MCUSR created during init process before watchdog is reset
 uint8_t mcusr_mirror __attribute__ ((section (".noinit")));
+
+static uint8_t eeprom_transaction_id;
 
 // MARK: Function Definitions
 void get_mcusr(void)
@@ -177,6 +185,7 @@ int main(void)
 #endif
     
     // Initilize software modules
+    init_fsm();
     init_menu();
 
     // Enable the watchdog timer for a 2 second timeout
@@ -243,9 +252,69 @@ static void main_loop ()
 #endif
     
     // Run Software Module Servies
+    advance_fsm();
+    
     ematch_detect_service();
     telemetry_service();
     menu_service();
+    eeprom_service();
+}
+
+void advance_fsm (void)
+{
+    if ((eeprom_transaction_id != 0) && eeprom_transaction_done(eeprom_transaction_id)) {
+        // Finished storing the current state in EEPROM
+        eeprom_clear_transaction(eeprom_transaction_id);
+        eeprom_transaction_id = 0;
+    } else {
+        // In the process of storing the current state.
+        return;
+    }
+    
+    switch (fsm_state) {
+        case STANDBY:
+            // Wait for rocket to be armed
+            if (ematch_1_is_ready() && ematch_2_is_ready()) {
+                // Rocket is armed
+#ifndef ENABLE_SENSORS_AT_RESET
+                init_sensors();
+#endif
+                fsm_state = PRE_FLIGHT;
+                eeprom_write(&eeprom_transaction_id, EEPROM_ADDR_FSM_STATE, &fsm_state, 1);
+            }
+            break;
+        case PRE_FLIGHT:
+            // Wait for engine to start
+            if (hypot(hypot(adxl343_accel_x, adxl343_accel_y), adxl343_accel_z) > LAUNCH_ACCEL_THRESHOLD) {
+                // Engine has started
+                fsm_state = POWERED_ASCENT;
+            }
+            break;
+        case POWERED_ASCENT:
+            // Wait for engine to burn out
+            if (hypot(hypot(adxl343_accel_x, adxl343_accel_y), adxl343_accel_z) < COASTING_ACCEL_THRESHOLD) {
+                // Engine has burnt out
+                fsm_state = COASTING_ASCENT;
+            }
+            break;
+        case COASTING_ASCENT:
+            // Wait for apogee
+            if ((mpl3115a2_prev_alt - mpl3115a2_alt) > ALTITUDE_COMPARISON_RANGE) {
+                // Rocket is descending
+                fsm_state = DESCENT;
+            }
+            break;
+        case DESCENT:
+            // Wait for altitude to stop changing (landing)
+            if (abs(mpl3115a2_prev_alt - mpl3115a2_alt) < ALTITUDE_COMPARISON_RANGE) {
+                // Rocket has stopped moving
+                fsm_state = RECOVERY;
+            }
+            break;
+        case RECOVERY:
+            // Wait to be found
+            break;
+    }
 }
 
 // MARK: Interupt Service Routines

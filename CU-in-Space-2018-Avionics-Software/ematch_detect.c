@@ -1,6 +1,6 @@
 //
 //  ematch_detect.c
-//  Index
+//  CU-in-Space-2018-Avionics-Software
 //
 //  Created by Samuel Dewan on 2018-04-03.
 //

@@ -33,6 +33,8 @@
 #include "Gyro-FXAS21002C.h"
 #include "GPS-FGPMMOPA6H.h"
 
+#include "telemetry_format.h"
+
 
 #define STR_LEN 128
 static char str[STR_LEN];
@@ -162,6 +164,12 @@ static const char stat_str_time_units[] PROGMEM = " ms\n";
 static const char stat_str_state_title[] PROGMEM = "Current State\n";
 static const char stat_str_state_time[] PROGMEM = "\tMission Time: ";
 static const char stat_str_state_state[] PROGMEM = "\tMain FSM State: ";
+static const char stat_str_state_state_stby[] PROGMEM = "STANDBY\n";
+static const char stat_str_state_state_pf[] PROGMEM = "PRE-FLIGHT\n";
+static const char stat_str_state_state_pa[] PROGMEM = "POWERED ASCENT\n";
+static const char stat_str_state_state_ca[] PROGMEM = "COASTING ASCENT\n";
+static const char stat_str_state_state_des[] PROGMEM = "DESCENT\n";
+static const char stat_str_state_state_rec[] PROGMEM = "RECOVERY\n";
 static const char stat_str_state_ematch_1[] PROGMEM = "\tE-Match 1: ";
 static const char stat_str_state_ematch_2[] PROGMEM = "\tE-Match 2: ";
 static const char stat_str_state_ematch_t[] PROGMEM = "READY\n";
@@ -196,7 +204,26 @@ void menu_cmd_stat_handler(uint8_t arg_len, char** args)
     serial_0_put_string_P(stat_str_time_units);
     // FSM State
     serial_0_put_string_P(stat_str_state_state);
-    serial_0_put_string_P(string_nl);
+    switch (fsm_state) {
+        case STANDBY:
+            serial_0_put_string_P(stat_str_state_state_stby);
+            break;
+        case PRE_FLIGHT:
+            serial_0_put_string_P(stat_str_state_state_pf);
+            break;
+        case POWERED_ASCENT:
+            serial_0_put_string_P(stat_str_state_state_pa);
+            break;
+        case COASTING_ASCENT:
+            serial_0_put_string_P(stat_str_state_state_ca);
+            break;
+        case DESCENT:
+            serial_0_put_string_P(stat_str_state_state_des);
+            break;
+        case RECOVERY:
+            serial_0_put_string_P(stat_str_state_state_rec);
+            break;
+    }
     // E-Matches present
     serial_0_put_string_P(stat_str_state_ematch_1);
     serial_0_put_string_P((ematch_1_is_ready()) ? stat_str_state_ematch_t : stat_str_state_ematch_f);
@@ -260,6 +287,11 @@ void menu_cmd_stat_handler(uint8_t arg_len, char** args)
             serial_0_put_string_P(str_reset_poweron);
             break;
     }
+    
+    serial_0_put_string("Telemetry payload size: ");
+    utoa(sizeof(struct telemetry_frame), str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(string_nl);
 }
 
 // EEPROM
@@ -269,6 +301,7 @@ static const char menu_help_eeprom[] PROGMEM = "Test external 25LC1024 EEPROM.\n
 static const char eeprom_string_read[] PROGMEM = "read";
 static const char eeprom_string_write[] PROGMEM = "write";
 static const char eeprom_string_erase[] PROGMEM = "erase";
+static const char eeprom_string_dump[] PROGMEM = { 0x5 };
 
 static const char eeprom_string_hex[] PROGMEM = "0x";
 
@@ -326,6 +359,24 @@ void menu_cmd_epprom_handler(uint8_t arg_len, char** args)
         eeprom_25lc1024_chip_erase(&id);
         
         while (!eeprom_25lc1024_transaction_done(id)) eeprom_25lc1024_service();
+    } else if (!strcasecmp_P(args[1], eeprom_string_dump)) {
+        if (arg_len != 2) {
+            return;
+        }
+        
+        uint8_t step = (128 > STR_LEN) ? STR_LEN : 128;
+        
+        for (int i = 0; i < (2 * 0x1FFFF); i += step) {
+            eeprom_read(&id, i, (uint8_t*)str, step);
+            
+            while (!serial_0_out_buffer_empty()) eeprom_25lc1024_service();
+            while (!eeprom_25lc1024_transaction_done(id)) eeprom_25lc1024_service();
+            
+            eeprom_25lc1024_clear_transaction(id);
+            
+            serial_0_put_string(str);
+        }
+        return;
     } else {
         goto invalid_args;
     }
