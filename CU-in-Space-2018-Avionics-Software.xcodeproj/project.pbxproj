@@ -31,7 +31,6 @@
 
 /* Begin PBXFileReference section */
 		6E14D7B0207C8CA100E8537A /* Radio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Radio.h; sourceTree = "<group>"; };
-		BC28A4BE20B259D9007F68C3 /* XBee-Commands.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "XBee-Commands.h"; sourceTree = "<group>"; };
 		BC2FB4A5206AB5F600B8890A /* bus_tests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bus_tests.h; sourceTree = "<group>"; };
 		BC2FB4A6206AB5F600B8890A /* bus_tests.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = bus_tests.c; sourceTree = "<group>"; };
 		BC3214CC20599B0F00DB108E /* telemetry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = telemetry.h; sourceTree = "<group>"; };
@@ -40,7 +39,6 @@
 		BC36611F20743764009D4B19 /* EEPROM.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EEPROM.h; sourceTree = "<group>"; };
 		BC36612020743764009D4B19 /* EEPROM.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = EEPROM.c; sourceTree = "<group>"; };
 		BC3B8BC7201123EC00C7B0BA /* I2C-Example.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "I2C-Example.c"; sourceTree = "<group>"; };
-		BC3CCE0920B8CC6A00DEDA01 /* telemetry_format.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = telemetry_format.h; sourceTree = "<group>"; };
 		BC588CAC1FA9261D003E8C15 /* ADC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ADC.h; sourceTree = "<group>"; };
 		BC588CAD1FA9261D003E8C15 /* ADC.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ADC.c; sourceTree = "<group>"; };
 		BC933A191FAA8C7000476F3F /* 25LC1024.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = 25LC1024.h; sourceTree = "<group>"; };
@@ -72,6 +70,7 @@
 		BC93ECDE1FA4FC7500AD7504 /* Gyro-FXAS21002C.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "Gyro-FXAS21002C.c"; sourceTree = "<group>"; };
 		BC93ECE01FA4FC9700AD7504 /* GPS-FGPMMOPA6H.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "GPS-FGPMMOPA6H.h"; sourceTree = "<group>"; };
 		BC93ECE11FA4FC9700AD7504 /* GPS-FGPMMOPA6H.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "GPS-FGPMMOPA6H.c"; sourceTree = "<group>"; };
+		BCBD767D20B8DF3700E4EBBC /* telemetry_format.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = telemetry_format.h; sourceTree = "<group>"; };
 		BCD115251FAD48AC00AC1997 /* telemetry.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = telemetry.c; sourceTree = "<group>"; };
 		BCD1152A1FAD494B00AC1997 /* Radio_commands.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Radio_commands.h; sourceTree = "<group>"; };
 		BCD1152B1FAD494B00AC1997 /* Radio.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Radio.c; sourceTree = "<group>"; };
@@ -171,7 +170,6 @@
 				BCD1152A1FAD494B00AC1997 /* Radio_commands.h */,
 				6E14D7B0207C8CA100E8537A /* Radio.h */,
 				BCD1152B1FAD494B00AC1997 /* Radio.c */,
-				BC28A4BE20B259D9007F68C3 /* XBee-Commands.h */,
 				BC93ECD01FA4FA7E00AD7504 /* XBee.h */,
 				BC93ECD11FA4FA7E00AD7504 /* XBee.c */,
 			);
@@ -200,7 +198,7 @@
 		BCD115231FAD489A00AC1997 /* Application */ = {
 			isa = PBXGroup;
 			children = (
-				BC3CCE0920B8CC6A00DEDA01 /* telemetry_format.h */,
+				BCBD767D20B8DF3700E4EBBC /* telemetry_format.h */,
 				BC3214CC20599B0F00DB108E /* telemetry.h */,
 				BCD115251FAD48AC00AC1997 /* telemetry.c */,
 				BC3661192073CFC9009D4B19 /* ematch_detect.h */,
