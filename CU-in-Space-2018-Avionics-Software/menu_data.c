@@ -27,6 +27,7 @@
 #include "I2C.h"
 #include "ADC.h"
 #include "EEPROM.h"
+#include "XBee.h"
 
 #include "Accel-ADXL343.h"
 #include "Barometer-MPL3115A2.h"
@@ -170,6 +171,7 @@ static const char stat_str_state_state_pa[] PROGMEM = "POWERED ASCENT\n";
 static const char stat_str_state_state_ca[] PROGMEM = "COASTING ASCENT\n";
 static const char stat_str_state_state_des[] PROGMEM = "DESCENT\n";
 static const char stat_str_state_state_rec[] PROGMEM = "RECOVERY\n";
+static const char stat_str_state_state_unkown[] PROGMEM = "UNKNOWN\n";
 static const char stat_str_state_ematch_1[] PROGMEM = "\tE-Match 1: ";
 static const char stat_str_state_ematch_2[] PROGMEM = "\tE-Match 2: ";
 static const char stat_str_state_ematch_t[] PROGMEM = "READY\n";
@@ -222,6 +224,9 @@ void menu_cmd_stat_handler(uint8_t arg_len, char** args)
             break;
         case RECOVERY:
             serial_0_put_string_P(stat_str_state_state_rec);
+            break;
+        default:
+            serial_0_put_string_P(stat_str_state_state_unkown);
             break;
     }
     // E-Matches present
@@ -287,11 +292,6 @@ void menu_cmd_stat_handler(uint8_t arg_len, char** args)
             serial_0_put_string_P(str_reset_poweron);
             break;
     }
-    
-    serial_0_put_string("Telemetry payload size: ");
-    utoa(sizeof(struct telemetry_frame), str, 10);
-    serial_0_put_string(str);
-    serial_0_put_string_P(string_nl);
 }
 
 // EEPROM
@@ -860,15 +860,25 @@ void menu_cmd_altest_handler(uint8_t arg_len, char** args)
 static const char menu_cmd_checkid_string[] PROGMEM = "checkid";
 static const char menu_help_checkid[] PROGMEM = "Check the device IDs of attached peripherals\n";
 
+#ifdef ENABLE_SPI
 static const char checkid_eeprom_1_title[] PROGMEM = "EEPROM 1 (25LC1024)\n";
 static const char checkid_eeprom_2_title[] PROGMEM = "EEPROM 2 (25LC1024)\n";
+static const char checkid_sig[] PROGMEM = "\tElectronic Signature: 0x";
+#else
+static const char checkid_no_spi[] PROGMEM = "SPI queue disabled. Cannot check EEPROMs.\n";
+#endif
 
+#ifdef ENABLE_I2C
 static const char checkid_devid[] PROGMEM = "\tDevice ID: 0x";
 static const char checkid_who_am_i[] PROGMEM = "\tWho Am I: 0x";
-static const char checkid_sig[] PROGMEM = "\tElectronic Signature: 0x";
+#else
+static const char checkid_no_i2c[] PROGMEM = "I2C queue disabled. Cannot check sensors.\n";
+#endif
 
+#if defined(ENABLE_SPI) || defined(ENABLE_I2C)
 static const char checkid_good[] PROGMEM = " (Good)\n";
 static const char checkid_bad[] PROGMEM = " (Bad)\n";
+#endif
 
 void menu_cmd_checkid_handler(uint8_t arg_len, char** args)
 {
@@ -877,16 +887,13 @@ void menu_cmd_checkid_handler(uint8_t arg_len, char** args)
         return;
     }
     
-    uint8_t alt_id, accel_id, gyro_id, eeprom_1_id, eeprom_2_id;
-    uint8_t alt_buffer, accel_buffer, gyro_buffer, eeprom_1_buffer, eeprom_2_buffer;
-    uint8_t eeprom_deep_power_down = 0b10111001;
-    uint8_t eeprom_read_id[] = {0b10101011, 0, 0, 0};
+#ifdef ENABLE_I2C
+    uint8_t alt_id, accel_id, gyro_id;
+    uint8_t alt_buffer, accel_buffer, gyro_buffer;
     
     i2c_read(&alt_id, 0x60, 0x0c, &alt_buffer, 1); // 0xC4
     i2c_read(&accel_id, 0x53, 0x0, &accel_buffer, 1); // 0xE5
     i2c_read(&gyro_id, 0x20, 0x0c, &gyro_buffer, 1); // 0xD7
-    spi_start_half_duplex(&eeprom_1_id, EEPROM_CS_NUM, eeprom_read_id, 4, &eeprom_1_buffer, 1); // 0x29
-    spi_start_half_duplex(&eeprom_2_id, EEPROM2_CS_NUM, eeprom_read_id, 4, &eeprom_2_buffer, 1); // 0x29
     
     // Altimeter
     serial_0_put_string_P(sensors_str_baro_title);
@@ -916,7 +923,20 @@ void menu_cmd_checkid_handler(uint8_t arg_len, char** args)
     utoa(gyro_buffer, str, 16);
     serial_0_put_string(str);
     serial_0_put_string_P((gyro_buffer == 0xd7) ? checkid_good : checkid_bad);
+#else
+    serial_0_put_string_P(checkid_no_i2c);
+#endif
 
+#ifdef ENABLE_SPI
+    uint8_t eeprom_1_id, eeprom_2_id;
+    uint8_t eeprom_1_buffer, eeprom_2_buffer;
+    
+    uint8_t eeprom_deep_power_down = 0b10111001;
+    uint8_t eeprom_read_id[] = {0b10101011, 0, 0, 0};
+    
+    spi_start_half_duplex(&eeprom_1_id, EEPROM_CS_NUM, eeprom_read_id, 4, &eeprom_1_buffer, 1); // 0x29
+    spi_start_half_duplex(&eeprom_2_id, EEPROM2_CS_NUM, eeprom_read_id, 4, &eeprom_2_buffer, 1); // 0x29
+    
     // Eeprom 1
     serial_0_put_string_P(checkid_eeprom_1_title);
     serial_0_put_string_P(checkid_sig);
@@ -943,6 +963,9 @@ void menu_cmd_checkid_handler(uint8_t arg_len, char** args)
     spi_clear_transaction(eeprom_1_id);
     while (!spi_transaction_done(eeprom_2_id)) spi_service();
     spi_clear_transaction(eeprom_2_id);
+#else
+    serial_0_put_string_P(checkid_no_spi);
+#endif
 }
 
 // introm
@@ -1000,8 +1023,83 @@ invalid_args:
     serial_0_put_string_P(menu_help_introm);
 }
 
+// XBeeSend
+static const char menu_cmd_xbeesend_string[] PROGMEM = "xbeesend";
+static const char menu_help_xbeesend[] PROGMEM = "Send a string via the radio.\nValid Usage: xbeesend <string>\nNote: String must not contain any spaces.\n";
 
-const uint8_t menu_num_items = 19;
+void menu_cmd_xbeesend_handler(uint8_t arg_len, char** args)
+{
+    if (arg_len > 2) {
+        serial_0_put_string_P(menu_help_xbeesend);
+        return;
+    } else if (arg_len < 2) {
+        return;
+    }
+    
+    uint8_t t_id;
+    xbee_transmit_command(&t_id, 0, XBEE_ADDRESS_64_BROADCAST, XBEE_ADDRESS_16_UNKOWN, 0, 0, (uint8_t*)args[1], strlen(args[1]));
+    
+    while (!xbee_transaction_done(t_id)) xbee_service();
+    
+    xbee_clear_transaction(t_id);
+}
+
+// XBeeraw
+static const char menu_cmd_xbeeraw_string[] PROGMEM = "xbeeraw";
+static const char menu_help_xbeeraw[] PROGMEM = "Send a string via the radio without using the XBee driver.\nValid Usage: xbeeraw <string>\nNote: String must not contain any spaces.\n";
+
+void menu_cmd_xbeeraw_handler(uint8_t arg_len, char** args)
+{
+    if (arg_len > 2) {
+        serial_0_put_string_P(menu_help_xbeeraw);
+        return;
+    } else if (arg_len < 2) {
+        return;
+    }
+
+    uint64_t address_64 = XBEE_ADDRESS_64_BROADCAST;
+    uint16_t address_16 = XBEE_ADDRESS_16_UNKOWN;
+
+    uint8_t data_length = strlen(args[1]);
+
+    str[0] = 0x7E;
+    str[1] = 0;
+    str[2] = 14 + data_length;
+    str[3] = 0x10;
+    str[4] = 0x01;
+    uint8_t *addr_64_bytes = (uint8_t*)(&address_64);
+    str[5] = addr_64_bytes[7];
+    str[6] = addr_64_bytes[6];
+    str[7] = addr_64_bytes[5];
+    str[8] = addr_64_bytes[4];
+    str[9] = addr_64_bytes[3];
+    str[10] = addr_64_bytes[2];
+    str[11] = addr_64_bytes[1];
+    str[12] = addr_64_bytes[0];
+    uint8_t *addr_16_bytes = (uint8_t*)(&address_16);
+    str[13] = addr_16_bytes[1];
+    str[14] = addr_16_bytes[0];
+    str[15] = 0;
+    str[16] = 0;
+    
+    memcpy(str + 17, (uint8_t*)args[1], data_length);
+
+    uint16_t checksum = 0;
+    for (uint8_t i = 3; i < 17 + data_length; i++) {
+        checksum += str[i];
+    }
+    
+    uint8_t *cs = (uint8_t*)(&checksum);
+    str[17 + data_length] = 0xff - cs[0];
+    
+    uint8_t t_id;
+    uint8_t in_buff[100];
+    spi_start_full_duplex(&t_id, RADIO_CS_NUM, (uint8_t*)str, 18 + data_length, in_buff, RADIO_ATTN_NUM);
+    while (!spi_transaction_done(t_id));
+    spi_clear_transaction(t_id);
+}
+
+const uint8_t menu_num_items = 21;
 const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_version_string, .handler = menu_cmd_version_handler, .help_string = menu_help_version},
     {.string = menu_cmd_help_string, .handler = menu_cmd_help_handler, .help_string = menu_help_help},
@@ -1021,5 +1119,7 @@ const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_iicraw_string, .handler = menu_cmd_iicraw_handler, .help_string = menu_help_iicraw},
     {.string = menu_cmd_iicio_string, .handler = menu_cmd_iicio_handler, .help_string = menu_help_iicio},
     {.string = menu_cmd_introm_string, .handler = menu_cmd_introm_handler, .help_string = menu_help_introm},
-    {.string = menu_cmd_checkid_string, .handler = menu_cmd_checkid_handler, .help_string = menu_help_checkid}
+    {.string = menu_cmd_checkid_string, .handler = menu_cmd_checkid_handler, .help_string = menu_help_checkid},
+    {.string = menu_cmd_xbeesend_string, .handler = menu_cmd_xbeesend_handler, .help_string = menu_help_xbeesend},
+    {.string = menu_cmd_xbeeraw_string, .handler = menu_cmd_xbeeraw_handler, .help_string = menu_help_xbeeraw},
 };

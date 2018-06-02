@@ -6,11 +6,13 @@
 //
 
 #include "XBee.h"
-#include "Radio.h"
+
 #include "Radio_commands.h"
 #include "pindefinitions.h"
 #include "SPI.h"
-#include "string.h"
+
+#include <avr/io.h>
+#include <string.h>
 
 //The address configuring, initializing, and also the routing will be done in this.
 
@@ -39,22 +41,23 @@ typedef struct {
     /** 1 if this transaction is complete */
     uint8_t done:1;
     
-} radio_transaction_t;
+} xbee_transaction_t;
 
 /** The transaction queue */
-static volatile radio_transaction_t queue[QUEUE_LENGTH];
+static xbee_transaction_t queue[QUEUE_LENGTH];
 /** The index of the head of the transaction queue */
-static volatile uint8_t queue_head;
+static uint8_t queue_head;
 
 /** The transaction id that should be given to the next new transaction */
 static uint8_t next_id = ID_FIRST;
+
+/** The buffer used to received data from the module */
+static uint8_t in_buffer[256];
 
 
 void init_xbee(void)
 {
     
-    
-
 }
 
 static inline void start_next_transaction (void) {
@@ -89,9 +92,49 @@ static uint8_t has_queued_transaction (void)
     return 0;
 }
 
-static uint8_t radio_receive(uint8_t get_response, uint8_t *command, uint8_t has_parameter, uint8_t parameter) { //endians
-    
-    volatile radio_transaction_t *t = get_next_free_transaction();
+/**
+ *  Get the first transaction in the queue with the given ID
+ *  @param id The transaction ID to search for
+ */
+static xbee_transaction_t *get_transaction_with_id(uint8_t id)
+{
+    for (xbee_transaction_t *i = queue; i < queue + QUEUE_LENGTH; i++) {
+        if (i->id == id) return i;
+    }
+    return NULL;
+}
+
+uint8_t xbee_transaction_done(uint8_t transaction_id)
+{
+    xbee_transaction_t *t = get_transaction_with_id(transaction_id);
+    return (t != NULL) ? (t->done) : 1;
+}
+
+uint8_t xbee_clear_transaction(uint8_t transaction_id)
+{
+    xbee_transaction_t *t = get_transaction_with_id(transaction_id);
+    if ((t != NULL) && !(t->active)) {
+        t->id = ID_INVALID;
+        return 0;
+    }
+    return 1;
+}
+
+/**
+ *  Get the next transaction slot which is not currently in use
+ */
+static xbee_transaction_t *get_next_free_transaction(void)
+{
+    uint8_t i = queue_head;
+    do {
+        if (queue[i].id == ID_INVALID) return queue + i;
+        i = (i + 1) % QUEUE_LENGTH;
+    } while (i != queue_head);
+    return NULL;
+}
+
+static uint8_t radio_receive(uint8_t *transaction_id) { //endians
+    xbee_transaction_t *t = get_next_free_transaction();
     if (t == NULL) return 1;
     
     t->id = next_id;
@@ -112,33 +155,40 @@ static uint8_t radio_receive(uint8_t get_response, uint8_t *command, uint8_t has
 void xbee_service(void) {
     
     if(RADIO_ATTN_PORT & (1 << RADIO_ATTN_NUM) && !(has_queued_transaction()) ) {
-        
-        //spi_start_full_duplex(&transaction_id, RADIO_CS_NUM, 0, 0, in_buffer, RADIO_ATTN_NUM);
+        uint8_t id;
+        radio_receive(&id);
     }
     
-    radio_transaction_t *t = queue + queue_head; //pointer to transaction
+    xbee_transaction_t *t = queue + queue_head; //pointer to transaction
     if( (t->id == 0) || !spi_transaction_done(t->spi_transaction_id)) return;
     spi_clear_transaction(t->spi_transaction_id);
     
     t->done = 1; //transaction is done
     t->active = 0;
-    //TODO: Panic when you receive something! 
+    
+    if (t->read) {
+        // This is an internally created read transaction, it should be freed
+        t->id = ID_INVALID;
+    }
+    
+    //TODO: Panic when you receive something!
+    
     queue_head = (queue_head + 1) % QUEUE_LENGTH; //advanced queue
     
     start_next_transaction();
 }
 
-static void checksum(uint8_t *array, uint8_t size) {
-    checksum_value = 0;
-    for(int i = 3; i < size; i++) {
-        checksum_value = checksum_value + array[i];
+static uint8_t calculate_checksum (uint8_t *array, uint8_t size) {
+    uint8_t checksum_value = 0;
+    for(uint8_t i = 0; i < size; i++) {
+        checksum_value += array[i];
     }
-    checksum_value = 0xff - checksum_value;
+    return 0xff - checksum_value;
 }
 
-uint8_t radio_send_at_command(uint8_t get_response, uint8_t *command, uint8_t has_parameter, uint8_t parameter) { //endians
+uint8_t xbee_send_at_command(uint8_t *transaction_id, uint8_t get_response, uint8_t *command, uint8_t has_parameter, uint8_t parameter) {
     
-    volatile radio_transaction_t *t = get_next_free_transaction();
+    xbee_transaction_t *t = get_next_free_transaction();
     if (t == NULL) return 1;
     
     t->id = next_id;
@@ -154,8 +204,7 @@ uint8_t radio_send_at_command(uint8_t get_response, uint8_t *command, uint8_t ha
     t->buffer[6] = command[1];
     t->buffer[7] = parameter;
     
-    checksum(t->buffer,8);
-    t->buffer[8] = checksum_value;
+    t->buffer[8] = calculate_checksum(t->buffer + 3, 8);
     
     t->read = 0;
     t->length = 9;
@@ -168,9 +217,9 @@ uint8_t radio_send_at_command(uint8_t get_response, uint8_t *command, uint8_t ha
     return 0;
 }
 
-uint8_t radio_send_at_queue_command(uint8_t get_response, uint8_t *command, uint8_t has_parameter, uint8_t parameter) { //endians
+uint8_t xbee_send_at_queue_command(uint8_t *transaction_id, uint8_t get_response, uint8_t *command, uint8_t has_parameter, uint8_t parameter) {
     
-    volatile radio_transaction_t *t = get_next_free_transaction();
+    xbee_transaction_t *t = get_next_free_transaction();
     if (t == NULL) return 1;
     
     t->id = next_id;
@@ -186,8 +235,7 @@ uint8_t radio_send_at_queue_command(uint8_t get_response, uint8_t *command, uint
     t->buffer[6] = command[1];
     t->buffer[7] = parameter;
     
-    checksum(t->buffer,8);
-    t->buffer[8] = checksum_value;
+    t->buffer[8] = calculate_checksum(t->buffer + 3, 8);
     
     t->read = 0;
     t->length = 9;
@@ -201,10 +249,9 @@ uint8_t radio_send_at_queue_command(uint8_t get_response, uint8_t *command, uint
 }
 
 
-uint8_t radio_transmit_at_command(uint8_t get_response, uint64_t address_64, uint16_t address_16, uint8_t broadcast_radius, uint8_t transmit_options, uint8_t *data, uint8_t data_size) { //endians
+uint8_t xbee_transmit_command(uint8_t *transaction_id, uint8_t get_response, uint64_t address_64, uint16_t address_16, uint8_t broadcast_radius, uint8_t transmit_options, uint8_t *data, uint8_t data_size) {
     
-    //Length is calculated internally
-    volatile radio_transaction_t *t = get_next_free_transaction();
+    xbee_transaction_t *t = get_next_free_transaction();
     if (t == NULL) return 1;
 
     t->id = next_id;
@@ -214,7 +261,7 @@ uint8_t radio_transmit_at_command(uint8_t get_response, uint64_t address_64, uin
     uint8_t data_length = (data_size < 110) ? data_size : 110;
     t->buffer[0] = 0x7E;
     t->buffer[1] = 0;
-    t->buffer[2] = 15 + data_length;
+    t->buffer[2] = 14 + data_length;
     t->buffer[3] = TRANSMIT_REQUEST;
     t->buffer[4] = (get_response) ? 1 : 0;
     uint8_t *addr_64_bytes = (uint8_t*)(&address_64);
@@ -232,8 +279,7 @@ uint8_t radio_transmit_at_command(uint8_t get_response, uint64_t address_64, uin
     t->buffer[15] = broadcast_radius;
     t->buffer[16] = transmit_options;
     memcpy(t->buffer + 17, data, data_length);
-    checksum(t->buffer,8);
-    t->buffer[17 + data_length] = checksum_value;
+    t->buffer[17 + data_length] = calculate_checksum(t->buffer + 3, data_length + 14);
     
     t->read = 0;
     t->length = 18 + data_length;
