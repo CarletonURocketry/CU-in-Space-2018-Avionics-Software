@@ -30,7 +30,7 @@ void ematch_detect_service (void)
     if ((millis - debounce_data.ematch_1_last_shift_time) >= EMATCH_SENSE_SAMPLE_PERIOD) {
         // Shift the current state into the shift variable
         debounce_data.ematch_1_sense_shift = (debounce_data.ematch_1_sense_shift << 1);
-        debounce_data.ematch_1_sense_shift |= !!(EMATCH_SENSE_1_PIN & (1<<EMATCH_SENSE_1_NUM));
+        debounce_data.ematch_1_sense_shift |= !(EMATCH_SENSE_1_PIN & (1<<EMATCH_SENSE_1_NUM));
         
         if ((debounce_data.ematch_1_sense_shift == 0x00) && (debounce_data.ematch_1_sense_state == 0)) {
             // Now on, was off -> Arm
@@ -44,7 +44,7 @@ void ematch_detect_service (void)
     if ((millis - debounce_data.ematch_2_last_shift_time) >= EMATCH_SENSE_SAMPLE_PERIOD) {
         // Shift the current state into the shift variable
         debounce_data.ematch_2_sense_shift = (debounce_data.ematch_2_sense_shift << 1);
-        debounce_data.ematch_2_sense_shift |= !!(EMATCH_SENSE_2_PIN & (1<<EMATCH_SENSE_2_NUM));
+        debounce_data.ematch_2_sense_shift |= !(EMATCH_SENSE_2_PIN & (1<<EMATCH_SENSE_2_NUM));
         
         if ((debounce_data.ematch_2_sense_shift == 0x00) && (debounce_data.ematch_2_sense_state == 0)) {
             // Now on, was off -> Arm
@@ -63,7 +63,7 @@ uint8_t ematch_1_is_ready (void)
 
 uint8_t ematch_2_is_ready (void)
 {
-    return debounce_data.ematch_1_sense_state;
+    return debounce_data.ematch_2_sense_state;
 }
 
 #include "ematch_detect.h"
