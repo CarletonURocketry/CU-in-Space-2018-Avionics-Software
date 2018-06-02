@@ -10,9 +10,11 @@
 
 #include "global.h"
 
+#define FRAME_START_DELIMITER   0x52
+#define FRAME_END_DELIMITER     0xCC
+
 enum DeviceAddress {GROUND_STATION = 0b00, ROCKET = 0b10, PAYLOAD_UAV = 0b11, PAYLOAD_CONTAINER = 0b100};
 enum PayloadType {ROCKET_PRI_TELEM = 0x1, ROCKET_AUX_TELEM = 0x2, PAYLOAD_UAV_TELEM = 0x3, PAYLOAD_CONTAINER_TELEM = 0x4};
-
 
 struct telemetry_frame {
     uint32_t mission_time;
@@ -114,9 +116,27 @@ struct telemetry_frame {
 };
 
 
-// Not when using these structures, source_address, destintation_address and payload_type should be cast to and from their
+// Note when using these structures, source_address, destintation_address and payload_type should be cast to and from their
 // respective enum types.
 struct telemetry_api_frame {
+    uint8_t start_delimiter;            // 0x52
+    
+    uint8_t source_address;
+    uint8_t destination_address;
+    
+    uint8_t payload_type;
+    
+    uint16_t length:15;
+    uint16_t crc_present:1;
+    
+    struct telemetry_frame payload;
+    
+    uint8_t end_delimiter;              // 0xCC
+};
+
+struct telemetry_api_frame_with_crc {
+    uint8_t start_delimiter;
+    
     uint8_t source_address;
     uint8_t destination_address;
     
@@ -128,18 +148,8 @@ struct telemetry_api_frame {
     struct telemetry_frame payload;
     
     uint8_t crc;
-};
-
-struct telemetry_api_frame_with_crc {
-    uint8_t source_address;
-    uint8_t destination_address;
     
-    uint8_t payload_type;
-    
-    uint16_t length:15;
-    uint16_t crc_present:1;
-    
-    struct telemetry_frame payload;
+    uint8_t end_delimiter;
 };
 
 #endif /* telemetry_format_h */
