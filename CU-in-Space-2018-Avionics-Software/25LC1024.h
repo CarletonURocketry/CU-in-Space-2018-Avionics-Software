@@ -12,6 +12,8 @@
 
 #include "global.h"
 
+#define EEPROM_25LC1024_MAX (0x1FFFF * 2)
+
 /**
  *  Initilize the 25LC1024 EEPROM with the given CS num
  *  @param cs_num_0 The offset within the SPI output IO register for the CS pin of the first EEPROM

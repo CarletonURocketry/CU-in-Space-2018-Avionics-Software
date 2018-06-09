@@ -37,8 +37,9 @@
 #define ALTITUDE_COMPARISON_RANGE   8       // 0.5m in 1/16m per least signifigant bit
 
 // MARK: EEPROM Addresses
-#define EEPORM_ADDR_OSCCAL          0
-#define EEPROM_ADDR_FSM_STATE       1
+#define EEPORM_ADDR_OSCCAL              0
+#define EEPROM_ADDR_FSM_STATE           1
+#define EEPROM_ADDR_TELEMETRY_LOCATION  2
 
 // MARK: Constants
 #define TIMER_FREQUENCY     1000

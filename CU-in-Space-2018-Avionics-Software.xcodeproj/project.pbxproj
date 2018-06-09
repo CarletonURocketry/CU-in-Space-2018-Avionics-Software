@@ -217,6 +217,7 @@
 			buildPhases = (
 			);
 			buildToolPath = make;
+			buildWorkingDirectory = "";
 			dependencies = (
 			);
 			name = All;
@@ -486,6 +487,9 @@
 		BC93ECAB1FA4F5F200AD7504 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				AVR_EXTRA_PARAMS = "-B1";
+				AVR_NO_PORT = TRUE;
+				AVR_PROG = atmelice_isp;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 9A8JKZZ857;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -495,6 +499,9 @@
 		BC93ECAC1FA4F5F200AD7504 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				AVR_EXTRA_PARAMS = "-B1";
+				AVR_NO_PORT = TRUE;
+				AVR_PROG = atmelice_isp;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 9A8JKZZ857;
 				PRODUCT_NAME = "$(TARGET_NAME)";

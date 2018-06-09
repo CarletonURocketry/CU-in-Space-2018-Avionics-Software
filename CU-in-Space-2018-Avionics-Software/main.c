@@ -21,6 +21,7 @@
 #include "I2C.h"
 #include "ADC.h"
 #include "EEPROM.h"
+#include "XBee.h"
 
 #include "Accel-ADXL343.h"
 #include "Barometer-MPL3115A2.h"
@@ -187,6 +188,7 @@ int main(void)
     // Initilize software modules
     init_fsm();
     init_menu();
+    init_telemetry();
 
     // Enable the watchdog timer for a 2 second timeout
     wdt_enable(WDTO_2S);
@@ -198,6 +200,9 @@ int main(void)
 #endif
 #ifdef ENABLE_EEPROM
     init_25lc1024(EEPROM_CS_NUM, EEPROM2_CS_NUM); // EEPROM
+#endif
+#ifdef ENABLE_XBEE
+    init_xbee(); // XBee
 #endif
 
     for (;;) {
@@ -233,23 +238,28 @@ static void main_loop ()
     if (fsm_state != STANDBY) {
 #endif
 #ifdef ENABLE_ALTIMETER
-        mpl3115a2_service(); // Barometric Altimeter
+        mpl3115a2_service();        // Barometric Altimeter
 #endif
 #ifdef ENABLE_ACCELEROMETER
-        adxl343_service();  // Accelerometer
+        adxl343_service();          // Accelerometer
 #endif
 #ifdef ENABLE_GYROSCOPE
-        fxas21002c_service();  // Gyroscope
+        fxas21002c_service();       // Gyroscope
 #endif
 #ifdef ENABLE_GPS
-        fgpmmopa6h_service();  // GPS
-#endif
-#ifdef ENABLE_EEPROM
-        eeprom_25lc1024_service(); // EEPROM
+        fgpmmopa6h_service();       // GPS
 #endif
 #ifndef ENABLE_SENSORS_AT_RESET
     }
 #endif
+    
+#ifdef ENABLE_EEPROM
+        eeprom_25lc1024_service();  // EEPROM
+#endif
+#ifdef ENABLE_XBEE
+        xbee_service();             // XBee
+#endif
+    
     
     // Run Software Module Servies
     advance_fsm();
