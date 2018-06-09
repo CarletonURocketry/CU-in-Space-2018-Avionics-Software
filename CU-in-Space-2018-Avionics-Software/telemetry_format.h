@@ -13,6 +13,17 @@
 #define FRAME_START_DELIMITER   0x52
 #define FRAME_END_DELIMITER     0xCC
 
+#define ADDRESS_GROUND_STATION      0x00
+#define ADDRESS_ROCKET              0x02
+#define ADDRESS_PAYLOAD_UAV         0x11
+#define ADDRESS_PAYLOAD_CONTAINER   0x12
+
+#define FRAME_TYPE_ROCKET_PRIMARY       0x1
+#define FRAME_TYPE_ROCKET_SECONDARY     0x2
+#define FRAME_TYPE_PAYLOAD_UAV          0x3
+#define FRAME_TYPE_PAYLOAD_CONTAINER    0x4
+
+
 enum DeviceAddress {GROUND_STATION = 0b00, ROCKET = 0b10, PAYLOAD_UAV = 0b11, PAYLOAD_CONTAINER = 0b100};
 enum PayloadType {ROCKET_PRI_TELEM = 0x1, ROCKET_AUX_TELEM = 0x2, PAYLOAD_UAV_TELEM = 0x3, PAYLOAD_CONTAINER_TELEM = 0x4};
 
@@ -106,7 +117,7 @@ struct telemetry_frame {
     uint8_t alt_temp_msb;
     
     
-    /*** Gyroscope ***/
+    /*** GPS ***/
     uint32_t gps_time;
     int32_t lattitude;
     int32_t longitude;
