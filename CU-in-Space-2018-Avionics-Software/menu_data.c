@@ -46,6 +46,8 @@ const char prompt_string[] PROGMEM = "> ";
 const char menu_unkown_cmd_prt1[] PROGMEM = "Unkown command: \"";
 const char menu_unkown_cmd_prt2[] PROGMEM = "\"\nUse \"help --list\" to get a list of avaliable commands.\n";
 static const char string_nl[] PROGMEM = "\n";
+static const char string_on[] PROGMEM = "on";
+static const char string_off[] PROGMEM = "off";
 
 // MARK: Welcome
 const char welcome_string[] PROGMEM = "CU InSpace 2018 Avionics Software -> ";
@@ -165,13 +167,14 @@ static const char stat_str_time_units[] PROGMEM = " ms\n";
 static const char stat_str_state_title[] PROGMEM = "Current State\n";
 static const char stat_str_state_time[] PROGMEM = "\tMission Time: ";
 static const char stat_str_state_state[] PROGMEM = "\tMain FSM State: ";
-static const char stat_str_state_state_stby[] PROGMEM = "STANDBY\n";
-static const char stat_str_state_state_pf[] PROGMEM = "PRE-FLIGHT\n";
-static const char stat_str_state_state_pa[] PROGMEM = "POWERED ASCENT\n";
-static const char stat_str_state_state_ca[] PROGMEM = "COASTING ASCENT\n";
-static const char stat_str_state_state_des[] PROGMEM = "DESCENT\n";
-static const char stat_str_state_state_rec[] PROGMEM = "RECOVERY\n";
-static const char stat_str_state_state_unkown[] PROGMEM = "UNKNOWN\n";
+static const char stat_str_state_state_stby[] PROGMEM = "STANDBY (0x";
+static const char stat_str_state_state_pf[] PROGMEM = "PRE-FLIGHT (0x";
+static const char stat_str_state_state_pa[] PROGMEM = "POWERED ASCENT (0x";
+static const char stat_str_state_state_ca[] PROGMEM = "COASTING ASCENT (0x";
+static const char stat_str_state_state_des[] PROGMEM = "DESCENT (0x";
+static const char stat_str_state_state_rec[] PROGMEM = "RECOVERY (0x";
+static const char stat_str_state_state_unkown[] PROGMEM = "UNKNOWN (0x";
+static const char stat_str_state_end[] PROGMEM = ")\n";
 static const char stat_str_state_ematch_1[] PROGMEM = "\tE-Match 1: ";
 static const char stat_str_state_ematch_2[] PROGMEM = "\tE-Match 2: ";
 static const char stat_str_state_ematch_t[] PROGMEM = "READY\n";
@@ -229,6 +232,9 @@ void menu_cmd_stat_handler(uint8_t arg_len, char** args)
             serial_0_put_string_P(stat_str_state_state_unkown);
             break;
     }
+    utoa(fsm_state, str, 16);
+    serial_0_put_string(str);
+    serial_0_put_string_P(stat_str_state_end);
     // E-Matches present
     serial_0_put_string_P(stat_str_state_ematch_1);
     serial_0_put_string_P((ematch_1_is_ready()) ? stat_str_state_ematch_t : stat_str_state_ematch_f);
@@ -987,15 +993,6 @@ void menu_cmd_introm_handler(uint8_t arg_len, char** args)
         uint32_t buffer;
         eeprom_read(&id, addr, (uint8_t*)&buffer, 4);
         while (!eeprom_transaction_done(id));
-        
-//        for (uint8_t i = 0; i < 4; i++) {
-//            ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-//                EEAR = addr + i;
-//                EECR = (1<<EERE);
-//                ((uint8_t*)&buffer)[i] = EEDR;
-//            }
-//        }
-        
         serial_0_put_string_P(eeprom_string_hex);
         ultoa(buffer, str, 16);
         serial_0_put_string(str);
@@ -1044,62 +1041,175 @@ void menu_cmd_xbeesend_handler(uint8_t arg_len, char** args)
     xbee_clear_transaction(t_id);
 }
 
-// XBeeraw
-static const char menu_cmd_xbeeraw_string[] PROGMEM = "xbeeraw";
-static const char menu_help_xbeeraw[] PROGMEM = "Send a string via the radio without using the XBee driver.\nValid Usage: xbeeraw <string>\nNote: String must not contain any spaces.\n";
+// XBeeCont
+static const char menu_cmd_xbeecont_string[] PROGMEM = "xbeecont";
+static const char menu_help_xbeecont[] PROGMEM = "Send a continuous test signal on the radio\n";
 
-void menu_cmd_xbeeraw_handler(uint8_t arg_len, char** args)
+void menu_cmd_xbeecont_handler(uint8_t arg_len, char** args)
 {
-    if (arg_len > 2) {
-        serial_0_put_string_P(menu_help_xbeeraw);
-        return;
-    } else if (arg_len < 2) {
+    if (arg_len != 1) {
+        serial_0_put_string_P(menu_help_xbeecont);
         return;
     }
-
-    uint64_t address_64 = XBEE_ADDRESS_64_BROADCAST;
-    uint16_t address_16 = XBEE_ADDRESS_16_UNKOWN;
-
-    uint8_t data_length = strlen(args[1]);
-
-    str[0] = 0x7E;
-    str[1] = 0;
-    str[2] = 14 + data_length;
-    str[3] = 0x10;
-    str[4] = 0x01;
-    uint8_t *addr_64_bytes = (uint8_t*)(&address_64);
-    str[5] = addr_64_bytes[7];
-    str[6] = addr_64_bytes[6];
-    str[7] = addr_64_bytes[5];
-    str[8] = addr_64_bytes[4];
-    str[9] = addr_64_bytes[3];
-    str[10] = addr_64_bytes[2];
-    str[11] = addr_64_bytes[1];
-    str[12] = addr_64_bytes[0];
-    uint8_t *addr_16_bytes = (uint8_t*)(&address_16);
-    str[13] = addr_16_bytes[1];
-    str[14] = addr_16_bytes[0];
-    str[15] = 0;
-    str[16] = 0;
     
-    memcpy(str + 17, (uint8_t*)args[1], data_length);
-
-    uint16_t checksum = 0;
-    for (uint8_t i = 3; i < 17 + data_length; i++) {
-        checksum += str[i];
+    str[0] = '-';
+    for (uint32_t i = 0; !serial_0_has_line('\n') ;i++) {
+        uint8_t t_id;
+        
+        ultoa(i, str + 1, 10);
+        
+        xbee_transmit_command(&t_id, 0, XBEE_ADDRESS_64_BROADCAST, XBEE_ADDRESS_16_UNKOWN, 0, 0, (uint8_t*)str, strlen(str));
+        
+        while (!xbee_transaction_done(t_id)) xbee_service();
+        
+        xbee_clear_transaction(t_id);
+        
+        uint32_t time = millis;
+        while ((millis - time) < 1000);
+        wdt_reset();
     }
-    
-    uint8_t *cs = (uint8_t*)(&checksum);
-    str[17 + data_length] = 0xff - cs[0];
-    
-    uint8_t t_id;
-    uint8_t in_buff[100];
-    spi_start_full_duplex(&t_id, RADIO_CS_NUM, (uint8_t*)str, 18 + data_length, in_buff, RADIO_ATTN_NUM);
-    while (!spi_transaction_done(t_id));
-    spi_clear_transaction(t_id);
+    serial_0_get_line('\n', str, STR_LEN);
 }
 
-const uint8_t menu_num_items = 21;
+// XBeetelem
+static const char menu_cmd_xbeetelem_string[] PROGMEM = "xbeetelem";
+static const char menu_help_xbeetelem[] PROGMEM = "Send a telemetry frame.\n";
+
+static const char string_xbeetelem_length[] PROGMEM = " bytes sent.\n";
+
+void menu_cmd_xbeetelem_handler(uint8_t arg_len, char** args)
+{
+    if (arg_len != 1) {
+        serial_0_put_string_P(menu_help_xbeetelem);
+        return;
+    }
+    
+    struct telemetry_api_frame frame;
+
+    // Generate telemetry frame
+    frame.start_delimiter = FRAME_START_DELIMITER;
+    frame.source_address = ADDRESS_ROCKET;
+    frame.destination_address = ADDRESS_GROUND_STATION;
+    frame.payload_type = FRAME_TYPE_ROCKET_PRIMARY;
+    frame.length = sizeof(frame.payload);
+    frame.crc_present = 0;
+    frame.end_delimiter = FRAME_END_DELIMITER;
+    
+    frame.payload.mission_time = millis;
+    frame.payload.state = fsm_state;
+    frame.payload.flag_ematch_1_present = ematch_1_is_ready();
+    frame.payload.flag_ematch_2_present = ematch_2_is_ready();
+    frame.payload.flag_parachute_deployed = 0;
+    frame.payload.adc_cap_voltage = adc_avg_data[0];
+    frame.payload.flag_gps_data_valid = (fgpmmopa6h_data_valid & 1);
+    frame.payload.adc_temp_1 = adc_avg_data[1];
+    frame.payload.adc_temp_2 = adc_avg_data[2];
+    frame.payload.adc_3 = adc_avg_data[3];
+    frame.payload.adc_4 = adc_avg_data[4];
+    frame.payload.adc_5 = adc_avg_data[5];
+    frame.payload.adc_6 = adc_avg_data[6];
+    frame.payload.adc_batt_voltage = adc_avg_data[7];
+    frame.payload.acceleration_x = adxl343_accel_x;
+    frame.payload.acceleration_y = adxl343_accel_y;
+    frame.payload.acceleration_z = adxl343_accel_z;
+    frame.payload.pitch_rate = fxas21002c_pitch_rate;
+    frame.payload.roll_rate = fxas21002c_roll_rate;
+    frame.payload.yaw_rate = fxas21002c_yaw_rate;
+    frame.payload.gyro_temp = fxas21002c_temp;
+    frame.payload.altitude_lsb = mpl3115a2_alt_lsb;
+    frame.payload.altitude_csb = mpl3115a2_alt_csb;
+    frame.payload.altitude_msb = mpl3115a2_alt_msb;
+    frame.payload.alt_temp_lsb = mpl3115a2_temp_lsb;
+    frame.payload.alt_temp_msb = mpl3115a2_temp_msb;
+    frame.payload.gps_time = fgpmmopa6h_utc_time;
+    frame.payload.lattitude = fgpmmopa6h_latitude;
+    frame.payload.longitude = fgpmmopa6h_longitude;
+    frame.payload.ground_speed = fgpmmopa6h_speed;
+    frame.payload.course_over_ground = fgpmmopa6h_course;
+    frame.payload.gps_sample_time = fgpmmopa6h_sample_time;
+    
+    // Send frame
+    uint8_t t_id;
+    xbee_transmit_command(&t_id, 0, XBEE_ADDRESS_64_BROADCAST, XBEE_ADDRESS_16_UNKOWN, 0, 0, (uint8_t*)&frame, sizeof(frame));
+    
+    utoa(sizeof(frame), str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(string_xbeetelem_length);
+    
+    while (!xbee_transaction_done(t_id)) xbee_service();
+    xbee_clear_transaction(t_id);
+}
+
+// 12v
+static const char menu_cmd_12v_string[] PROGMEM = "12v";
+static const char menu_help_12v[] PROGMEM = "Control the 12v rail\nValid Usage: 12v <on/off>\n";
+
+void menu_cmd_12v_handler(uint8_t arg_len, char** args)
+{
+    if (arg_len != 2) {
+        serial_0_put_string_P(menu_help_12v);
+        return;
+    }
+    
+    if (!strcasecmp_P(args[1], string_on)) {
+        ENABLE_12V_PORT |= (1<<ENABLE_12V_NUM);
+    } else if (!strcasecmp_P(args[1], string_off)) {
+        ENABLE_12V_PORT &= ~(1<<ENABLE_12V_NUM);
+    } else {
+        serial_0_put_string_P(menu_help_12v);
+    }
+}
+
+// deploy
+static const char menu_cmd_deploy_string[] PROGMEM = "deploy";
+static const char menu_help_deploy[] PROGMEM = "Deploy the parachutes\nValid Usage: deploy <on/off/sequence>";
+
+static const char deploy_string_sequence[] PROGMEM = "sequence";
+
+void menu_cmd_deploy_handler(uint8_t arg_len, char** args)
+{
+    if (arg_len != 2) {
+        serial_0_put_string_P(menu_help_deploy);
+        return;
+    }
+    
+    if (!strcasecmp_P(args[1], string_on)) {
+        MAIN_TRIGGER_PORT |= (1<<MAIN_TRIGGER_NUM);
+    } else if (!strcasecmp_P(args[1], string_off)) {
+        MAIN_TRIGGER_PORT &= ~(1<<MAIN_TRIGGER_NUM);
+    } else if (!strcasecmp_P(args[1], deploy_string_sequence)) {
+        ENABLE_12V_PORT &= ~(1<<ENABLE_12V_NUM);
+        MAIN_TRIGGER_PORT |= (1<<MAIN_TRIGGER_NUM);
+        while (adc_avg_data[0] > 50);
+        MAIN_TRIGGER_PORT &= ~(1<<MAIN_TRIGGER_NUM);
+    } else {
+        serial_0_put_string_P(menu_help_deploy);
+    }
+    
+    
+}
+
+// capdis
+static const char menu_cmd_capdis_string[] PROGMEM = "capdis";
+static const char menu_help_capdis[] PROGMEM = "Control the capacitor discarge pin\nValid Usage: capdis <on/off>\n";
+
+void menu_cmd_capdis_handler(uint8_t arg_len, char** args)
+{
+    if (arg_len != 2) {
+        serial_0_put_string_P(menu_help_capdis);
+        return;
+    }
+    
+    if (!strcasecmp_P(args[1], string_on)) {
+        CAP_DISCHARGE_PORT |= (1<<CAP_DISCHARGE_NUM);
+    } else if (!strcasecmp_P(args[1], string_off)) {
+        CAP_DISCHARGE_PORT &= ~(1<<CAP_DISCHARGE_NUM);
+    } else {
+        serial_0_put_string_P(menu_help_capdis);
+    }
+}
+
+const uint8_t menu_num_items = 24;
 const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_version_string, .handler = menu_cmd_version_handler, .help_string = menu_help_version},
     {.string = menu_cmd_help_string, .handler = menu_cmd_help_handler, .help_string = menu_help_help},
@@ -1121,5 +1231,9 @@ const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_introm_string, .handler = menu_cmd_introm_handler, .help_string = menu_help_introm},
     {.string = menu_cmd_checkid_string, .handler = menu_cmd_checkid_handler, .help_string = menu_help_checkid},
     {.string = menu_cmd_xbeesend_string, .handler = menu_cmd_xbeesend_handler, .help_string = menu_help_xbeesend},
-    {.string = menu_cmd_xbeeraw_string, .handler = menu_cmd_xbeeraw_handler, .help_string = menu_help_xbeeraw},
+    {.string = menu_cmd_xbeecont_string, .handler = menu_cmd_xbeecont_handler, .help_string = menu_help_xbeecont},
+    {.string = menu_cmd_xbeetelem_string, .handler = menu_cmd_xbeetelem_handler, .help_string = menu_help_xbeetelem},
+    {.string = menu_cmd_12v_string, .handler = menu_cmd_12v_handler, .help_string = menu_help_12v},
+    {.string = menu_cmd_deploy_string, .handler = menu_cmd_deploy_handler, .help_string = menu_help_deploy},
+    {.string = menu_cmd_capdis_string, .handler = menu_cmd_capdis_handler, .help_string = menu_help_capdis}
 };
