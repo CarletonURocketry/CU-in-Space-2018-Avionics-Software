@@ -119,7 +119,7 @@ struct telemetry_frame {
     
     /*** GPS ***/
     uint32_t gps_time;
-    int32_t lattitude;
+    int32_t latitude;
     int32_t longitude;
     uint16_t ground_speed;
     uint16_t course_over_ground;

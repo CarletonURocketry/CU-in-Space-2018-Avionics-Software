@@ -1122,7 +1122,7 @@ void menu_cmd_xbeetelem_handler(uint8_t arg_len, char** args)
     frame.payload.alt_temp_lsb = mpl3115a2_temp_lsb;
     frame.payload.alt_temp_msb = mpl3115a2_temp_msb;
     frame.payload.gps_time = fgpmmopa6h_utc_time;
-    frame.payload.lattitude = fgpmmopa6h_latitude;
+    frame.payload.latitude = fgpmmopa6h_latitude;
     frame.payload.longitude = fgpmmopa6h_longitude;
     frame.payload.ground_speed = fgpmmopa6h_speed;
     frame.payload.course_over_ground = fgpmmopa6h_course;
