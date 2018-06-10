@@ -485,8 +485,8 @@ void menu_cmd_sensors_handler(uint8_t arg_len, char** args)
     // Altimeter
     serial_0_put_string_P(sensors_str_baro_title);
     serial_0_put_string_P(sensors_str_baro_alt);
-    val = ((double)(mpl3115a2_alt_csb + (((uint16_t)mpl3115a2_alt_msb) << 8))) +
-                    (((double)(mpl3115a2_alt_lsb >> 4)) / 16);
+    val = ((double)(mpl3115a2_alt_csb + (((uint16_t)(mpl3115a2_alt_msb & ~(1<<7)) << 8))) +
+           (((double)(mpl3115a2_alt_lsb >> 4)) / 16)) - ((mpl3115a2_alt_msb & ~(1<<7)) ? 32768.0 : 0.0);
     dtostrf(val, 12, 4, str);
     serial_0_put_string(str);
     serial_0_put_string_P(sensors_str_alt_units);
