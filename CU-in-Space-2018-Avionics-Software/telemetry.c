@@ -21,6 +21,8 @@
 
 #define EEPROM_TELEMETRY_SPACING    64
 
+#define RADIO_WARMUP_TIME   250
+
 static uint32_t last_eeprom_time;
 static uint32_t last_radio_time;
 
@@ -86,7 +88,7 @@ static void update_telemetry_packet (void)
     
     /*** GPS ***/
     frame.payload.gps_time = fgpmmopa6h_utc_time;
-    frame.payload.lattitude = fgpmmopa6h_latitude;
+    frame.payload.latitude = fgpmmopa6h_latitude;
     frame.payload.longitude = fgpmmopa6h_longitude;
     frame.payload.ground_speed = fgpmmopa6h_speed;
     frame.payload.course_over_ground = fgpmmopa6h_course;
@@ -131,7 +133,7 @@ void telemetry_service(void)
     
     uint16_t eeprom_addr = EEPROM_TELEMETRY_SPACING * eeprom_frame_number;
     uint8_t save_packet = (eeprom_telemetry_period != 0) && ((millis - last_eeprom_time) > eeprom_telemetry_period) && (eeprom_transaction_id == 0) && (internal_eeprom_transaction_id == 0) && (eeprom_addr < EEPROM_25LC1024_MAX);
-    uint8_t send_packet = ((radio_telemetry_period != 0) && ((millis - last_radio_time) > radio_telemetry_period) && (xbee_transaction_id == 0)) || !has_sent_packet;
+    uint8_t send_packet = ((radio_telemetry_period != 0) && ((millis - last_radio_time) > radio_telemetry_period) && (xbee_transaction_id == 0)) || (!has_sent_packet && (millis > RADIO_WARMUP_TIME));
     
     if (send_packet || save_packet) {
         // Need to generate a new telemetry packet
