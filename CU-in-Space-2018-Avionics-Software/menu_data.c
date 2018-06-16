@@ -372,16 +372,32 @@ void menu_cmd_epprom_handler(uint8_t arg_len, char** args)
         
         uint8_t step = (128 > STR_LEN) ? STR_LEN : 128;
         
-        for (int i = 0; i < (2 * 0x1FFFF); i += step) {
-            eeprom_read(&id, i, (uint8_t*)str, step);
+        while (!serial_0_out_buffer_empty());
+        
+        UBRR0H = 0;                         // Set baud rate: 9.6Kbaud at 12mhz clock, 0.1602564103% error
+        UBRR0L = 77;
+        UCSR0B |= (1<<TXEN0);               // Enable transmitter with no interupts
+        UCSR0C = (1<<UCSZ00)|(1<<UCSZ01);   // Set frame format: 8 data, 1 stop bit(s)
+        
+        for (uint32_t i = 0; i < EEPROM_25LC1024_MAX; i += step) {
+            eeprom_25lc1024_read(&id, i, step, (uint8_t*)str);
             
-            while (!serial_0_out_buffer_empty()) eeprom_25lc1024_service();
             while (!eeprom_25lc1024_transaction_done(id)) eeprom_25lc1024_service();
             
             eeprom_25lc1024_clear_transaction(id);
             
-            serial_0_put_string(str);
+            // Write data to serial port
+            for (uint8_t j = 0; j < step; j++) {
+                while (!(UCSR0A & (1<<UDRE0)));
+                UDR0 = str[j];
+                
+            }
+            
+            wdt_reset();
         }
+        
+        init_serial_0();
+        
         return;
     } else {
         goto invalid_args;
