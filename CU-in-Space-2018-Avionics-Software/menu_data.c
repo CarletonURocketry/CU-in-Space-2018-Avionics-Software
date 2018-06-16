@@ -179,6 +179,7 @@ static const char stat_str_state_ematch_1[] PROGMEM = "\tE-Match 1: ";
 static const char stat_str_state_ematch_2[] PROGMEM = "\tE-Match 2: ";
 static const char stat_str_state_ematch_t[] PROGMEM = "READY\n";
 static const char stat_str_state_ematch_f[] PROGMEM = "NOT PRESENT\n";
+static const char stat_str_eeprom_addr[] PROGMEM = "\tTelemetry EEPROM Address: ";
 
 static const char stat_str_volt_title[] PROGMEM = "Voltages\n";
 static const char stat_str_volt_bat[] PROGMEM = "\tBattery: ";
@@ -240,6 +241,16 @@ void menu_cmd_stat_handler(uint8_t arg_len, char** args)
     serial_0_put_string_P((ematch_1_is_ready()) ? stat_str_state_ematch_t : stat_str_state_ematch_f);
     serial_0_put_string_P(stat_str_state_ematch_2);
     serial_0_put_string_P((ematch_2_is_ready()) ? stat_str_state_ematch_t : stat_str_state_ematch_f);
+    // EEPROM Address
+    serial_0_put_string_P(stat_str_eeprom_addr);
+    uint32_t addr;
+    uint8_t eeprom_id;
+    eeprom_read(&eeprom_id, EEPROM_ADDR_TELEMETRY_LOCATION, (uint8_t*)&addr, 4);
+    while (!eeprom_transaction_done(eeprom_id)) eeprom_service();
+    eeprom_clear_transaction(eeprom_id);
+    ultoa(addr, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(string_nl);
     while (!serial_0_out_buffer_empty());
     
     // Voltages
@@ -307,7 +318,7 @@ static const char menu_help_eeprom[] PROGMEM = "Test external 25LC1024 EEPROM.\n
 static const char eeprom_string_read[] PROGMEM = "read";
 static const char eeprom_string_write[] PROGMEM = "write";
 static const char eeprom_string_erase[] PROGMEM = "erase";
-static const char eeprom_string_dump[] PROGMEM = { 0x5 };
+static const char eeprom_string_dump[] PROGMEM = "dump";
 
 static const char eeprom_string_hex[] PROGMEM = "0x";
 
@@ -365,6 +376,16 @@ void menu_cmd_epprom_handler(uint8_t arg_len, char** args)
         eeprom_25lc1024_chip_erase(&id);
         
         while (!eeprom_25lc1024_transaction_done(id)) eeprom_25lc1024_service();
+        
+        
+        uint32_t addr = 0;
+        uint8_t eep_id;
+        eeprom_write(&eep_id, EEPROM_ADDR_TELEMETRY_LOCATION, (uint8_t*)&addr, 4);
+        
+        while (!eeprom_transaction_done(eep_id)) eeprom_service();
+        
+        eeprom_clear_transaction(eep_id);
+        
     } else if (!strcasecmp_P(args[1], eeprom_string_dump)) {
         if (arg_len != 2) {
             return;
@@ -1207,7 +1228,7 @@ void menu_cmd_deploy_handler(uint8_t arg_len, char** args)
 
 // capdis
 static const char menu_cmd_capdis_string[] PROGMEM = "capdis";
-static const char menu_help_capdis[] PROGMEM = "Control the capacitor discarge pin\nValid Usage: capdis <on/off>\n";
+static const char menu_help_capdis[] PROGMEM = "Control the capacitor discarge pin.\nValid Usage: capdis <on/off>\n";
 
 void menu_cmd_capdis_handler(uint8_t arg_len, char** args)
 {
@@ -1225,7 +1246,45 @@ void menu_cmd_capdis_handler(uint8_t arg_len, char** args)
     }
 }
 
-const uint8_t menu_num_items = 24;
+// setalt
+static const char menu_cmd_setalt_string[] PROGMEM = "setalt";
+static const char menu_help_setalt[] PROGMEM = "Manually set the altitude value.\nValid Usage: setalt <altitude>\n";
+
+static const char setalt_string_alt[] PROGMEM = "Altitude: ";
+static const char setalt_string_two[] PROGMEM = " (";
+static const char setalt_string_three[] PROGMEM = " m)\n";
+
+void menu_cmd_setalt_handler(uint8_t arg_len, char** args)
+{
+    if (arg_len > 2) {
+        goto invalid_args;
+        
+    }
+    
+    if (arg_len == 2) {
+        char* end;
+        uint32_t alt = strtoul(args[1], &end, 0);
+        if (*end != '\0') goto invalid_args;
+        
+        mpl3115a2_prev_alt = mpl3115a2_alt;
+        mpl3115a2_alt = alt;
+    }
+    
+    serial_0_put_string_P(setalt_string_alt);
+    ultoa(mpl3115a2_alt, str, 10);
+    serial_0_put_string(str);
+    serial_0_put_string_P(setalt_string_two);
+    dtostrf(((double)mpl3115a2_alt)/16.0, 12, 4, str);
+    serial_0_put_string(str);
+    serial_0_put_string_P(setalt_string_three);
+    
+    return;
+    
+invalid_args:
+    serial_0_put_string_P(menu_help_setalt);
+}
+
+const uint8_t menu_num_items = 26;
 const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_version_string, .handler = menu_cmd_version_handler, .help_string = menu_help_version},
     {.string = menu_cmd_help_string, .handler = menu_cmd_help_handler, .help_string = menu_help_help},
@@ -1251,5 +1310,6 @@ const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_xbeetelem_string, .handler = menu_cmd_xbeetelem_handler, .help_string = menu_help_xbeetelem},
     {.string = menu_cmd_12v_string, .handler = menu_cmd_12v_handler, .help_string = menu_help_12v},
     {.string = menu_cmd_deploy_string, .handler = menu_cmd_deploy_handler, .help_string = menu_help_deploy},
-    {.string = menu_cmd_capdis_string, .handler = menu_cmd_capdis_handler, .help_string = menu_help_capdis}
+    {.string = menu_cmd_capdis_string, .handler = menu_cmd_capdis_handler, .help_string = menu_help_capdis},
+    {.string = menu_cmd_setalt_string, .handler = menu_cmd_setalt_handler, .help_string = menu_help_setalt}
 };
