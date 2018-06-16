@@ -15,8 +15,8 @@
 
 // MARK: Compile Time Settings
 #define ENABLE_SENSORS_AT_RESET
-
-#define ENABLE_DEBUG_FLASH
+//#define ENABLE_DEPLOYMENT
+//#define ENABLE_DEBUG_FLASH
 
 #define ENABLE_SPI
 #define ENABLE_I2C
@@ -27,14 +27,18 @@
 //#define ENABLE_GYROSCOPE
 #define ENABLE_GPS
 
-//#define ENABLE_XBEE
-
+#define ENABLE_XBEE
 #define ENABLE_EEPROM
 
-// FSM Settings
-#define LAUNCH_ACCEL_THRESHOLD      1282    // 5g in 3.9mg per least signifigant bit
-#define COASTING_ACCEL_THRESHOLD    256     // 1g in 3.9mg per least signifigant bit
-#define ALTITUDE_COMPARISON_RANGE   8       // 0.5m in 1/16m per least signifigant bit
+
+// MARK: FSM Settings
+#define LAUNCH_ACCEL_THRESHOLD      1410    // 5.5g in 3.9mg per least signifigant bit
+#define LAUNCH_ALT_THRESHOLD        800     // 50m in 1/16m per least signifigant bit
+#define COASTING_ACCEL_THRESHOLD    513     // 2g in 3.9mg per least signifigant bit
+#define COASTING_ALT_THRESOLD       35200   // 2200m (7217') in 1/16m per least signifigant bit
+#define ALTITUDE_COMPARISON_RANGE   32      // 2m in 1/16m per least signifigant bit
+
+#define CAP_DISCARGE_THRESHOLD      40      // About 1v
 
 // MARK: EEPROM Addresses
 #define EEPORM_ADDR_OSCCAL              0

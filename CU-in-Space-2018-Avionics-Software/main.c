@@ -52,6 +52,8 @@ volatile static uint32_t last_led;
 
 global_state_t fsm_state;
 
+static uint32_t max_alt;
+
 // Mirror of MCUSR created during init process before watchdog is reset
 uint8_t mcusr_mirror __attribute__ ((section (".noinit")));
 
@@ -65,7 +67,7 @@ void get_mcusr(void)
     wdt_disable();
 }
 
-void initIO(void)
+static void initIO(void)
 {
     // Set LED pin as an output
     LED_DDR |= (1<<LED_NUM);
@@ -119,7 +121,7 @@ void initIO(void)
     SPI_SCK_DDR |= (1<<SPI_SCK_NUM);
 }
 
-void init_timers(void)
+static void init_timers(void)
 {
     // Timer 1 (clock)
     TCCR1B |= (1<<WGM12);                           // Set the Timer Mode to CTC
@@ -130,7 +132,7 @@ void init_timers(void)
     TCCR1B |= (1<<CS11);                            // set prescaler to 8 and start timer 1
 }
 
-void init_sensors (void)
+static void init_sensors (void)
 {
 #ifdef ENABLE_ALTIMETER
     init_mpl3115a2(); // Barometric Altimeter
@@ -146,14 +148,42 @@ void init_sensors (void)
 #endif
 }
 
-void init_fsm (void)
+static void init_fsm (void)
 {
-    if (RESET_JUMPER_PIN & ~(1<<RESET_JUMPER_NUM)) {
+    if (RESET_JUMPER_PIN & (1<<RESET_JUMPER_NUM)) {
         // Reset jumper not shorted
-        fsm_state = STANDBY;
+        fsm_state = eeprom_read_byte_sync(EEPROM_ADDR_FSM_STATE);
     } else {
         // Reset jumper shorted
         fsm_state = STANDBY;
+        eeprom_write(&eeprom_transaction_id, EEPROM_ADDR_FSM_STATE, &fsm_state, 1);
+    }
+    
+    switch (fsm_state) {
+        case STANDBY:
+            radio_telemetry_period = TELEMETRY_RADIO_PERIOD_EXTRA_LOW;
+            eeprom_telemetry_period = TELEMETRY_EEPROM_PERIOD_LOW;
+            break;
+        case PRE_FLIGHT:
+            radio_telemetry_period = TELEMETRY_RADIO_PERIOD_MEDIUM;
+            eeprom_telemetry_period = TELEMETRY_EEPROM_PERIOD_LOW;
+            break;
+        case POWERED_ASCENT:
+            radio_telemetry_period = TELEMETRY_RADIO_PERIOD_HIGH;
+            eeprom_telemetry_period = TELEMETRY_EEPROM_PERIOD_HIGH;
+            break;
+        case COASTING_ASCENT:
+            radio_telemetry_period = TELEMETRY_RADIO_PERIOD_HIGH;
+            eeprom_telemetry_period = TELEMETRY_EEPROM_PERIOD_HIGH;
+            break;
+        case DESCENT:
+            radio_telemetry_period = TELEMETRY_RADIO_PERIOD_HIGH;
+            eeprom_telemetry_period = TELEMETRY_EEPROM_PERIOD_HIGH;
+            break;
+        case RECOVERY:
+            radio_telemetry_period = TELEMETRY_RADIO_PERIOD_LOW;
+            eeprom_telemetry_period = TELEMETRY_EEPROM_PERIOD_HIGH;
+            break;
     }
 }
 
@@ -260,8 +290,11 @@ static void main_loop ()
         xbee_service();             // XBee
 #endif
     
+    if (mpl3115a2_alt > max_alt) {
+        max_alt = mpl3115a2_alt;
+    }
     
-    // Run Software Module Servies
+    // Run Software Module Services
     advance_fsm();
     
     ematch_detect_service();
@@ -270,16 +303,18 @@ static void main_loop ()
     eeprom_service();
 }
 
-void advance_fsm (void)
+static void advance_fsm (void)
 {
     if ((eeprom_transaction_id != 0) && eeprom_transaction_done(eeprom_transaction_id)) {
         // Finished storing the current state in EEPROM
         eeprom_clear_transaction(eeprom_transaction_id);
         eeprom_transaction_id = 0;
-    } else {
+    } else if (eeprom_transaction_id != 0) {
         // In the process of storing the current state.
         return;
     }
+    
+    
     
     switch (fsm_state) {
         case STANDBY:
@@ -289,39 +324,77 @@ void advance_fsm (void)
 #ifndef ENABLE_SENSORS_AT_RESET
                 init_sensors();
 #endif
+
+                radio_telemetry_period = TELEMETRY_RADIO_PERIOD_MEDIUM;
+                
                 fsm_state = PRE_FLIGHT;
                 eeprom_write(&eeprom_transaction_id, EEPROM_ADDR_FSM_STATE, &fsm_state, 1);
             }
             break;
         case PRE_FLIGHT:
             // Wait for engine to start
-            if (hypot(hypot(adxl343_accel_x, adxl343_accel_y), adxl343_accel_z) > LAUNCH_ACCEL_THRESHOLD) {
+            if ((hypot(hypot(adxl343_accel_x, adxl343_accel_y), adxl343_accel_z) > LAUNCH_ACCEL_THRESHOLD) || (mpl3115a2_alt > LAUNCH_ALT_THRESHOLD)) {
                 // Engine has started
+                radio_telemetry_period = TELEMETRY_RADIO_PERIOD_HIGH;
+                eeprom_telemetry_period = TELEMETRY_EEPROM_PERIOD_HIGH;
+                
                 fsm_state = POWERED_ASCENT;
+                eeprom_write(&eeprom_transaction_id, EEPROM_ADDR_FSM_STATE, &fsm_state, 1);
             }
             break;
         case POWERED_ASCENT:
             // Wait for engine to burn out
-            if (hypot(hypot(adxl343_accel_x, adxl343_accel_y), adxl343_accel_z) < COASTING_ACCEL_THRESHOLD) {
+            if ((hypot(hypot(adxl343_accel_x, adxl343_accel_y), adxl343_accel_z) < COASTING_ACCEL_THRESHOLD) || (mpl3115a2_alt > COASTING_ALT_THRESOLD)) {
                 // Engine has burnt out
+                
+                ENABLE_12V_PORT |= (1<<ENABLE_12V_NUM); // Start charging capacitors for deployment
+                
                 fsm_state = COASTING_ASCENT;
+                eeprom_write(&eeprom_transaction_id, EEPROM_ADDR_FSM_STATE, &fsm_state, 1);
             }
             break;
         case COASTING_ASCENT:
             // Wait for apogee
-            if ((mpl3115a2_prev_alt - mpl3115a2_alt) > ALTITUDE_COMPARISON_RANGE) {
+            if ((max_alt - mpl3115a2_alt) > ALTITUDE_COMPARISON_RANGE) {
                 // Rocket is descending
+                
+                // Deploy parachute
+                ENABLE_12V_PORT &= ~(1<<ENABLE_12V_NUM);
+#ifdef ENABLE_DEPLOYMENT
+                MAIN_TRIGGER_PORT |= (1<<MAIN_TRIGGER_NUM);
+#else
+                LED_PORT |= (1<<LED_NUM);
+#endif
+                
                 fsm_state = DESCENT;
+                eeprom_write(&eeprom_transaction_id, EEPROM_ADDR_FSM_STATE, &fsm_state, 1);
             }
             break;
         case DESCENT:
+            if (adc_avg_data[0] < CAP_DISCARGE_THRESHOLD) {
+                // Disable trigger and turn on cap discarge circuit
+                ENABLE_12V_PORT &= ~(1<<ENABLE_12V_NUM);
+                MAIN_TRIGGER_PORT &= ~(1<<MAIN_TRIGGER_NUM);
+                CAP_DISCHARGE_PORT |= (1<<CAP_DISCHARGE_NUM);
+            }
+            
             // Wait for altitude to stop changing (landing)
             if (abs(mpl3115a2_prev_alt - mpl3115a2_alt) < ALTITUDE_COMPARISON_RANGE) {
                 // Rocket has stopped moving
+                radio_telemetry_period = TELEMETRY_RADIO_PERIOD_LOW;
+                
                 fsm_state = RECOVERY;
+                eeprom_write(&eeprom_transaction_id, EEPROM_ADDR_FSM_STATE, &fsm_state, 1);
             }
             break;
         case RECOVERY:
+            if (adc_avg_data[0] < CAP_DISCARGE_THRESHOLD) {
+                // Disable trigger and turn on cap discarge circuit
+                ENABLE_12V_PORT &= ~(1<<ENABLE_12V_NUM);
+                MAIN_TRIGGER_PORT &= ~(1<<MAIN_TRIGGER_NUM);
+                CAP_DISCHARGE_PORT |= (1<<CAP_DISCHARGE_NUM);
+            }
+            
             // Wait to be found
             break;
     }
