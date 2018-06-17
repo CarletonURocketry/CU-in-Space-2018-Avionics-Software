@@ -1284,7 +1284,43 @@ invalid_args:
     serial_0_put_string_P(menu_help_setalt);
 }
 
-const uint8_t menu_num_items = 26;
+// setaltraw
+static const char menu_cmd_setaltraw_string[] PROGMEM = "setaltraw";
+static const char menu_help_setaltraw[] PROGMEM = "Manually set the altitude value with MSB CSB LSB.\nValid Usage: setaltraw <msb> <csb> <lsb>\n";
+
+void menu_cmd_setaltraw_handler(uint8_t arg_len, char** args)
+{
+    if (arg_len != 4) {
+        goto invalid_args;
+        
+    }
+    
+    char* end;
+    uint8_t msb = strtoul(args[1], &end, 0);
+    if (*end != '\0') goto invalid_args;
+    
+    uint8_t csb = strtoul(args[2], &end, 0);
+    if (*end != '\0') goto invalid_args;
+    
+    uint8_t lsb = strtoul(args[3], &end, 0);
+    if (*end != '\0') goto invalid_args;
+    
+    mpl3115a2_alt = 0;
+    ((uint8_t*)&mpl3115a2_alt)[3] = msb;
+    ((uint8_t*)&mpl3115a2_alt)[2] = csb;
+    // Shift the whole part into place (sign extending)
+    mpl3115a2_alt >>= 12;
+    // OR the fractional part into the altitude value
+    mpl3115a2_alt |= (lsb >> 4);
+    
+    return;
+    
+invalid_args:
+    serial_0_put_string_P(menu_help_setaltraw);
+}
+
+
+const uint8_t menu_num_items = 27;
 const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_version_string, .handler = menu_cmd_version_handler, .help_string = menu_help_version},
     {.string = menu_cmd_help_string, .handler = menu_cmd_help_handler, .help_string = menu_help_help},
@@ -1311,5 +1347,6 @@ const menu_item_t menu_items[] PROGMEM = {
     {.string = menu_cmd_12v_string, .handler = menu_cmd_12v_handler, .help_string = menu_help_12v},
     {.string = menu_cmd_deploy_string, .handler = menu_cmd_deploy_handler, .help_string = menu_help_deploy},
     {.string = menu_cmd_capdis_string, .handler = menu_cmd_capdis_handler, .help_string = menu_help_capdis},
-    {.string = menu_cmd_setalt_string, .handler = menu_cmd_setalt_handler, .help_string = menu_help_setalt}
+    {.string = menu_cmd_setalt_string, .handler = menu_cmd_setalt_handler, .help_string = menu_help_setalt},
+    {.string = menu_cmd_setaltraw_string, .handler = menu_cmd_setaltraw_handler, .help_string = menu_help_setaltraw}
 };

@@ -177,6 +177,8 @@ void mpl3115a2_service(void)
             mpl3115a2_temp_lsb = buffer[4];
             // Store previous sample
             mpl3115a2_prev_alt = mpl3115a2_alt;
+            // Zero out previous value
+            mpl3115a2_alt = 0;
             // Put the whole part of the new data in the highest bytes of the altitude value
             ((uint8_t*)&mpl3115a2_alt)[3] = mpl3115a2_alt_msb;
             ((uint8_t*)&mpl3115a2_alt)[2] = mpl3115a2_alt_csb;
