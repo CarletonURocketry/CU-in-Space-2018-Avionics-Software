@@ -15,8 +15,8 @@
 
 // MARK: Compile Time Settings
 #define ENABLE_SENSORS_AT_RESET
-//#define ENABLE_DEPLOYMENT
-//#define ENABLE_DEBUG_FLASH
+#define ENABLE_DEPLOYMENT
+#define ENABLE_DEBUG_FLASH
 
 #define ENABLE_SPI
 #define ENABLE_I2C
