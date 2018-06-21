@@ -114,6 +114,11 @@ void init_telemetry (void) {
     update_telemetry_packet();
 }
 
+void telemetry_send_packet (void)
+{
+    has_sent_packet = 0;
+}
+
 void telemetry_service(void)
 {
     if ((eeprom_transaction_id != 0) && eeprom_25lc1024_transaction_done(eeprom_transaction_id)) {

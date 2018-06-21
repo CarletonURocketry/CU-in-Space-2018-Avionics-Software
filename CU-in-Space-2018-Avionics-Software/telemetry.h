@@ -28,6 +28,11 @@ extern uint32_t radio_telemetry_period;
 extern void init_telemetry (void);
 
 /**
+ *  Send a telemetry packet on the next call to telemetry_service
+ */
+extern void telemetry_send_packet (void);
+
+/**
  *  Code to be run in each iteration of the main loop
  */
 extern void telemetry_service(void);

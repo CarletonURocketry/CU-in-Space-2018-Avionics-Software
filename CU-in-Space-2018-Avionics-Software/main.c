@@ -327,6 +327,7 @@ static void advance_fsm (void)
 
                 radio_telemetry_period = TELEMETRY_RADIO_PERIOD_MEDIUM;
                 
+                telemetry_send_packet();
                 fsm_state = PRE_FLIGHT;
                 eeprom_write(&eeprom_transaction_id, EEPROM_ADDR_FSM_STATE, &fsm_state, 1);
             }
@@ -338,6 +339,7 @@ static void advance_fsm (void)
                 radio_telemetry_period = TELEMETRY_RADIO_PERIOD_HIGH;
                 eeprom_telemetry_period = TELEMETRY_EEPROM_PERIOD_HIGH;
                 
+                telemetry_send_packet();
                 fsm_state = POWERED_ASCENT;
                 eeprom_write(&eeprom_transaction_id, EEPROM_ADDR_FSM_STATE, &fsm_state, 1);
             }
@@ -349,6 +351,7 @@ static void advance_fsm (void)
                 
                 ENABLE_12V_PORT |= (1<<ENABLE_12V_NUM); // Start charging capacitors for deployment
                 
+                telemetry_send_packet();
                 fsm_state = COASTING_ASCENT;
                 eeprom_write(&eeprom_transaction_id, EEPROM_ADDR_FSM_STATE, &fsm_state, 1);
             }
@@ -366,6 +369,7 @@ static void advance_fsm (void)
                 LED_PORT |= (1<<LED_NUM);
 #endif
                 
+                telemetry_send_packet();
                 fsm_state = DESCENT;
                 eeprom_write(&eeprom_transaction_id, EEPROM_ADDR_FSM_STATE, &fsm_state, 1);
             }
@@ -383,6 +387,7 @@ static void advance_fsm (void)
                 // Rocket has stopped moving
                 radio_telemetry_period = TELEMETRY_RADIO_PERIOD_LOW;
                 
+                telemetry_send_packet();
                 fsm_state = RECOVERY;
                 eeprom_write(&eeprom_transaction_id, EEPROM_ADDR_FSM_STATE, &fsm_state, 1);
             }
