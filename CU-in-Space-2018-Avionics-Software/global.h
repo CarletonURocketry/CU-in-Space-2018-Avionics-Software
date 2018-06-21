@@ -32,8 +32,10 @@
 
 
 // MARK: FSM Settings
-#define LAUNCH_ACCEL_THRESHOLD      1410    // 5.5g in 3.9mg per least signifigant bit
-#define LAUNCH_ALT_THRESHOLD        800     // 50m in 1/16m per least signifigant bit
+#define UPRIGHT_ACCEL_THRESOLD      256     // 1g in 3.9mg per least signifigant bit
+#define ACCEL_COMPARISON_RANGE      25      // 0.1g in 3.9mg per least signifigant bit
+#define LAUNCH_ACCEL_THRESHOLD      1026    // 4g in 3.9mg per least signifigant bit
+#define LAUNCH_ALT_THRESHOLD        1600    // 100m in 1/16m per least signifigant bit
 #define COASTING_ACCEL_THRESHOLD    513     // 2g in 3.9mg per least signifigant bit
 #define COASTING_ALT_THRESOLD       35200   // 2200m (7217') in 1/16m per least signifigant bit
 #define ALTITUDE_COMPARISON_RANGE   32      // 2m in 1/16m per least signifigant bit

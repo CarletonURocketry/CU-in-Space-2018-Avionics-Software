@@ -334,7 +334,7 @@ static void advance_fsm (void)
             break;
         case PRE_FLIGHT:
             // Wait for engine to start
-            if ((hypot(hypot(adxl343_accel_x, adxl343_accel_y), adxl343_accel_z) > LAUNCH_ACCEL_THRESHOLD) || (mpl3115a2_alt > LAUNCH_ALT_THRESHOLD)) {
+            if ((hypot(hypot(adxl343_accel_x, adxl343_accel_y), adxl343_accel_z) > LAUNCH_ACCEL_THRESHOLD) && (mpl3115a2_alt > LAUNCH_ALT_THRESHOLD)) {
                 // Engine has started
                 radio_telemetry_period = TELEMETRY_RADIO_PERIOD_HIGH;
                 eeprom_telemetry_period = TELEMETRY_EEPROM_PERIOD_HIGH;
